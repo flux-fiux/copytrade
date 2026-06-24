@@ -8,7 +8,9 @@ from app.core.database import get_db
 from app.models.leaderboard_score import LeaderboardScore
 from app.models.user import User
 from app.models.signal import Signal
+from app.models.trade_history import TradeHistory
 from app.schemas.leaderboard import LeaderboardEntry, LeaderboardResponse
+from app.services import ai_service
 
 router = APIRouter()
 
@@ -135,3 +137,37 @@ async def get_master_detail(
             for s in signals
         ],
     }
+
+
+@router.get("/{master_id}/ai-summary")
+async def get_master_ai_summary(
+    master_id: uuid.UUID,
+    lang: str = Query("en", pattern="^(en|zh-CN|ja|es)$"),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """用 AI 解读 Master 的交易风格，帮助 Follower 做决策。"""
+    # 取最近 50 笔已平仓交易历史
+    result = await db.execute(
+        select(TradeHistory)
+        .where(TradeHistory.master_id == master_id)
+        .order_by(TradeHistory.closed_at.desc())
+        .limit(50)
+    )
+    trades = result.scalars().all()
+    trade_data = [
+        {
+            "symbol": t.symbol,
+            "direction": t.direction,
+            "volume": float(t.volume),
+            "open_price": float(t.open_price) if t.open_price else None,
+            "close_price": float(t.close_price) if t.close_price else None,
+            "profit": float(t.profit) if t.profit else None,
+            "opened_at": t.opened_at.isoformat() if t.opened_at else None,
+            "closed_at": t.closed_at.isoformat() if t.closed_at else None,
+        }
+        for t in trades
+    ]
+
+    summary = await ai_service.explain_master(trade_data, lang=lang)
+    return {"summary": summary, "trade_count": len(trade_data), "lang": lang}

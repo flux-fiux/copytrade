@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     API_BASE_URL: str = "http://localhost:8000"
 
+    # AI — 支持 deepseek（默认）和 anthropic
+    AI_PROVIDER: str = "deepseek"          # "deepseek" | "anthropic"
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_MODEL: str = "deepseek-chat"  # deepseek-chat | deepseek-reasoner
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 

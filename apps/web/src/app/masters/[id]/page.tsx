@@ -9,6 +9,7 @@ import { EquityCurve } from "@/components/masters/equity-curve";
 import { TradeCalendar } from "@/components/masters/trade-calendar";
 import { StatsRadar } from "@/components/masters/stats-radar";
 import { RecentTradesTable } from "@/components/masters/recent-trades-table";
+import { AiSummary } from "@/components/masters/ai-summary";
 import { api } from "@/lib/api-client";
 
 interface Trade {
@@ -221,6 +222,11 @@ export default async function MasterPage({ params }: { params: Promise<{ id: str
         <div className="rounded-lg border border-border bg-card p-5 mb-8">
           <h3 className="text-sm font-semibold mb-4">Daily P&amp;L Calendar (Last 90 days)</h3>
           <TradeCalendar data={master.calendar} />
+        </div>
+
+        {/* AI Strategy Analysis */}
+        <div className="mb-8">
+          <AiSummary masterId={id} />
         </div>
 
         {/* Recent Trades */}
