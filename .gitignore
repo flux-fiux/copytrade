@@ -55,3 +55,4 @@ apps/api/uv.lock
 # Worker build outputs  
 apps/worker-ct/dist/
 apps/worker-rt/dist/
+.github/
