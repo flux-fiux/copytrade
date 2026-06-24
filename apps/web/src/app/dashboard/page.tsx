@@ -27,6 +27,7 @@ interface CopyTradeRow {
   id: string;
   symbol: string;
   master_id: string;
+  master_name?: string;
   direction: string;
   volume: number;
   profit?: number;
@@ -206,7 +207,7 @@ export default function DashboardPage() {
                     <div key={t.id} className="flex items-center gap-4 px-4 py-3">
                       <div className="font-mono text-sm font-semibold w-16">{t.symbol}</div>
                       <div className="flex-1 text-xs text-muted-foreground truncate">
-                        {t.master_id.slice(0, 8)}…
+                        {t.master_name ?? `${t.master_id.slice(0, 8)}…`}
                       </div>
                       <Badge
                         variant="outline"

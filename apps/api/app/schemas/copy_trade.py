@@ -24,3 +24,4 @@ class CopyTradeOut(BaseModel):
     opened_at: datetime | None
     closed_at: datetime | None
     created_at: datetime
+    master_name: str | None = None
