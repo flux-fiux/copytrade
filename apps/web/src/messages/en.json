@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "leaderboard": "Leaderboard",
+    "terminal": "Terminal",
+    "community": "Community",
+    "signIn": "Sign In",
+    "dashboard": "Dashboard",
+    "accounts": "My Accounts",
+    "subscriptions": "Subscriptions",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  },
+  "home": {
+    "hero_title": "Copy the World's Best",
+    "hero_title_highlight": "Forex Traders",
+    "hero_subtitle": "Connect your MT4/MT5 account, subscribe to verified signal providers, and let our engine replicate every trade automatically.",
+    "hero_cta_browse": "Browse Traders",
+    "hero_cta_terminal": "Open Terminal",
+    "stats_traders": "Active Traders",
+    "stats_trades": "Copy Trades Executed",
+    "stats_return": "Avg Monthly Return",
+    "stats_countries": "Countries",
+    "top_providers": "Top Signal Providers",
+    "top_providers_subtitle": "Ranked by risk-adjusted returns",
+    "view_all": "View All",
+    "features_title": "Everything you need to trade smarter",
+    "cta_title": "Ready to start copying?",
+    "cta_subtitle": "Connect your MT4/MT5 account in minutes. No technical setup required.",
+    "cta_button": "Get Started Free"
+  },
+  "leaderboard": {
+    "title": "Signal Provider Leaderboard",
+    "subtitle": "Ranked by verified performance. All accounts are independently audited via MetaAPI.",
+    "period_1M": "1M",
+    "period_3M": "3M",
+    "period_6M": "6M",
+    "period_1Y": "1Y",
+    "period_ALL": "ALL",
+    "col_provider": "Provider",
+    "col_return": "Return",
+    "col_drawdown": "Max DD",
+    "col_sharpe": "Sharpe",
+    "col_followers": "Followers",
+    "col_grade": "Grade",
+    "verified": "Verified",
+    "load_more": "Load more traders"
+  },
+  "auth": {
+    "login_title": "Sign in to CopyTrade",
+    "login_google": "Continue with Google",
+    "login_email": "Email",
+    "login_password": "Password",
+    "login_submit": "Sign In",
+    "login_no_account": "Don't have an account?",
+    "register_link": "Create one",
+    "register_title": "Create your account",
+    "register_username": "Username",
+    "register_confirm_password": "Confirm Password",
+    "register_submit": "Create Account",
+    "register_role_follower": "I want to Follow trades",
+    "register_role_master": "I want to be a Signal Provider"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "portfolio_value": "Portfolio Value",
+    "active_subscriptions": "Active Subscriptions",
+    "monthly_pnl": "Monthly P&L",
+    "trades_today": "Copy Trades Today"
+  },
+  "terminal": {
+    "live": "Live",
+    "watchlist": "Watchlist"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm"
+  }
+}

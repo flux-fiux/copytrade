@@ -1,0 +1,8 @@
+[build]
+dockerfilePath = "Dockerfile.worker"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+
+[deploy.environmentVariables]
+PYTHONUNBUFFERED = "1"

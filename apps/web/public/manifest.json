@@ -1,0 +1,32 @@
+{
+  "name": "CopyTrade",
+  "short_name": "CopyTrade",
+  "description": "Professional copy trading platform — follow top signal providers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Leaderboard",
+      "url": "/leaderboard",
+      "description": "Top signal providers"
+    },
+    {
+      "name": "Terminal",
+      "url": "/terminal",
+      "description": "Market data terminal"
+    }
+  ]
+}

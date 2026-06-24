@@ -19,6 +19,7 @@ dependencies = [
     "stripe>=11.1.0",
     "finnhub-python>=2.4.20",
     "yfinance>=0.2.44",
+    "psycopg2-binary>=2.9.12",
 ]
 
 [project.optional-dependencies]

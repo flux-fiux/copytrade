@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import Redis from 'ioredis';
 import pino from 'pino';
 
@@ -12,47 +12,100 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:3000';
 
 const app = express();
 const httpServer = createServer(app);
-
 const io = new Server(httpServer, {
   cors: { origin: CORS_ORIGIN, methods: ['GET', 'POST'] },
   transports: ['websocket', 'polling'],
 });
 
-const redis = new Redis(REDIS_URL);
-const redisSub = redis.duplicate();
+const redis = new Redis(REDIS_URL, { lazyConnect: true });
+const redisSub = new Redis(REDIS_URL, { lazyConnect: true });
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req, res) =>
+  res.json({ status: 'ok', connections: io.engine.clientsCount }),
+);
 
-io.on('connection', (socket) => {
+io.on('connection', (socket: Socket) => {
   logger.info({ socketId: socket.id }, 'Client connected');
 
-  // Client subscribes to market data for specific symbols
-  socket.on('subscribe:market', (symbols: string[]) => {
-    symbols.forEach((sym) => socket.join(`market:${sym}`));
-    logger.debug({ socketId: socket.id, symbols }, 'Subscribed to market data');
+  socket.on('subscribe:market', (symbols: unknown) => {
+    if (!Array.isArray(symbols)) return;
+    (symbols as string[]).forEach((sym) =>
+      socket.join(`market:${String(sym).toUpperCase()}`),
+    );
+    logger.debug({ socketId: socket.id, symbols }, 'Subscribed to market');
   });
 
-  // Client subscribes to signals for a master
-  socket.on('subscribe:signals', (masterId: string) => {
+  socket.on('unsubscribe:market', (symbols: unknown) => {
+    if (!Array.isArray(symbols)) return;
+    (symbols as string[]).forEach((sym) =>
+      socket.leave(`market:${String(sym).toUpperCase()}`),
+    );
+  });
+
+  socket.on('subscribe:signals', (masterId: unknown) => {
+    if (typeof masterId !== 'string') return;
     socket.join(`signals:${masterId}`);
+    logger.debug({ socketId: socket.id, masterId }, 'Subscribed to signals');
   });
 
-  socket.on('disconnect', () => {
-    logger.info({ socketId: socket.id }, 'Client disconnected');
+  socket.on('subscribe:copytrades', (followerId: unknown) => {
+    if (typeof followerId !== 'string') return;
+    socket.join(`copytrades:${followerId}`);
+    logger.debug({ socketId: socket.id, followerId }, 'Subscribed to copytrades');
+  });
+
+  socket.on('disconnect', (reason) => {
+    logger.info({ socketId: socket.id, reason }, 'Client disconnected');
   });
 });
 
-// Relay Redis Pub/Sub → Socket.IO rooms
-redisSub.psubscribe('market:*', 'signal:*');
-redisSub.on('pmessage', (_pattern, channel, message) => {
-  const [type, id] = channel.split(':');
-  if (type === 'market') {
-    io.to(`market:${id}`).emit('market:update', JSON.parse(message));
-  } else if (type === 'signal') {
-    io.to(`signals:${id}`).emit('signal:new', JSON.parse(message));
-  }
-});
+async function startRedisSubscriber(): Promise<void> {
+  await redisSub.connect();
 
-httpServer.listen(PORT, () => {
-  logger.info({ port: PORT }, 'Realtime service started');
+  await redisSub.psubscribe('signal:*', 'market:*', 'copytrade:*');
+
+  redisSub.on('pmessage', (_pattern: string, channel: string, message: string) => {
+    try {
+      const data = JSON.parse(message) as Record<string, unknown>;
+
+      if (channel.startsWith('signal:')) {
+        const masterId = channel.slice('signal:'.length);
+        io.to(`signals:${masterId}`).emit('signal', { masterId, ...data });
+      } else if (channel.startsWith('market:')) {
+        const symbol = channel.slice('market:'.length);
+        io.to(`market:${symbol}`).emit('quote', { symbol, ...data });
+      } else if (channel.startsWith('copytrade:')) {
+        const followerId = channel.slice('copytrade:'.length);
+        io.to(`copytrades:${followerId}`).emit('copytrade', data);
+      }
+    } catch (err) {
+      logger.error({ err, channel }, 'Failed to relay message');
+    }
+  });
+
+  logger.info('Redis subscriber ready');
+}
+
+async function main(): Promise<void> {
+  await redis.connect();
+  await startRedisSubscriber();
+
+  httpServer.listen(PORT, () => {
+    logger.info({ port: PORT }, 'Realtime service started');
+  });
+
+  const shutdown = async (): Promise<void> => {
+    logger.info('Shutting down...');
+    await new Promise<void>((resolve) => io.close(() => resolve()));
+    redis.disconnect();
+    redisSub.disconnect();
+    process.exit(0);
+  };
+  process.on('SIGTERM', () => void shutdown());
+  process.on('SIGINT', () => void shutdown());
+}
+
+main().catch((err) => {
+  logger.error({ err }, 'Fatal error');
+  process.exit(1);
 });

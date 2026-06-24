@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "leaderboard": "Clasificación",
+    "terminal": "Terminal",
+    "community": "Comunidad",
+    "signIn": "Iniciar sesión",
+    "dashboard": "Panel",
+    "accounts": "Mis cuentas",
+    "subscriptions": "Suscripciones",
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión"
+  },
+  "home": {
+    "hero_title": "Copia a los mejores",
+    "hero_title_highlight": "Traders de Forex",
+    "hero_subtitle": "Conecta tu cuenta MT4/MT5, suscríbete a proveedores de señales verificados y deja que nuestro motor replique cada operación automáticamente.",
+    "hero_cta_browse": "Ver traders",
+    "hero_cta_terminal": "Abrir terminal",
+    "stats_traders": "Traders activos",
+    "stats_trades": "Operaciones copiadas",
+    "stats_return": "Retorno mensual medio",
+    "stats_countries": "Países",
+    "top_providers": "Mejores proveedores de señales",
+    "top_providers_subtitle": "Clasificados por retorno ajustado al riesgo",
+    "view_all": "Ver todos",
+    "features_title": "Todo lo que necesitas para operar mejor",
+    "cta_title": "¿Listo para empezar a copiar?",
+    "cta_subtitle": "Conecta tu cuenta MT4/MT5 en minutos. Sin configuración técnica.",
+    "cta_button": "Comenzar gratis"
+  },
+  "leaderboard": {
+    "title": "Clasificación de proveedores de señales",
+    "subtitle": "Clasificados por rendimiento verificado. Todas las cuentas son auditadas independientemente vía MetaAPI.",
+    "period_1M": "1M",
+    "period_3M": "3M",
+    "period_6M": "6M",
+    "period_1Y": "1A",
+    "period_ALL": "TODO",
+    "col_provider": "Proveedor",
+    "col_return": "Retorno",
+    "col_drawdown": "DD máx.",
+    "col_sharpe": "Sharpe",
+    "col_followers": "Seguidores",
+    "col_grade": "Grado",
+    "verified": "Verificado",
+    "load_more": "Cargar más"
+  },
+  "auth": {
+    "login_title": "Iniciar sesión en CopyTrade",
+    "login_google": "Continuar con Google",
+    "login_email": "Correo electrónico",
+    "login_password": "Contraseña",
+    "login_submit": "Iniciar sesión",
+    "login_no_account": "¿No tienes cuenta?",
+    "register_link": "Créala aquí",
+    "register_title": "Crear tu cuenta",
+    "register_username": "Nombre de usuario",
+    "register_confirm_password": "Confirmar contraseña",
+    "register_submit": "Crear cuenta",
+    "register_role_follower": "Quiero copiar operaciones",
+    "register_role_master": "Quiero ser proveedor de señales"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido de nuevo",
+    "portfolio_value": "Valor del portafolio",
+    "active_subscriptions": "Suscripciones activas",
+    "monthly_pnl": "P&L mensual",
+    "trades_today": "Operaciones copiadas hoy"
+  },
+  "terminal": {
+    "live": "En vivo",
+    "watchlist": "Lista de seguimiento"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo salió mal",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar"
+  }
+}

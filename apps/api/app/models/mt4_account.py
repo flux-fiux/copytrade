@@ -22,6 +22,7 @@ class MT4Account(Base):
     equity: Mapped[float | None] = mapped_column(Numeric(20, 2))
     currency: Mapped[str] = mapped_column(String(10), default="USD")
     leverage: Mapped[int | None] = mapped_column(Integer)
+    encrypted_password: Mapped[str | None] = mapped_column(String(500))
     copy_factory_strategy_id: Mapped[str | None] = mapped_column(String(100))
     last_synced_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())

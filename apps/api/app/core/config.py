@@ -25,11 +25,15 @@ class Settings(BaseSettings):
     METAAPI_TOKEN: str = ""
     METAAPI_DOMAIN: str = "agiliumtrade.agiliumtrade.ai"
 
-    # Stripe
+    # Stripe (kept for backward compat, unused)
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_CONNECT_CLIENT_ID: str = ""
+
+    # CryptoMus
+    CRYPTOMUS_API_KEY: str = ""
+    CRYPTOMUS_MERCHANT_UUID: str = ""
 
     # Market Data
     FINNHUB_API_KEY: str = ""
@@ -41,6 +45,12 @@ class Settings(BaseSettings):
 
     # Encryption (MT4 password AES-256)
     ENCRYPTION_KEY: str = ""  # 32-byte hex key
+
+    # Email (SendGrid)
+    SENDGRID_API_KEY: str = ""
+    FROM_EMAIL: str = "noreply@copytrade.io"
+    FROM_NAME: str = "CopyTrade"
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]

@@ -29,6 +29,7 @@ class LeaderboardScore(Base):
     win_rate_pct: Mapped[float | None] = mapped_column(Numeric(10, 4))
     profit_factor: Mapped[float | None] = mapped_column(Numeric(10, 4))
     avg_rr_ratio: Mapped[float | None] = mapped_column(Numeric(10, 4))
+    avg_trade_duration_hours: Mapped[float | None] = mapped_column(Numeric(10, 2))
     total_trades: Mapped[int | None] = mapped_column(Integer)
     trading_days: Mapped[int | None] = mapped_column(Integer)
 

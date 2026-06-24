@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "leaderboard": "排行榜",
+    "terminal": "交易终端",
+    "community": "社区",
+    "signIn": "登录",
+    "dashboard": "控制台",
+    "accounts": "我的账户",
+    "subscriptions": "我的订阅",
+    "settings": "设置",
+    "signOut": "退出登录"
+  },
+  "home": {
+    "hero_title": "复制全球顶尖",
+    "hero_title_highlight": "外汇交易员",
+    "hero_subtitle": "连接您的 MT4/MT5 账户，订阅经过验证的信号提供者，我们的引擎将自动复制每一笔交易。",
+    "hero_cta_browse": "浏览交易员",
+    "hero_cta_terminal": "打开终端",
+    "stats_traders": "活跃交易员",
+    "stats_trades": "已执行跟单",
+    "stats_return": "平均月收益",
+    "stats_countries": "覆盖国家",
+    "top_providers": "顶级信号提供者",
+    "top_providers_subtitle": "按风险调整收益排名",
+    "view_all": "查看全部",
+    "features_title": "交易更聪明所需的一切",
+    "cta_title": "准备好开始跟单了吗？",
+    "cta_subtitle": "几分钟内连接您的 MT4/MT5 账户，无需技术配置。",
+    "cta_button": "免费开始"
+  },
+  "leaderboard": {
+    "title": "信号提供者排行榜",
+    "subtitle": "按经过验证的表现排名。所有账户均通过 MetaAPI 独立审计。",
+    "period_1M": "1月",
+    "period_3M": "3月",
+    "period_6M": "6月",
+    "period_1Y": "1年",
+    "period_ALL": "全部",
+    "col_provider": "提供者",
+    "col_return": "收益",
+    "col_drawdown": "最大回撤",
+    "col_sharpe": "夏普比率",
+    "col_followers": "跟单人数",
+    "col_grade": "评级",
+    "verified": "已认证",
+    "load_more": "加载更多"
+  },
+  "auth": {
+    "login_title": "登录 CopyTrade",
+    "login_google": "使用 Google 继续",
+    "login_email": "邮箱",
+    "login_password": "密码",
+    "login_submit": "登录",
+    "login_no_account": "还没有账户？",
+    "register_link": "立即注册",
+    "register_title": "创建您的账户",
+    "register_username": "用户名",
+    "register_confirm_password": "确认密码",
+    "register_submit": "创建账户",
+    "register_role_follower": "我想跟单交易",
+    "register_role_master": "我想成为信号提供者"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来",
+    "portfolio_value": "投资组合价值",
+    "active_subscriptions": "活跃订阅",
+    "monthly_pnl": "月盈亏",
+    "trades_today": "今日跟单"
+  },
+  "terminal": {
+    "live": "实时",
+    "watchlist": "自选"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "出现错误",
+    "retry": "重试",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "confirm": "确认"
+  }
+}

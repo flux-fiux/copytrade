@@ -25,3 +25,6 @@ class SignalSubscription(Base):
     performance_fee_hwm: Mapped[float] = mapped_column(Numeric(20, 2), default=0)  # High Water Mark
     subscribed_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     cancelled_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
+    paused_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
+    pause_reason: Mapped[str | None] = mapped_column(String(500))
+    cryptomus_payment_uuid: Mapped[str | None] = mapped_column(String(100))

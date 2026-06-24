@@ -1,15 +1,18 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import redis.asyncio as aioredis
 from app.core.config import settings
-from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants
+from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants, webhooks, admin, payments
+from app.services.market_data import market_data_service
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup
+    redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+    market_data_service.set_redis(redis_client)
     yield
-    # shutdown
+    await redis_client.aclose()
 
 
 app = FastAPI(
@@ -36,6 +39,9 @@ app.include_router(leaderboard.router, prefix="/api/v1/leaderboard", tags=["lead
 app.include_router(market_data.router, prefix="/api/v1/market", tags=["market-data"])
 app.include_router(subscriptions.router, prefix="/api/v1/subscriptions", tags=["subscriptions"])
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
+app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 
 
 @app.get("/health")

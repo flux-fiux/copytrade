@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "leaderboard": "ランキング",
+    "terminal": "ターミナル",
+    "community": "コミュニティ",
+    "signIn": "ログイン",
+    "dashboard": "ダッシュボード",
+    "accounts": "マイアカウント",
+    "subscriptions": "サブスクリプション",
+    "settings": "設定",
+    "signOut": "ログアウト"
+  },
+  "home": {
+    "hero_title": "世界トップの",
+    "hero_title_highlight": "FXトレーダーをコピー",
+    "hero_subtitle": "MT4/MT5アカウントを接続し、認証済みシグナルプロバイダーをサブスクライブして、すべてのトレードを自動的に複製しましょう。",
+    "hero_cta_browse": "トレーダーを探す",
+    "hero_cta_terminal": "ターミナルを開く",
+    "stats_traders": "アクティブトレーダー",
+    "stats_trades": "コピートレード実行数",
+    "stats_return": "平均月間リターン",
+    "stats_countries": "対応国数",
+    "top_providers": "トップシグナルプロバイダー",
+    "top_providers_subtitle": "リスク調整後リターンでランキング",
+    "view_all": "すべて表示",
+    "features_title": "よりスマートなトレードに必要なすべて",
+    "cta_title": "コピートレードを始める準備はできましたか？",
+    "cta_subtitle": "数分でMT4/MT5アカウントを接続。技術的なセットアップは不要です。",
+    "cta_button": "無料で始める"
+  },
+  "leaderboard": {
+    "title": "シグナルプロバイダーランキング",
+    "subtitle": "認証済みパフォーマンスでランキング。全アカウントはMetaAPIにより独立監査済み。",
+    "period_1M": "1ヶ月",
+    "period_3M": "3ヶ月",
+    "period_6M": "6ヶ月",
+    "period_1Y": "1年",
+    "period_ALL": "全期間",
+    "col_provider": "プロバイダー",
+    "col_return": "リターン",
+    "col_drawdown": "最大DD",
+    "col_sharpe": "シャープ",
+    "col_followers": "フォロワー",
+    "col_grade": "グレード",
+    "verified": "認証済み",
+    "load_more": "さらに読み込む"
+  },
+  "auth": {
+    "login_title": "CopyTradeにサインイン",
+    "login_google": "Googleで続ける",
+    "login_email": "メールアドレス",
+    "login_password": "パスワード",
+    "login_submit": "サインイン",
+    "login_no_account": "アカウントをお持ちでない方は",
+    "register_link": "新規登録",
+    "register_title": "アカウントを作成",
+    "register_username": "ユーザー名",
+    "register_confirm_password": "パスワード確認",
+    "register_submit": "アカウント作成",
+    "register_role_follower": "トレードをフォローしたい",
+    "register_role_master": "シグナルプロバイダーになりたい"
+  },
+  "dashboard": {
+    "welcome": "おかえりなさい",
+    "portfolio_value": "ポートフォリオ価値",
+    "active_subscriptions": "アクティブサブスクリプション",
+    "monthly_pnl": "月間損益",
+    "trades_today": "本日のコピートレード"
+  },
+  "terminal": {
+    "live": "ライブ",
+    "watchlist": "ウォッチリスト"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "delete": "削除",
+    "confirm": "確認"
+  }
+}
