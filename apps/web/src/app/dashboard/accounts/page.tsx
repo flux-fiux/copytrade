@@ -64,6 +64,7 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [formToken, setFormToken] = useState("");
   const [syncingId, setSyncingId] = useState<string | null>(null);
 
   const getToken = useCallback(async () => {
@@ -119,6 +120,12 @@ export default function AccountsPage() {
     }
   };
 
+  const handleShowForm = async () => {
+    const token = await getToken();
+    setFormToken(token);
+    setShowForm(true);
+  };
+
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <Sidebar />
@@ -129,7 +136,7 @@ export default function AccountsPage() {
               <h1 className="text-2xl font-bold">My MT4/MT5 Accounts</h1>
               <p className="text-sm text-muted-foreground mt-1">Manage your connected trading accounts</p>
             </div>
-            <button className={cn(buttonVariants({ size: "sm" }), "gap-2")} onClick={() => setShowForm(true)}>
+            <button className={cn(buttonVariants({ size: "sm" }), "gap-2")} onClick={handleShowForm}>
               Connect Account
             </button>
           </div>
@@ -152,7 +159,7 @@ export default function AccountsPage() {
                 <p className="text-sm text-muted-foreground mb-4 max-w-xs">
                   Connect your MT4 or MT5 account to start copying trades.
                 </p>
-                <button className={cn(buttonVariants(), "gap-2")} onClick={() => setShowForm(true)}>
+                <button className={cn(buttonVariants(), "gap-2")} onClick={handleShowForm}>
                   Connect your first MT4 account
                 </button>
               </CardContent>
@@ -234,7 +241,7 @@ export default function AccountsPage() {
 
       {showForm && (
         <ConnectAccountForm
-          token=""
+          token={formToken}
           onSuccess={async () => { setShowForm(false); await fetchAccounts(); }}
           onCancel={() => setShowForm(false)}
         />

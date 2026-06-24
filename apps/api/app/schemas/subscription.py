@@ -26,7 +26,7 @@ class SubscriptionPlanOut(BaseModel):
 class SubscribeRequest(BaseModel):
     master_id: str
     plan_id: str
-    follower_account_id: str
+    follower_account_id: str | None = None
 
 
 class SubscribeResponse(BaseModel):

@@ -80,7 +80,7 @@ async def subscribe(
     follower_id = uuid.UUID(current_user["sub"])
     master_id = uuid.UUID(payload.master_id)
     plan_id = uuid.UUID(payload.plan_id)
-    follower_account_id = uuid.UUID(payload.follower_account_id)
+    follower_account_id = uuid.UUID(payload.follower_account_id) if payload.follower_account_id else None
 
     # Get plan
     plan_result = await db.execute(select(SubscriptionPlan).where(SubscriptionPlan.id == plan_id))
@@ -113,10 +113,21 @@ async def subscribe(
     )
     master_account = master_account_result.scalars().first()
 
-    follower_account_result = await db.execute(
-        select(MT4Account).where(MT4Account.id == follower_account_id)
-    )
-    follower_account = follower_account_result.scalar_one_or_none()
+    follower_account = None
+    if follower_account_id:
+        follower_account_result = await db.execute(
+            select(MT4Account).where(MT4Account.id == follower_account_id)
+        )
+        follower_account = follower_account_result.scalar_one_or_none()
+    elif True:
+        # Auto-pick the follower's first FOLLOWER account
+        auto_result = await db.execute(
+            select(MT4Account).where(
+                MT4Account.user_id == follower_id,
+                MT4Account.account_type == "FOLLOWER",
+            )
+        )
+        follower_account = auto_result.scalars().first()
 
     copy_factory_sub_id = None
     if master_account and master_account.copy_factory_strategy_id and follower_account:
@@ -137,7 +148,7 @@ async def subscribe(
         tenant_id=follower.tenant_id,
         follower_id=follower_id,
         master_id=master_id,
-        follower_account_id=follower_account_id,
+        follower_account_id=follower_account.id if follower_account else follower_account_id,
         plan_id=plan_id,
         stripe_subscription_id=stripe_result["subscription_id"],
         status="ACTIVE" if stripe_result["status"] == "active" else "PENDING",

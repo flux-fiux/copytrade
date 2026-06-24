@@ -9,6 +9,7 @@ import { EquityCurve } from "@/components/masters/equity-curve";
 import { TradeCalendar } from "@/components/masters/trade-calendar";
 import { StatsRadar } from "@/components/masters/stats-radar";
 import { RecentTradesTable } from "@/components/masters/recent-trades-table";
+import { api } from "@/lib/api-client";
 
 interface Trade {
   id: string;
@@ -87,9 +88,7 @@ function getMockMasterData(id: string) {
   };
 }
 
-export function generateStaticParams() {
-  return [{ id: "1" }, { id: "2" }, { id: "3" }];
-}
+export const dynamic = "force-dynamic";
 
 const gradeColors: Record<string, string> = {
   "A+": "border-emerald-500/50 text-emerald-400 bg-emerald-500/10",
@@ -100,7 +99,43 @@ const gradeColors: Record<string, string> = {
 
 export default async function MasterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const master = getMockMasterData(id);
+
+  let apiMaster: { username?: string; display_name?: string } | null = null;
+  let apiScore: { total_return_pct?: number; max_drawdown_pct?: number; sharpe_ratio?: number; win_rate_pct?: number; risk_grade?: string } | null = null;
+  let apiSignals: { id: string; symbol: string; direction: string; volume: number; open_price?: number; profit?: number; opened_at: string; closed_at?: string }[] = [];
+
+  try {
+    const detail = await api.leaderboard.getMaster(id);
+    apiMaster = detail.master;
+    apiScore = detail.score;
+    apiSignals = detail.recent_signals ?? [];
+  } catch {
+    // API not available — fall back to mock
+  }
+
+  const mockData = getMockMasterData(id);
+  const master = {
+    ...mockData,
+    name: apiMaster?.display_name ?? apiMaster?.username ?? mockData.name,
+    return_pct: apiScore?.total_return_pct ?? mockData.return_pct,
+    max_drawdown: apiScore?.max_drawdown_pct ?? mockData.max_drawdown,
+    sharpe: apiScore?.sharpe_ratio ?? mockData.sharpe,
+    win_rate: apiScore?.win_rate_pct ?? mockData.win_rate,
+    grade: apiScore?.risk_grade ?? mockData.grade,
+    recentTrades: apiSignals.length > 0
+      ? apiSignals.map((s, i) => ({
+          id: s.id,
+          symbol: s.symbol,
+          direction: s.direction as "BUY" | "SELL",
+          volume: s.volume,
+          openPrice: s.open_price ?? 0,
+          profit: s.profit,
+          openedAt: s.opened_at,
+          closedAt: s.closed_at,
+          status: (s.closed_at ? "CLOSED" : "OPEN") as "OPEN" | "CLOSED",
+        }))
+      : mockData.recentTrades,
+  };
 
   return (
     <div className="min-h-screen bg-background">

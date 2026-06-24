@@ -5,8 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
+from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.signal import Signal
+from app.models.signal_subscription import SignalSubscription
 from app.models.mt4_account import MT4Account
 from app.models.trade_history import TradeHistory
 from app.schemas.signal import SignalOut, SignalIngest
@@ -16,13 +18,34 @@ router = APIRouter()
 
 @router.get("/", response_model=list[SignalOut])
 async def list_signals(
-    master_id: uuid.UUID = Query(...),
+    master_id: uuid.UUID | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    current_user: dict | None = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    if master_id:
+        result = await db.execute(
+            select(Signal)
+            .where(Signal.master_id == master_id)
+            .order_by(Signal.opened_at.desc())
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    # No master_id — return signals for all masters the current user subscribes to
+    if not current_user:
+        return []
+    follower_id = uuid.UUID(current_user["sub"])
+    sub_result = await db.execute(
+        select(SignalSubscription.master_id)
+        .where(SignalSubscription.follower_id == follower_id, SignalSubscription.status == "ACTIVE")
+    )
+    master_ids = [row[0] for row in sub_result.all()]
+    if not master_ids:
+        return []
     result = await db.execute(
         select(Signal)
-        .where(Signal.master_id == master_id)
+        .where(Signal.master_id.in_(master_ids))
         .order_by(Signal.opened_at.desc())
         .limit(limit)
     )
