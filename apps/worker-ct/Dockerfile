@@ -1,20 +1,21 @@
-FROM node:20-slim
-
+FROM node:20-slim AS builder
 WORKDIR /app
-
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
 COPY package*.json ./
-RUN npm ci --only=production
-
+RUN npm ci
 COPY tsconfig*.json ./
 COPY src ./src
 RUN npm run build
 
+FROM node:20-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY package*.json ./
+RUN npm ci --only=production
+COPY --from=builder /app/dist ./dist
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
-
 EXPOSE 3002
-
 CMD ["node", "dist/index.js"]

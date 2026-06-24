@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[standard]" gunicorn==22.0.0 || pip install --no-cache-dir -e . gunicorn==22.0.0
+RUN pip install --no-cache-dir "python-jose[cryptography]>=3.3.0" && \
+    pip install --no-cache-dir -e ".[standard]" gunicorn==22.0.0 || pip install --no-cache-dir -e . gunicorn==22.0.0
 
 COPY app ./app
 COPY alembic ./alembic
