@@ -23,14 +23,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         router.replace("/auth/login?redirectTo=/admin");
         return;
       }
-      const roles: string[] = session.user.user_metadata?.roles ?? [];
-      const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("TENANT_ADMIN");
-      if (!isAdmin) {
+      // Check roles from our DB (not Supabase metadata)
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+        const res = await fetch(`${apiUrl}/api/v1/users/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const user = await res.json();
+          const roles: string[] = user.roles ?? [];
+          const isAdmin = roles.includes("SUPER_ADMIN") || roles.includes("TENANT_ADMIN");
+          if (!isAdmin) { router.replace("/"); return; }
+        } else {
+          router.replace("/");
+          return;
+        }
+      } catch {
         router.replace("/");
         return;
       }

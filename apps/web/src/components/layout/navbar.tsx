@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart2, TrendingUp, Users, Bell, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BarChart2, TrendingUp, Bell, ChevronDown, Loader2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,17 +15,41 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/auth-actions";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 
 const navLinks = [
   { href: "/leaderboard", label: "Leaderboard", icon: TrendingUp },
   { href: "/terminal", label: "Terminal", icon: BarChart2 },
-  { href: "/community", label: "Community", icon: Users },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const initials = userEmail
+    ? userEmail.slice(0, 2).toUpperCase()
+    : "U";
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
+    router.push("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,40 +85,61 @@ export function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
-          </Button>
+          {/* Loading state */}
+          {userEmail === undefined ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : userEmail ? (
+            <>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+              </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 px-2")}>
-              <Avatar className="h-7 w-7">
-                <AvatarFallback className="text-xs">U</AvatarFallback>
-              </Avatar>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => router.push("/dashboard")}>
-                Dashboard
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>
-                My Accounts
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>
-                Subscriptions
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/settings")}>
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Link href="/auth/login" className={buttonVariants({ size: "sm" })}>
-            Sign In
-          </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 px-2")}>
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:block text-sm max-w-[120px] truncate">{userEmail}</span>
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{userEmail}</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>
+                    My Accounts
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>
+                    Subscriptions
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                  >
+                    {signingOut ? "Signing out…" : "Sign Out"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+                Sign In
+              </Link>
+              <Link href="/auth/register" className={cn(buttonVariants({ size: "sm" }))}>
+                Get Started
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>
