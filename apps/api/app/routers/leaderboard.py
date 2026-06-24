@@ -1,8 +1,9 @@
 import uuid
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import get_tenant_id
 from app.core.database import get_db
 from app.models.leaderboard_score import LeaderboardScore
 from app.models.user import User
@@ -26,14 +27,18 @@ _MOCK_ENTRIES = [
 
 @router.get("/", response_model=LeaderboardResponse)
 async def list_leaderboard(
+    request: Request,
     period: str = Query("1M", pattern="^(1M|3M|6M|1Y|ALL)$"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
 ):
     try:
+        base_filter = (LeaderboardScore.period == period, LeaderboardScore.tenant_id == tenant_id)
+
         count_result = await db.execute(
-            select(func.count()).select_from(LeaderboardScore).where(LeaderboardScore.period == period)
+            select(func.count()).select_from(LeaderboardScore).where(*base_filter)
         )
         total = count_result.scalar_one()
 
@@ -45,7 +50,7 @@ async def list_leaderboard(
         result = await db.execute(
             select(LeaderboardScore, User.username)
             .join(User, LeaderboardScore.master_id == User.id)
-            .where(LeaderboardScore.period == period)
+            .where(*base_filter)
             .order_by(LeaderboardScore.total_return_pct.desc())
             .offset(offset)
             .limit(per_page)
@@ -78,20 +83,26 @@ async def list_leaderboard(
 @router.get("/{master_id}")
 async def get_master_detail(
     master_id: uuid.UUID,
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(User).where(User.id == master_id))
+    result = await db.execute(
+        select(User).where(User.id == master_id, User.tenant_id == tenant_id)
+    )
     user = result.scalar_one_or_none()
 
     score_result = await db.execute(
-        select(LeaderboardScore)
-        .where(LeaderboardScore.master_id == master_id, LeaderboardScore.period == "ALL_TIME")
+        select(LeaderboardScore).where(
+            LeaderboardScore.master_id == master_id,
+            LeaderboardScore.tenant_id == tenant_id,
+            LeaderboardScore.period == "ALL",
+        )
     )
     score = score_result.scalar_one_or_none()
 
     signals_result = await db.execute(
         select(Signal)
-        .where(Signal.master_id == master_id)
+        .where(Signal.master_id == master_id, Signal.tenant_id == tenant_id)
         .order_by(Signal.opened_at.desc())
         .limit(20)
     )

@@ -1,10 +1,10 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import asyncio
-from app.core.auth import require_admin
+from app.core.auth import require_admin, get_tenant_id
 from app.core.database import get_db
 from app.services.email_service import email_service
 from app.models.user import User
@@ -19,21 +19,29 @@ router = APIRouter()
 
 @router.get("/stats")
 async def admin_stats(
+    request: Request,
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
-    total_users = await db.scalar(select(func.count()).select_from(User))
+    total_users = await db.scalar(
+        select(func.count()).select_from(User).where(User.tenant_id == tenant_id)
+    )
     total_masters = await db.scalar(
-        select(func.count()).select_from(User).where(User.roles.any("MASTER"))
+        select(func.count()).select_from(User).where(User.tenant_id == tenant_id, User.roles.any("MASTER"))
     )
     total_followers = await db.scalar(
-        select(func.count()).select_from(User).where(User.roles.any("FOLLOWER"))
+        select(func.count()).select_from(User).where(User.tenant_id == tenant_id, User.roles.any("FOLLOWER"))
     )
     active_subs = await db.scalar(
-        select(func.count()).select_from(SignalSubscription).where(SignalSubscription.status == "ACTIVE")
+        select(func.count()).select_from(SignalSubscription).where(
+            SignalSubscription.tenant_id == tenant_id, SignalSubscription.status == "ACTIVE"
+        )
     )
     pending_masters = await db.scalar(
-        select(func.count()).select_from(User).where(User.kyc_status == "PENDING")
+        select(func.count()).select_from(User).where(
+            User.tenant_id == tenant_id, User.kyc_status == "PENDING"
+        )
     )
     return {
         "total_users": total_users or 0,
@@ -48,14 +56,16 @@ async def admin_stats(
 
 @router.get("/users")
 async def list_users(
+    request: Request,
     page: int = Query(1, ge=1),
     per_page: int = Query(50, le=100),
     role: str | None = None,
     search: str | None = None,
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(User)
+    stmt = select(User).where(User.tenant_id == tenant_id)
     if role:
         stmt = stmt.where(User.roles.any(role))
     if search:

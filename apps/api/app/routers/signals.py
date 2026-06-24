@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, get_tenant_id
 from app.core.database import get_db
 from app.models.signal import Signal
 from app.models.signal_subscription import SignalSubscription
@@ -18,15 +18,17 @@ router = APIRouter()
 
 @router.get("/", response_model=list[SignalOut])
 async def list_signals(
+    request: Request,
     master_id: uuid.UUID | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
     current_user: dict | None = Depends(get_current_user),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
     if master_id:
         result = await db.execute(
             select(Signal)
-            .where(Signal.master_id == master_id)
+            .where(Signal.master_id == master_id, Signal.tenant_id == tenant_id)
             .order_by(Signal.opened_at.desc())
             .limit(limit)
         )
@@ -38,14 +40,18 @@ async def list_signals(
     follower_id = uuid.UUID(current_user["sub"])
     sub_result = await db.execute(
         select(SignalSubscription.master_id)
-        .where(SignalSubscription.follower_id == follower_id, SignalSubscription.status == "ACTIVE")
+        .where(
+            SignalSubscription.follower_id == follower_id,
+            SignalSubscription.status == "ACTIVE",
+            SignalSubscription.tenant_id == tenant_id,
+        )
     )
     master_ids = [row[0] for row in sub_result.all()]
     if not master_ids:
         return []
     result = await db.execute(
         select(Signal)
-        .where(Signal.master_id.in_(master_ids))
+        .where(Signal.master_id.in_(master_ids), Signal.tenant_id == tenant_id)
         .order_by(Signal.opened_at.desc())
         .limit(limit)
     )

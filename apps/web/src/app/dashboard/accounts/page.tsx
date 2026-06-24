@@ -82,13 +82,15 @@ export default function AccountsPage() {
       setAccounts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load accounts");
-      // Show demo data in dev when API is unavailable
-      setAccounts([{
-        id: "demo-1", broker_name: "IC Markets (demo)", login: "584291",
-        server: "ICMarketsLive01", account_type: "FOLLOWER", platform: "MT4",
-        connection_status: "CONNECTED", balance: 11640, equity: 12480.20,
-        currency: "USD", created_at: new Date().toISOString(),
-      }]);
+      // 生产环境不降级显示假数据，只展示错误状态
+      if (process.env.NODE_ENV === "development") {
+        setAccounts([{
+          id: "demo-1", broker_name: "IC Markets (demo)", login: "584291",
+          server: "ICMarketsLive01", account_type: "FOLLOWER", platform: "MT4",
+          connection_status: "CONNECTED", balance: 11640, equity: 12480.20,
+          currency: "USD", created_at: new Date().toISOString(),
+        }]);
+      }
     } finally {
       setLoading(false);
     }
