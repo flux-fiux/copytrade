@@ -42,7 +42,7 @@ async def create_payment(
     amount = float(plan.price_usd) if plan else 29.0
 
     order_id = f"sub_{sub.id}_{uuid.uuid4().hex[:8]}"
-    callback_url = f"{settings.FRONTEND_URL}/api/payments/webhook"
+    callback_url = f"{settings.API_BASE_URL}/api/v1/payments/webhook"
     success_url = f"{settings.FRONTEND_URL}/dashboard/subscriptions?success=1"
 
     payment = await cryptomus_service.create_payment(

@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     FROM_EMAIL: str = "noreply@copytrade.io"
     FROM_NAME: str = "CopyTrade"
     FRONTEND_URL: str = "http://localhost:3000"
+    API_BASE_URL: str = "http://localhost:8000"
 
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]

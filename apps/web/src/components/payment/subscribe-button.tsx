@@ -23,15 +23,21 @@ export function SubscribeButton({ masterId, planId, priceUsd }: Props) {
       const token = session?.access_token;
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+      if (!token) throw new Error("Please sign in to subscribe");
+
       const subRes = await fetch(`${apiUrl}/api/v1/subscriptions/subscribe`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ master_id: masterId, plan_id: planId }),
       });
-      if (!subRes.ok) throw new Error("Failed to create subscription");
+      if (!subRes.ok) {
+        const errBody = await subRes.json().catch(() => ({}));
+        const detail = errBody?.detail ?? "Failed to create subscription";
+        throw new Error(detail);
+      }
       const sub = await subRes.json();
 
       const payRes = await fetch(`${apiUrl}/api/v1/payments/create`, {
