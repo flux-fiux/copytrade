@@ -1,5 +1,5 @@
 import uuid
-from jose import jwt, JWTError, ExpiredSignatureError
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import settings
@@ -30,9 +30,9 @@ async def get_current_user(
             options={"verify_aud": False},
         )
         return payload
-    except ExpiredSignatureError:
+    except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
