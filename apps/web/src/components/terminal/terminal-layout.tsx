@@ -6,6 +6,7 @@ import { SymbolSearch } from "./symbol-search";
 import { ChartPlaceholder } from "./chart-placeholder";
 import { WatchList } from "./watchlist";
 import { MarketNews } from "./market-news";
+import { EconomicCalendar } from "./economic-calendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export function TerminalLayout() {
@@ -49,10 +50,12 @@ export function TerminalLayout() {
               <MarketNews symbol={activeSymbol} />
             </TabsContent>
             <TabsContent value="signals" className="p-4 mt-0">
-              <p className="text-xs text-muted-foreground">Live signal feed for {activeSymbol} coming soon.</p>
+              <p className="text-xs text-muted-foreground">
+                Real-time signal feed from followed Masters appears here once you subscribe and Masters are trading.
+              </p>
             </TabsContent>
-            <TabsContent value="calendar" className="p-4 mt-0">
-              <p className="text-xs text-muted-foreground">Economic calendar integration coming soon.</p>
+            <TabsContent value="calendar" className="p-0 mt-0 overflow-y-auto max-h-[calc(100vh-160px)]">
+              <EconomicCalendar />
             </TabsContent>
           </Tabs>
         </aside>

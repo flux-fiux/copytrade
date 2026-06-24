@@ -114,3 +114,26 @@ async def get_news(symbol: str = Query(...), limit: int = Query(10, ge=1, le=50)
         raise HTTPException(502, detail=f"News error: {e}")
     await _cache_set(cache_key, data, ttl=300)
     return data
+
+
+@router.get("/calendar")
+async def get_economic_calendar(
+    from_date: str = Query(default=""),
+    to_date: str = Query(default=""),
+):
+    import datetime
+    today = datetime.date.today()
+    if not from_date:
+        from_date = str(today)
+    if not to_date:
+        to_date = str(today + datetime.timedelta(days=7))
+    cache_key = f"calendar:{from_date}:{to_date}"
+    cached = await _cache_get(cache_key)
+    if cached:
+        return cached
+    try:
+        data = await market_data_service.get_economic_calendar(from_date, to_date)
+    except Exception as e:
+        raise HTTPException(502, detail=f"Calendar error: {e}")
+    await _cache_set(cache_key, data, ttl=3600)
+    return data

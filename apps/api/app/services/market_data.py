@@ -72,6 +72,37 @@ class MarketDataService:
             items = r.json()
             return items[:limit] if isinstance(items, list) else []
 
+    async def get_economic_calendar(self, from_date: str, to_date: str) -> list[dict]:
+        if not self.token:
+            return self._mock_calendar()
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    f"{FINNHUB_BASE}/calendar/economic",
+                    params={"from": from_date, "to": to_date},
+                    headers=self._headers,
+                )
+                r.raise_for_status()
+                data = r.json()
+                return data.get("economicCalendar", [])
+        except Exception:
+            return self._mock_calendar()
+
+    def _mock_calendar(self) -> list[dict]:
+        import datetime
+        today = datetime.date.today()
+        events = [
+            {"country": "US", "event": "Non-Farm Payrolls", "impact": "high", "estimate": "180K", "actual": None, "previous": "175K", "time": f"{today}T12:30:00"},
+            {"country": "US", "event": "CPI m/m", "impact": "high", "estimate": "0.3%", "actual": None, "previous": "0.4%", "time": f"{today}T12:30:00"},
+            {"country": "EU", "event": "ECB Rate Decision", "impact": "high", "estimate": "4.50%", "actual": None, "previous": "4.50%", "time": f"{today + datetime.timedelta(days=1)}T11:45:00"},
+            {"country": "UK", "event": "GDP q/q", "impact": "medium", "estimate": "0.2%", "actual": "0.1%", "previous": "0.1%", "time": f"{today + datetime.timedelta(days=1)}T06:00:00"},
+            {"country": "JP", "event": "BoJ Rate Statement", "impact": "high", "estimate": None, "actual": None, "previous": "0.10%", "time": f"{today + datetime.timedelta(days=2)}T03:00:00"},
+            {"country": "US", "event": "FOMC Minutes", "impact": "high", "estimate": None, "actual": None, "previous": None, "time": f"{today + datetime.timedelta(days=2)}T18:00:00"},
+            {"country": "CA", "event": "Retail Sales m/m", "impact": "medium", "estimate": "0.3%", "actual": None, "previous": "-0.1%", "time": f"{today + datetime.timedelta(days=3)}T12:30:00"},
+            {"country": "AU", "event": "RBA Rate Decision", "impact": "high", "estimate": "4.35%", "actual": None, "previous": "4.35%", "time": f"{today + datetime.timedelta(days=4)}T03:30:00"},
+        ]
+        return events
+
     def _mock_quote(self, symbol: str) -> dict:
         base = {"EURUSD": 1.08423, "GBPUSD": 1.26841, "XAUUSD": 2341.50, "BTCUSD": 67240.0,
                 "USDJPY": 157.48, "USDCAD": 1.36124, "AUDUSD": 0.65481}.get(symbol, 1.0)
