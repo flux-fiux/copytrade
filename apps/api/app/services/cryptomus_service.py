@@ -1,9 +1,9 @@
 """CryptoMus payment service — crypto subscription payments."""
 import hashlib
+import hmac
 import base64
 import json
 import uuid
-from typing import Optional
 import httpx
 from app.core.config import settings
 
@@ -84,11 +84,17 @@ class CryptomusService:
         return data.get("result", {})
 
     def verify_webhook(self, payload: dict) -> bool:
-        received_sign = payload.pop("sign", "")
-        body_str = json.dumps(payload, separators=(",", ":"))
+        if not settings.CRYPTOMUS_API_KEY:
+            return False
+        # 不修改调用方传入的 dict
+        data = dict(payload)
+        received_sign = data.pop("sign", "")
+        if not received_sign:
+            return False
+        body_str = json.dumps(data, separators=(",", ":"))
         b64 = base64.b64encode(body_str.encode()).decode()
         expected = hashlib.md5((b64 + settings.CRYPTOMUS_API_KEY).encode()).hexdigest()
-        return received_sign == expected
+        return hmac.compare_digest(received_sign, expected)
 
     async def create_recurring_payment(
         self,

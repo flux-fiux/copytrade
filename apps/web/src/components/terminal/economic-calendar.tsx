@@ -43,10 +43,12 @@ export function EconomicCalendar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/v1/market/calendar`)
+    const controller = new AbortController();
+    fetch(`${API_BASE}/api/v1/market/calendar`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : [])
       .then(data => { setEvents(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(err => { if (err.name !== "AbortError") setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) {

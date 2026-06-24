@@ -7,8 +7,28 @@ from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, 
 from app.services.market_data import market_data_service
 
 
+def _assert_production_config() -> None:
+    """生产环境启动时校验关键配置，缺失直接拒绝启动。"""
+    if settings.APP_ENV != "production":
+        return
+    errors = []
+    if not settings.SUPABASE_JWT_SECRET:
+        errors.append("SUPABASE_JWT_SECRET")
+    if not settings.ENCRYPTION_KEY:
+        errors.append("ENCRYPTION_KEY")
+    if not settings.CRYPTOMUS_API_KEY:
+        errors.append("CRYPTOMUS_API_KEY")
+    if not settings.CRYPTOMUS_MERCHANT_UUID:
+        errors.append("CRYPTOMUS_MERCHANT_UUID")
+    if settings.SECRET_KEY in ("change-me-in-production", ""):
+        errors.append("SECRET_KEY (still using default)")
+    if errors:
+        raise RuntimeError(f"Missing required production config: {', '.join(errors)}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _assert_production_config()
     redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
     market_data_service.set_redis(redis_client)
     yield
@@ -27,8 +47,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])

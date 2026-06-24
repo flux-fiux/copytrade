@@ -1,12 +1,14 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     username: str | None = None
-    role: str = "FOLLOWER"
+    # 公开注册只能成为 FOLLOWER，角色提升须管理员审批
+    role: Literal["FOLLOWER"] = "FOLLOWER"
 
 
 class UserUpdate(BaseModel):

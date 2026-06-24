@@ -22,6 +22,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    // Dev bypass when Supabase is not configured
+    if (!supabaseUrl || supabaseUrl.includes("placeholder")) {
+      setChecking(false);
+      return;
+    }
     const supabase = createClient();
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
