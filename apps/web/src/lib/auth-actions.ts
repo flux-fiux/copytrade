@@ -5,8 +5,23 @@ import { createServerSupabaseClient } from "./supabase/server";
 
 export async function signInWithEmail(email: string, password: string) {
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
+  // Ensure user record exists (covers OAuth→email merge edge cases)
+  if (data.session) {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1/users/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({ email, username: email.split("@")[0], role: "FOLLOWER" }),
+      });
+    } catch {
+      // Non-fatal
+    }
+  }
   redirect("/dashboard");
 }
 

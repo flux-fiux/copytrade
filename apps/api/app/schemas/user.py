@@ -10,6 +10,7 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    username: str | None = None
     display_name: str | None = None
     preferred_lang: str | None = None
     timezone: str | None = None
@@ -23,6 +24,7 @@ class UserOut(BaseModel):
     email: str
     username: str | None
     display_name: str | None
+    avatar_url: str | None = None
     roles: list[str]
     kyc_status: str
     preferred_lang: str

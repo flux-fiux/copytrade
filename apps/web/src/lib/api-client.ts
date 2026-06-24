@@ -103,8 +103,10 @@ export interface UserProfile {
   email: string;
   username?: string;
   display_name?: string;
+  avatar_url?: string;
   roles: string[];
   kyc_status: string;
+  preferred_lang?: string;
   created_at: string;
 }
 
