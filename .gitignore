@@ -48,3 +48,10 @@ coverage/
 # Supabase
 supabase/.branches/
 supabase/.temp/
+
+# uv lock (regenerated on deploy)
+apps/api/uv.lock
+
+# Worker build outputs  
+apps/worker-ct/dist/
+apps/worker-rt/dist/
