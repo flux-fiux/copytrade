@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Shield, DollarSign, Bell, Globe, Palette } from "lucide-react";
+import { Save, Shield, DollarSign, Bell, Globe, Palette, KeyRound, Trash2, Copy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -32,6 +32,9 @@ export default function AdminSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [branding, setBranding] = useState({ name: "", primary_color: "#6366f1", logo_url: "", favicon_url: "" });
   const [brandSaved, setBrandSaved] = useState(false);
+  const [apiKeys, setApiKeys] = useState<Array<{ id: string; name: string; prefix: string; is_active: boolean; last_used_at: string | null; created_at: string | null }>>([]);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -80,6 +83,55 @@ export default function AdminSettingsPage() {
       setBrandSaved(true);
       setTimeout(() => setBrandSaved(false), 2000);
     } catch { /* non-fatal in dev */ }
+  };
+
+  const _token = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
+  };
+
+  const loadKeys = async () => {
+    const token = await _token();
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/tenants/current/api-keys`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setApiKeys(await res.json());
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { loadKeys(); }, []);
+
+  const createKey = async () => {
+    const token = await _token();
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/tenants/current/api-keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: newKeyName || "Untitled key" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCreatedKey(data.api_key);
+        setNewKeyName("");
+        loadKeys();
+      }
+    } catch { /* ignore */ }
+  };
+
+  const revokeKey = async (id: string) => {
+    const token = await _token();
+    if (!token) return;
+    try {
+      await fetch(`${API_BASE}/api/v1/tenants/current/api-keys/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      loadKeys();
+    } catch { /* ignore */ }
   };
 
   const handleSave = async () => {
@@ -300,6 +352,74 @@ export default function AdminSettingsPage() {
             <p className="text-xs text-muted-foreground">
               Applies to this tenant&apos;s subdomain — brand color, logo and favicon.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Broker API Keys */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <KeyRound className="h-4 w-4" />
+            Broker API Keys
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Keys authenticate the Broker API (<code>/api/v1/broker/*</code>) and are scoped to this tenant.
+          </p>
+
+          {createdKey && (
+            <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+              <p className="text-xs text-amber-300">Copy this key now — it won&apos;t be shown again.</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono break-all bg-background/60 rounded px-2 py-1">{createdKey}</code>
+                <Button variant="outline" size="sm" onClick={() => navigator.clipboard?.writeText(createdKey)}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setCreatedKey(null)}>Done</Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <label className="text-sm font-medium block mb-1">New key name</label>
+              <input
+                type="text"
+                value={newKeyName}
+                onChange={e => setNewKeyName(e.target.value)}
+                placeholder="e.g. Broker XYZ production"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <Button onClick={createKey} size="sm">
+              <KeyRound className="h-4 w-4 mr-2" />
+              Generate
+            </Button>
+          </div>
+
+          <div className="divide-y divide-border/50 rounded-md border border-border/50">
+            {apiKeys.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-3 py-4 text-center">No API keys yet.</p>
+            ) : apiKeys.map(k => (
+              <div key={k.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{k.name}</div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {k.prefix}…··· {k.is_active ? "" : "· revoked"}
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {k.last_used_at ? `used ${new Date(k.last_used_at).toLocaleDateString()}` : "never used"}
+                </span>
+                {k.is_active && (
+                  <Button variant="ghost" size="sm" onClick={() => revokeKey(k.id)} className="text-red-400 hover:text-red-300">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
