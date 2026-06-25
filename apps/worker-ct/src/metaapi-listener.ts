@@ -28,6 +28,8 @@ export class TradeListener extends SynchronizationListener {
       volume: deal.volume ?? 0,
       openPrice: isOpen ? deal.price : undefined,
       closePrice: !isOpen ? deal.price : undefined,
+      stopLoss: deal.stopLoss ?? undefined,
+      takeProfit: deal.takeProfit ?? undefined,
       profit: deal.profit,
       mt4Ticket: deal.positionId ? parseInt(deal.positionId, 10) : undefined,
       openedAt: isOpen ? new Date().toISOString() : undefined,
@@ -60,6 +62,10 @@ export class MetaAPIListener {
     } catch (err) {
       logger.error({ err, metaApiAccountId, masterId }, 'Failed to connect master account');
     }
+  }
+
+  hasAccount(metaApiAccountId: string): boolean {
+    return this.connections.has(metaApiAccountId);
   }
 
   async disconnectAll(): Promise<void> {

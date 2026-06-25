@@ -47,30 +47,43 @@ async def list_leaderboard(
     period: str = Query("1M", pattern="^(1M|3M|6M|1Y|ALL)$"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    sort_by: str = Query("return", pattern="^(return|drawdown|sharpe|winrate|followers|days)$"),
+    min_days: int = Query(0, ge=0),
+    grade: str | None = Query(None),
+    search: str | None = Query(None, max_length=100),
     db: AsyncSession = Depends(get_db),
     tenant_id: uuid.UUID = Depends(get_tenant_id),
 ):
     try:
-        base_filter = (LeaderboardScore.period == period, LeaderboardScore.tenant_id == tenant_id)
+        filters = [LeaderboardScore.period == period, LeaderboardScore.tenant_id == tenant_id]
+        if min_days > 0:
+            filters.append(LeaderboardScore.trading_days >= min_days)
+        if grade:
+            filters.append(LeaderboardScore.risk_grade == grade)
 
-        count_result = await db.execute(
-            select(func.count()).select_from(LeaderboardScore).where(*base_filter)
-        )
+        _SORT_MAP = {
+            "return":    LeaderboardScore.total_return_pct.desc(),
+            "drawdown":  LeaderboardScore.max_drawdown_pct.asc(),
+            "sharpe":    LeaderboardScore.sharpe_ratio.desc(),
+            "winrate":   LeaderboardScore.win_rate_pct.desc(),
+            "followers": LeaderboardScore.followers_count.desc(),
+            "days":      LeaderboardScore.trading_days.desc(),
+        }
+        order_col = _SORT_MAP.get(sort_by, LeaderboardScore.total_return_pct.desc())
+
+        base_query = select(LeaderboardScore, User.username).join(User, LeaderboardScore.master_id == User.id).where(*filters)
+        if search:
+            base_query = base_query.where(User.username.ilike(f"%{search}%"))
+
+        count_result = await db.execute(select(func.count()).select_from(base_query.subquery()))
         total = count_result.scalar_one()
 
-        if total == 0:
+        if total == 0 and not search and not grade and min_days == 0:
             entries = [e.model_copy(update={"period": period}) for e in _MOCK_ENTRIES]
             return LeaderboardResponse(entries=entries, total=len(entries), period=period)
 
         offset = (page - 1) * per_page
-        result = await db.execute(
-            select(LeaderboardScore, User.username)
-            .join(User, LeaderboardScore.master_id == User.id)
-            .where(*base_filter)
-            .order_by(LeaderboardScore.total_return_pct.desc())
-            .offset(offset)
-            .limit(per_page)
-        )
+        result = await db.execute(base_query.order_by(order_col).offset(offset).limit(per_page))
         rows = result.all()
 
         entries = [
@@ -92,8 +105,69 @@ async def list_leaderboard(
         return LeaderboardResponse(entries=entries, total=total, period=period)
 
     except Exception:
-        entries = [e.model_copy(update={"period": period}) for e in _MOCK_ENTRIES]
-        return LeaderboardResponse(entries=entries, total=len(entries), period=period)
+        if settings.APP_ENV == "development":
+            entries = [e.model_copy(update={"period": period}) for e in _MOCK_ENTRIES]
+            return LeaderboardResponse(entries=entries, total=len(entries), period=period)
+        return LeaderboardResponse(entries=[], total=0, period=period)
+
+
+@router.get("/platform-stats")
+async def platform_stats(
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Public platform metrics — cached 60s in Redis."""
+    import datetime
+    import json as _json
+    from app.models.copy_trade import CopyTrade
+
+    cache_key = f"platform_stats:{tenant_id}"
+    try:
+        r = _get_redis()
+        cached = await r.get(cache_key)
+        if cached:
+            return _json.loads(cached)
+    except Exception:
+        pass
+
+    today_start = datetime.datetime.now(datetime.timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+
+    masters_count = await db.scalar(
+        select(func.count()).select_from(LeaderboardScore)
+        .where(LeaderboardScore.tenant_id == tenant_id, LeaderboardScore.period == "1M")
+    ) or 0
+
+    active_subs = await db.scalar(
+        select(func.count(func.distinct(SignalSubscription.follower_id)))
+        .where(SignalSubscription.status == "ACTIVE")
+    ) or 0
+
+    avg_sharpe = await db.scalar(
+        select(func.avg(LeaderboardScore.sharpe_ratio))
+        .where(LeaderboardScore.tenant_id == tenant_id, LeaderboardScore.period == "1M",
+               LeaderboardScore.sharpe_ratio.is_not(None))
+    )
+
+    trades_today = await db.scalar(
+        select(func.count()).select_from(CopyTrade)
+        .where(CopyTrade.created_at >= today_start)
+    ) or 0
+
+    result = {
+        "verified_providers": int(masters_count),
+        "active_followers": int(active_subs),
+        "avg_sharpe": round(float(avg_sharpe), 2) if avg_sharpe else 0.0,
+        "trades_today": int(trades_today),
+    }
+
+    try:
+        await r.set(cache_key, _json.dumps(result), ex=60)
+    except Exception:
+        pass
+
+    return result
 
 
 @router.get("/{master_id}")

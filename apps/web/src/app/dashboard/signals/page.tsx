@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Radio, TrendingUp, TrendingDown, Loader2, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useSocket } from "@/hooks/useSocket";
-import { incrementNotif } from "@/store/notifications";
+import { pushLocalNotification } from "@/store/notifications";
 
 interface Signal {
   id: string;
@@ -34,6 +35,7 @@ const MOCK_SIGNALS: Signal[] = [
 ];
 
 export default function SignalsPage() {
+  const t = useTranslations("signals_page");
   const [signals, setSignals] = useState<Signal[]>([]);
   const [masterIds, setMasterIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,7 @@ export default function SignalsPage() {
       return [signal, ...filtered].slice(0, 100);
     });
     markNew(signal.id);
-    incrementNotif();
+    pushLocalNotification("COPYTRADE", `New signal — ${signal.direction} ${signal.symbol}`, undefined, { signal_id: signal.id });
     setIsLive(true);
   }, [markNew]);
 
@@ -136,15 +138,15 @@ export default function SignalsPage() {
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Copy Signals</h1>
-            <p className="text-sm text-muted-foreground mt-1">Signals received from your subscribed masters</p>
+            <h1 className="text-2xl font-bold">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Live indicator */}
             <div className={cn("flex items-center gap-1.5 text-xs", isLive ? "text-emerald-400" : "text-muted-foreground")}>
               {isLive
-                ? <><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" /></span> Live</>
-                : <><WifiOff className="h-3 w-3" /> Offline</>
+                ? <><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" /></span> {t("live")}</>
+                : <><WifiOff className="h-3 w-3" /> {t("offline")}</>
               }
             </div>
             <button
@@ -153,7 +155,7 @@ export default function SignalsPage() {
               className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
             >
               <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-              Refresh
+              {t("refresh")}
             </button>
           </div>
         </div>
@@ -162,7 +164,7 @@ export default function SignalsPage() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Card className="border-border/60">
             <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Total P&L</div>
+              <div className="text-xs text-muted-foreground">{t("total_pnl")}</div>
               <div className={cn("text-xl font-bold mt-1", totalPnl >= 0 ? "text-emerald-400" : "text-red-400")}>
                 {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
               </div>
@@ -170,13 +172,13 @@ export default function SignalsPage() {
           </Card>
           <Card className="border-border/60">
             <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Open Positions</div>
+              <div className="text-xs text-muted-foreground">{t("open_positions")}</div>
               <div className="text-xl font-bold mt-1 text-blue-400">{openCount}</div>
             </CardContent>
           </Card>
           <Card className="border-border/60">
             <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Closed Trades</div>
+              <div className="text-xs text-muted-foreground">{t("closed_trades")}</div>
               <div className="text-xl font-bold mt-1">{closedCount}</div>
             </CardContent>
           </Card>
@@ -185,26 +187,26 @@ export default function SignalsPage() {
         {/* Signal list */}
         {loading ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground gap-2">
-            <Loader2 className="h-5 w-5 animate-spin" /> Loading signals…
+            <Loader2 className="h-5 w-5 animate-spin" /> {t("loading")}
           </div>
         ) : signals.length === 0 ? (
           <Card className="border-border/60 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <Radio className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="font-semibold mb-1">No signals yet</h3>
+              <h3 className="font-semibold mb-1">{t("empty_title")}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Subscribe to a master trader to start receiving signals.
+                {t("empty_desc")}
               </p>
               <Link href="/leaderboard" className={cn(buttonVariants({ size: "sm" }))}>
-                Browse Masters
+                {t("browse_masters")}
               </Link>
             </CardContent>
           </Card>
         ) : (
           <Card className="border-border/60 overflow-hidden">
             <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Recent Signals</h2>
-              <span className="text-xs text-muted-foreground">{signals.length} total</span>
+              <h2 className="text-sm font-semibold">{t("recent_signals")}</h2>
+              <span className="text-xs text-muted-foreground">{t("total_count", { count: signals.length })}</span>
             </div>
             <div className="divide-y divide-border/50">
               {signals.map(signal => {
@@ -250,7 +252,7 @@ export default function SignalsPage() {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {signal.master_username ?? "Unknown Master"} · {signal.volume} lot
+                        {signal.master_username ?? t("unknown_master")} · {signal.volume} {t("lot")}
                         {signal.open_price && ` @ ${signal.open_price}`}
                       </div>
                     </div>

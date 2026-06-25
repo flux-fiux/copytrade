@@ -13,9 +13,10 @@ class SignalSubscription(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     follower_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     master_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    follower_account_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("mt4_accounts.id"), nullable=False)
+    follower_account_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("mt4_accounts.id"), nullable=True)
     plan_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("subscription_plans.id"))
     copy_factory_sub_id: Mapped[str | None] = mapped_column(String(100))
+    mode: Mapped[str] = mapped_column(String(10), default="live")  # live | paper
     lot_multiplier: Mapped[float] = mapped_column(Numeric(5, 2), default=1.0)
     max_lot_per_trade: Mapped[float | None] = mapped_column(Numeric(10, 4))
     max_drawdown_pct: Mapped[float | None] = mapped_column(Numeric(5, 2))

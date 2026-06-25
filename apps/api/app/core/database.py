@@ -5,7 +5,7 @@ from app.core.config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
+    echo=(settings.DEBUG and settings.APP_ENV == "development"),
     pool_size=20,
     max_overflow=40,
 )

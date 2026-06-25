@@ -1,6 +1,9 @@
 import asyncio
+import logging
 from sqlalchemy import select
 from app.core.celery_app import celery_app
+
+logger = logging.getLogger(__name__)
 from app.core.database import AsyncSessionLocal
 from app.models.signal_subscription import SignalSubscription
 from app.services.risk_guard import risk_guard
@@ -27,8 +30,8 @@ def check_all_subscriptions():
                         )
                         paused += 1
                 except Exception as e:
-                    print(f"[RiskGuard] Error checking {sub.id}: {e}")
+                    logger.error("[RiskGuard] Error checking %s: %s", sub.id, e)
 
-            print(f"[RiskGuard] Checked {len(subscriptions)} subscriptions, paused {paused}")
+            logger.info("[RiskGuard] Checked %d subscriptions, paused %d", len(subscriptions), paused)
 
     asyncio.run(_run())

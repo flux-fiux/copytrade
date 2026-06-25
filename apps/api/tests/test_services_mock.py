@@ -37,15 +37,16 @@ async def test_copyfactory_dev_mode_strategy():
 
 
 @pytest.mark.asyncio
-async def test_email_service_mock_no_key(capsys):
+async def test_email_service_mock_no_key(caplog):
+    import logging
     from app.services.email_service import EmailService
     svc = EmailService()
-    # Force _get_client to return None (no key)
+    # Force _get_client to return None (no key) -> service logs a MOCK line.
     with patch.object(svc, "_get_client", return_value=None):
-        result = await svc.send_welcome("test@example.com", "TestUser")
+        with caplog.at_level(logging.INFO):
+            result = await svc.send_welcome("test@example.com", "TestUser")
     assert result is True
-    out = capsys.readouterr().out
-    assert "[EmailService MOCK]" in out
+    assert "[EmailService MOCK]" in caplog.text
 
 
 @pytest.mark.asyncio

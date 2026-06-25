@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Users, TrendingUp, TrendingDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { LeaderboardEntry } from "@/lib/api-client";
 
 interface Master {
@@ -68,18 +69,19 @@ interface Props {
 }
 
 export function LeaderboardTable({ apiEntries, loading }: Props) {
+  const t = useTranslations("leaderboard");
   const data = apiEntries && apiEntries.length > 0 ? apiEntriesToMasters(apiEntries) : MOCK_DATA;
 
   return (
     <div className={`rounded-lg border border-border overflow-hidden transition-opacity ${loading ? "opacity-60" : ""}`}>
       <div className="grid grid-cols-[2.5rem_1fr_auto_auto] md:grid-cols-[2.5rem_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-3 bg-muted/40 text-xs text-muted-foreground font-medium uppercase tracking-wide border-b border-border">
         <div>#</div>
-        <div>Provider</div>
-        <div className="text-right hidden lg:block">Return</div>
-        <div className="text-right hidden md:block">Max DD</div>
-        <div className="text-right hidden xl:block">Sharpe</div>
-        <div className="text-right hidden md:block">Followers</div>
-        <div className="text-right">Grade</div>
+        <div>{t("col_provider")}</div>
+        <div className="text-right hidden lg:block">{t("col_return")}</div>
+        <div className="text-right hidden md:block">{t("col_drawdown")}</div>
+        <div className="text-right hidden xl:block">{t("col_sharpe")}</div>
+        <div className="text-right hidden md:block">{t("col_followers")}</div>
+        <div className="text-right">{t("col_grade")}</div>
       </div>
 
       {loading && data.length === 0 && (
@@ -104,7 +106,7 @@ export function LeaderboardTable({ apiEntries, loading }: Props) {
             </Avatar>
             <div className="min-w-0">
               <span className="font-semibold truncate block">{master.name}</span>
-              <span className="text-xs text-muted-foreground">{master.trading_days}d track record</span>
+              <span className="text-xs text-muted-foreground">{t("track_days", { n: master.trading_days })}</span>
             </div>
           </div>
 
@@ -113,7 +115,7 @@ export function LeaderboardTable({ apiEntries, loading }: Props) {
               {master.return_pct >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
               {master.return_pct >= 0 ? "+" : ""}{master.return_pct.toFixed(1)}%
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">Win {master.win_rate.toFixed(0)}%</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{t("win_pct", { n: master.win_rate.toFixed(0) })}</div>
           </div>
 
           <div className="text-right hidden md:block">
@@ -123,7 +125,7 @@ export function LeaderboardTable({ apiEntries, loading }: Props) {
 
           <div className="text-right hidden xl:block">
             <div className="font-medium text-sm">{master.sharpe.toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">Sharpe</div>
+            <div className="text-xs text-muted-foreground">{t("col_sharpe")}</div>
           </div>
 
           <div className="text-right hidden md:block">

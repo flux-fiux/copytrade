@@ -11,7 +11,9 @@ from app.core.database import get_db
 from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.models.payment import Payment
+from app.models.mt4_account import MT4Account
 from app.models.signal_subscription import SignalSubscription
+from app.models.subscription_plan import SubscriptionPlan
 from app.schemas.user import UserCreate, UserOut, UserUpdate, MasterApplyRequest, MasterApplicationOut
 from app.services.email_service import email_service
 
@@ -138,13 +140,20 @@ async def get_my_earnings(
     """Master 收益汇总：历史付款记录 + 活跃 Follower 数。"""
     master_id = uuid.UUID(current_user["sub"])
 
-    followers_result = await db.execute(
-        select(func.count()).select_from(SignalSubscription).where(
+    # Active live subscriptions with plan prices
+    subs_result = await db.execute(
+        select(SignalSubscription, SubscriptionPlan)
+        .join(SubscriptionPlan, SubscriptionPlan.id == SignalSubscription.plan_id, isouter=True)
+        .where(
             SignalSubscription.master_id == master_id,
             SignalSubscription.status == "ACTIVE",
+            SignalSubscription.mode == "live",
         )
     )
-    followers_count = followers_result.scalar_one() or 0
+    active_subs = subs_result.all()
+    followers_count = len(active_subs)
+    # MRR = sum of actual plan prices × 80% (after platform 20% cut)
+    mrr = round(sum(float(plan.price_usd) * 0.8 if plan else 0 for _, plan in active_subs), 2)
 
     payments_result = await db.execute(
         select(Payment).where(
@@ -154,7 +163,7 @@ async def get_my_earnings(
     )
     payments = payments_result.scalars().all()
 
-    total_earned = sum(float(p.master_earnings_usd or 0) for p in payments)
+    total_earned = round(sum(float(p.master_earnings_usd or 0) for p in payments), 2)
 
     monthly: dict[str, dict] = {}
     for p in payments:
@@ -170,22 +179,24 @@ async def get_my_earnings(
 
     now = datetime.now(timezone.utc)
     current_month_key = now.strftime("%b %Y")
-    pending_estimate = followers_count * 29 * 0.8
 
-    if current_month_key not in monthly:
+    if current_month_key not in monthly and (followers_count > 0 or mrr > 0):
         monthly[current_month_key] = {
             "month": current_month_key,
-            "subscription_usd": followers_count * 29.0,
+            "subscription_usd": round(mrr / 0.8, 2),  # gross before platform cut
             "performance_usd": 0.0,
-            "payout_usd": round(pending_estimate, 2),
+            "payout_usd": mrr,
             "status": "PENDING",
         }
 
+    sorted_history = sorted(monthly.values(), key=lambda x: x["month"], reverse=True)
+
     return {
-        "total_earned": round(total_earned, 2),
-        "pending": round(pending_estimate, 2),
+        "total_earned": total_earned,
+        "pending": mrr,
         "followers_count": followers_count,
-        "monthly_history": list(monthly.values()),
+        "mrr": mrr,
+        "monthly_history": sorted_history,
     }
 
 
@@ -207,3 +218,62 @@ async def update_me(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+@router.get("/me/onboarding-status")
+async def get_onboarding_status(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns Master onboarding checklist — which setup steps are complete."""
+    user_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user or "MASTER" not in (user.roles or []):
+        return {"is_master": False}
+
+    has_stripe_connect = bool(user.stripe_connect_id)
+
+    has_mt4 = bool(await db.scalar(
+        select(func.count()).select_from(MT4Account).where(MT4Account.user_id == user_id)
+    ))
+
+    has_plan = bool(await db.scalar(
+        select(func.count()).select_from(SubscriptionPlan)
+        .where(SubscriptionPlan.master_id == user_id, SubscriptionPlan.is_active == True)
+    ))
+
+    has_profile = bool(user.display_name and user.apply_strategy)
+
+    steps = [
+        {"id": "stripe_connect", "label": "Set up Stripe Connect to receive payouts", "done": has_stripe_connect, "href": None, "action": "connect_stripe"},
+        {"id": "plan",           "label": "Your subscription plan is configured",     "done": has_plan,           "href": "/dashboard/earnings"},
+        {"id": "mt4",            "label": "Connect your MT4/MT5 trading account",     "done": has_mt4,            "href": "/dashboard/accounts"},
+        {"id": "profile",        "label": "Complete your public profile",             "done": has_profile,        "href": "/dashboard/settings"},
+    ]
+    completed = sum(1 for s in steps if s["done"])
+    return {
+        "is_master": True,
+        "kyc_status": user.kyc_status,
+        "completed": completed,
+        "total": len(steps),
+        "steps": steps,
+    }
+
+
+@router.post("/unsubscribe-email", status_code=status.HTTP_200_OK)
+async def unsubscribe_email(
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """CAN-SPAM compliant: mark user as opted out of marketing emails."""
+    email = payload.get("email", "").strip().lower()
+    if not email:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "email required")
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if user:
+        user.email_notify_signals = False
+        user.email_notify_billing = False
+        await db.commit()
+    return {"unsubscribed": True}

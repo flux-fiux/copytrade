@@ -1,7 +1,10 @@
 """Celery tasks for OHLCV data backfill and hourly refresh."""
 import asyncio
+import logging
 from datetime import datetime, timezone
 from app.core.celery_app import celery_app
+
+logger = logging.getLogger(__name__)
 from app.core.database import AsyncSessionLocal
 from app.services.ohlcv_service import ohlcv_service
 
@@ -24,8 +27,8 @@ def refresh_ohlcv():
                         )
                         count += await ohlcv_service.upsert_candles(session, candles)
                     except Exception as e:
-                        print(f"[OHLCV] Error {symbol}/{tf}: {e}")
-            print(f"[OHLCV] Refreshed {count} candles for {len(SYMBOLS)} symbols")
+                        logger.error("[OHLCV] Error %s/%s: %s", symbol, tf, e)
+            logger.info("[OHLCV] Refreshed %d candles for %d symbols", count, len(SYMBOLS))
     asyncio.run(_run())
 
 
@@ -39,5 +42,5 @@ def backfill_ohlcv(symbol: str = "EURUSD", timeframe: str = "1h", days: int = 90
                 symbol, timeframe, now - 86400 * days, now
             )
             n = await ohlcv_service.upsert_candles(session, candles)
-            print(f"[OHLCV] Backfilled {n} candles for {symbol}/{timeframe}")
+            logger.info("[OHLCV] Backfilled %d candles for %s/%s", n, symbol, timeframe)
     asyncio.run(_run())

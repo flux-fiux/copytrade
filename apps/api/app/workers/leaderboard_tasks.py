@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import math
 import uuid
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 
 from sqlalchemy import select, func
+
+logger = logging.getLogger(__name__)
 
 from app.core.celery_app import celery_app
 from app.core.database import AsyncSessionLocal
@@ -210,7 +213,7 @@ def recalculate_all(self):
                     try:
                         await _calculate_for_master(master_id, tenant_id, period_key, days, session)
                     except Exception as e:
-                        print(f"[leaderboard] Error {master_id}/{period_key}: {e}")
+                        logger.error("[leaderboard] Error %s/%s: %s", master_id, period_key, e)
 
     asyncio.run(_run())
 

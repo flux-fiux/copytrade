@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import select
@@ -8,6 +9,8 @@ from app.models.mt4_account import MT4Account
 from app.models.user import User
 from app.services.copyfactory import copyfactory_service
 from app.services.metaapi import metaapi_service
+
+logger = logging.getLogger(__name__)
 
 
 class RiskGuard:
@@ -86,13 +89,13 @@ class RiskGuard:
                     master_account.copy_factory_strategy_id,
                 )
             except Exception as e:
-                print(f"[RiskGuard] CopyFactory pause failed: {e}")
+                logger.error("[RiskGuard] CopyFactory pause failed: %s", e)
 
         subscription.status = "PAUSED"
         subscription.pause_reason = reason
         subscription.paused_at = datetime.now(timezone.utc)
         await session.commit()
-        print(f"[RiskGuard] Paused subscription {subscription.id}: {reason}")
+        logger.info("[RiskGuard] Paused subscription %s: %s", subscription.id, reason)
 
         # Parse drawdown values from reason string for email
         try:
@@ -151,7 +154,7 @@ class RiskGuard:
                     max_drawdown_pct=float(subscription.max_drawdown_pct or 20.0),
                 )
             except Exception as e:
-                print(f"[RiskGuard] CopyFactory resume failed: {e}")
+                logger.error("[RiskGuard] CopyFactory resume failed: %s", e)
 
         subscription.status = "ACTIVE"
         subscription.pause_reason = None

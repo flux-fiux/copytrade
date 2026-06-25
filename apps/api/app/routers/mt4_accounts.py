@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.core.internal_auth import verify_internal
+from app.core.rate_limit import rate_limit
 from app.models.mt4_account import MT4Account
 from app.schemas.mt4_account import MT4AccountConnect, MT4AccountOut, MT4AccountSyncOut
 from app.services.copyfactory import copyfactory_service
@@ -31,9 +32,11 @@ async def list_accounts(
 @router.post("/", response_model=MT4AccountOut, status_code=status.HTTP_201_CREATED)
 async def connect_account(
     payload: MT4AccountConnect,
+    request: Request,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await rate_limit(request, "connect_mt4", max_calls=5, window_seconds=3600)
     user_id = uuid.UUID(current_user["sub"])
 
     meta_info = await metaapi_service.provision_account(

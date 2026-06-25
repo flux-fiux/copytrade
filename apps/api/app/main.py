@@ -3,8 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as aioredis
 from app.core.config import settings
-from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants, webhooks, admin, payments
+from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants, webhooks, admin, payments, analytics, notifications
 from app.services.market_data import market_data_service
+from app.services.copyfactory import copyfactory_service
 
 
 def _assert_production_config() -> None:
@@ -16,12 +17,20 @@ def _assert_production_config() -> None:
         errors.append("SUPABASE_JWT_SECRET")
     if not settings.ENCRYPTION_KEY:
         errors.append("ENCRYPTION_KEY")
+    if settings.INTERNAL_API_TOKEN in ("dev-internal-token-change-in-prod", "change-me", ""):
+        errors.append("INTERNAL_API_TOKEN (still using default — run: openssl rand -hex 32)")
     if not settings.CRYPTOMUS_API_KEY:
         errors.append("CRYPTOMUS_API_KEY")
     if not settings.CRYPTOMUS_MERCHANT_UUID:
         errors.append("CRYPTOMUS_MERCHANT_UUID")
     if settings.SECRET_KEY in ("change-me-in-production", ""):
         errors.append("SECRET_KEY (still using default)")
+    if not settings.STRIPE_SECRET_KEY:
+        errors.append("STRIPE_SECRET_KEY")
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        errors.append("STRIPE_WEBHOOK_SECRET")
+    if not settings.METAAPI_TOKEN:
+        errors.append("METAAPI_TOKEN")
     if errors:
         raise RuntimeError(f"Missing required production config: {', '.join(errors)}")
 
@@ -33,6 +42,7 @@ async def lifespan(app: FastAPI):
     market_data_service.set_redis(redis_client)
     yield
     await redis_client.aclose()
+    await copyfactory_service.close()
 
 
 app = FastAPI(
@@ -62,6 +72,8 @@ app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 
 
 @app.get("/health")

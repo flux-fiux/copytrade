@@ -80,7 +80,11 @@ class StripeService:
     async def create_price(self, master_id: str, amount_usd: float, interval: str = "month") -> str:
         if _dev_mode():
             return f"price_dev_{uuid.uuid4().hex[:12]}"
+        # Stripe requires unit_amount >= 50 cents for recurring prices.
+        # Performance-fee-only plans (price_usd=0) skip Stripe price creation.
         amount_cents = int(amount_usd * 100)
+        if amount_cents < 50:
+            return ""
         price = stripe.Price.create(
             unit_amount=amount_cents,
             currency="usd",

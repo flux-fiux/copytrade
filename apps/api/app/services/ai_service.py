@@ -127,6 +127,17 @@ async def analyze_signal(signal: dict, lang: str = "en") -> str:
         return ""
 
 
+async def terminal_chat(prompt: str, max_tokens: int = 300) -> str:
+    """通用终端 AI 对话，接受自定义 prompt，用于终端助手功能。"""
+    if not _is_available():
+        return "AI assistant is not configured. Set DEEPSEEK_API_KEY or ANTHROPIC_API_KEY to enable."
+    messages = [{"role": "user", "content": prompt}]
+    try:
+        return _chat(messages, max_tokens=max_tokens)
+    except Exception:
+        return "Unable to reach AI service at this time. Please try again later."
+
+
 def _mock_explain(trade_history: list[dict], lang: str) -> str:
     count = len(trade_history)
     wins = sum(1 for t in trade_history if (t.get("profit") or 0) > 0)

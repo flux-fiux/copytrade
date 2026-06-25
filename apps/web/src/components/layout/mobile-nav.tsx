@@ -1,18 +1,21 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { TrendingUp, BarChart2, LayoutDashboard, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { href: "/", label: "Home", icon: Home, exact: true },
-  { href: "/leaderboard", label: "Leaders", icon: TrendingUp },
-  { href: "/terminal", label: "Terminal", icon: BarChart2 },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-];
-
 export function MobileNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+
+  const tabs = [
+    { href: "/", label: t("home"), icon: Home, exact: true },
+    { href: "/leaderboard", label: t("leaderboard_short"), icon: TrendingUp },
+    { href: "/terminal", label: t("terminal"), icon: BarChart2 },
+    { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {tabs.map(({ href, label, icon: Icon, exact }) => {

@@ -6,7 +6,13 @@ celery_app = Celery(
     "copytrade",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.tasks.leaderboard"],
+    include=[
+        "app.workers.leaderboard_tasks",
+        "app.workers.risk_guard_tasks",
+        "app.workers.ohlcv_tasks",
+        "app.workers.settlement_tasks",
+        "app.workers.mt4_sync_tasks",
+    ],
 )
 
 celery_app.conf.update(
@@ -18,17 +24,30 @@ celery_app.conf.update(
     task_track_started=True,
     worker_prefetch_multiplier=1,
     beat_schedule={
-        # 每小时增量更新排行榜（快速）
+        # Leaderboard: full recalculate every hour, driven by workers/
         "leaderboard-hourly": {
-            "task": "app.tasks.leaderboard.recalculate_leaderboard",
+            "task": "app.workers.leaderboard_tasks.recalculate_all",
             "schedule": crontab(minute=0),
-            "args": (False,),
         },
-        # 每天 UTC 00:05 全量重算（完整）
-        "leaderboard-daily-full": {
-            "task": "app.tasks.leaderboard.recalculate_leaderboard",
-            "schedule": crontab(hour=0, minute=5),
-            "args": (True,),
+        # Risk guard: check every 15 min
+        "risk-guard": {
+            "task": "app.workers.risk_guard_tasks.check_all_subscriptions",
+            "schedule": crontab(minute="*/15"),
+        },
+        # OHLCV refresh: every hour at :05 (after leaderboard finishes at :00)
+        "ohlcv-refresh": {
+            "task": "app.workers.ohlcv_tasks.refresh_ohlcv",
+            "schedule": crontab(minute=5),
+        },
+        # Monthly performance fee settlement: 1st of month, UTC 02:00
+        "monthly-settlement": {
+            "task": "app.workers.settlement_tasks.monthly_settlement",
+            "schedule": crontab(day_of_month=1, hour=2, minute=0),
+        },
+        # MT4 account status + balance sync: every 5 minutes
+        "mt4-sync": {
+            "task": "app.workers.mt4_sync_tasks.sync_all_accounts",
+            "schedule": crontab(minute="*/5"),
         },
     },
 )

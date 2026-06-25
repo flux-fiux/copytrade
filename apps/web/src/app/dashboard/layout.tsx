@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard, Cpu, BookOpen, Radio, DollarSign, Settings,
-  Star, Clock, XCircle,
+  Star, Clock, XCircle, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +24,7 @@ interface SidebarLink {
 
 function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const [kyc, setKyc] = useState<string>("NONE");
   const [isMaster, setIsMaster] = useState(false);
 
@@ -42,28 +44,29 @@ function Sidebar() {
   }, []);
 
   const links: SidebarLink[] = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-    { href: "/dashboard/accounts", label: "My Accounts", icon: Cpu },
-    { href: "/dashboard/subscriptions", label: "Subscriptions", icon: BookOpen },
-    { href: "/dashboard/signals", label: "Signals", icon: Radio },
+    { href: "/dashboard", label: t("overview"), icon: LayoutDashboard, exact: true },
+    { href: "/dashboard/accounts", label: t("accounts"), icon: Cpu },
+    { href: "/dashboard/subscriptions", label: t("subscriptions"), icon: BookOpen },
+    { href: "/dashboard/signals", label: t("signals"), icon: Radio },
+    { href: "/dashboard/trades", label: t("trades"), icon: Copy },
     ...(isMaster
-      ? [{ href: "/dashboard/earnings", label: "Earnings", icon: DollarSign }]
+      ? [{ href: "/dashboard/earnings", label: t("earnings"), icon: DollarSign }]
       : []),
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    { href: "/dashboard/settings", label: t("settings"), icon: Settings },
   ];
 
   const masterCta: SidebarLink | null = isMaster
     ? null
     : kyc === "PENDING"
-    ? { href: "/dashboard/apply-master", label: "Application Pending", icon: Clock, disabled: true, badge: "PENDING", badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/30" }
+    ? { href: "/dashboard/apply-master", label: t("apply_pending"), icon: Clock, disabled: true, badge: "PENDING", badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/30" }
     : kyc === "REJECTED"
-    ? { href: "/dashboard/apply-master", label: "Reapply as Master", icon: XCircle, badge: "REJECTED", badgeColor: "text-red-400 bg-red-500/10 border-red-500/30" }
-    : { href: "/dashboard/apply-master", label: "Become a Master", icon: Star };
+    ? { href: "/dashboard/apply-master", label: t("reapply_master"), icon: XCircle, badge: "REJECTED", badgeColor: "text-red-400 bg-red-500/10 border-red-500/30" }
+    : { href: "/dashboard/apply-master", label: t("become_master"), icon: Star };
 
   return (
     <aside className="w-56 border-r border-border/50 shrink-0 flex flex-col">
       <div className="px-4 py-4 border-b border-border/50">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dashboard</div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("dashboard")}</div>
       </div>
       <nav className="flex-1 px-2 py-3 space-y-0.5">
         {links.map(({ href, label, icon: Icon, exact }) => {

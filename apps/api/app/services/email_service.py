@@ -1,7 +1,10 @@
+import logging
 from typing import Optional
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 TEMPLATES = {
     "welcome": {
@@ -88,6 +91,23 @@ TEMPLATES = {
   <p style="color:#a1a1aa">You may reapply after addressing the feedback above.</p>
 </div>""",
     },
+    "payment_failed": {
+        "subject": "Action required — Payment failed for {master_name} subscription",
+        "html": """
+<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#0f0f0f;color:#e5e5e5">
+  <div style="background:#7c2d12;border-radius:12px;padding:16px 20px;margin-bottom:24px">
+    <h1 style="font-size:18px;margin:0;color:#fdba74">Payment Failed</h1>
+  </div>
+  <p style="color:#a1a1aa">We couldn't charge your card for the <strong style="color:#e5e5e5">{master_name}</strong> subscription (attempt {attempt}).</p>
+  <p style="color:#a1a1aa">Copy trading has been <strong style="color:#f97316">paused</strong> until payment succeeds.</p>
+  <div style="background:#18181b;border-radius:12px;padding:20px;margin:24px 0">
+    <p style="margin:0;color:#71717a;font-size:13px">Update your payment method to resume copying trades automatically.</p>
+  </div>
+  <div style="text-align:center;margin:32px 0">
+    <a href="{frontend_url}/dashboard/subscriptions" style="background:#f97316;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Update Payment Method</a>
+  </div>
+</div>""",
+    },
     "new_follower": {
         "subject": "New follower — {follower_name} is now copying your trades",
         "html": """
@@ -130,7 +150,7 @@ class EmailService:
         subject, html = self._render(template_key, **kwargs)
         client = self._get_client()
         if not client:
-            print(f"[EmailService MOCK] To: {to_email} | Subject: {subject}")
+            logger.info("[EmailService MOCK] To: %s | Subject: %s", to_email, subject)
             return True
         try:
             message = Mail(
@@ -142,7 +162,7 @@ class EmailService:
             response = client.send(message)
             return response.status_code in (200, 202)
         except Exception as e:
-            print(f"[EmailService] Failed to send to {to_email}: {e}")
+            logger.error("[EmailService] Failed to send to %s: %s", to_email, e)
             return False
 
     async def send_welcome(self, to_email: str, name: str) -> bool:
@@ -174,6 +194,14 @@ class EmailService:
 
     async def send_master_rejected(self, to_email: str, reason: str) -> bool:
         return await self.send(to_email, "master_rejected", reason=reason)
+
+    async def send_payment_failed(
+        self, to_email: str, master_name: str, attempt: int
+    ) -> bool:
+        return await self.send(
+            to_email, "payment_failed",
+            master_name=master_name, attempt=attempt,
+        )
 
     async def send_new_follower(
         self, to_email: str, follower_name: str,

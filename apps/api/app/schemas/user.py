@@ -28,6 +28,7 @@ class UserUpdate(BaseModel):
     wallet_address: str | None = None
     email_notify_signals: bool | None = None
     email_notify_billing: bool | None = None
+    apply_strategy: str | None = Field(None, max_length=200)
 
 
 class MasterApplyRequest(BaseModel):

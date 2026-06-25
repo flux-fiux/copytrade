@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { TrendingUp, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signUpWithEmail } from "@/lib/auth-actions";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth");
   const [role, setRole] = useState<"FOLLOWER" | "MASTER">("FOLLOWER");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -37,7 +39,7 @@ export default function RegisterPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary mb-3">
             <TrendingUp className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold">Create your account</h1>
+          <h1 className="text-xl font-bold">{t("register_title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">Join 12,400+ traders worldwide</p>
         </div>
 
@@ -55,8 +57,7 @@ export default function RegisterPage() {
           >
             <Users className="h-5 w-5" />
             <div>
-              <div className="text-xs font-semibold">Follow Trades</div>
-              <div className="text-[10px] mt-0.5 opacity-70">Copy top traders</div>
+              <div className="text-xs font-semibold">{t("register_role_follower")}</div>
             </div>
           </button>
           <button
@@ -71,8 +72,7 @@ export default function RegisterPage() {
           >
             <TrendingUp className="h-5 w-5" />
             <div>
-              <div className="text-xs font-semibold">Signal Provider</div>
-              <div className="text-[10px] mt-0.5 opacity-70">Earn from followers</div>
+              <div className="text-xs font-semibold">{t("register_role_master")}</div>
             </div>
           </button>
         </div>
@@ -85,7 +85,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Username</label>
+            <label className="block text-sm font-medium mb-1.5">{t("register_username")}</label>
             <input
               type="text"
               value={username}
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             <p className="text-[11px] text-muted-foreground mt-1">Letters, numbers, _ or - only</p>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Email</label>
+            <label className="block text-sm font-medium mb-1.5">{t("login_email")}</label>
             <input
               type="email"
               value={email}
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Password</label>
+            <label className="block text-sm font-medium mb-1.5">{t("login_password")}</label>
             <input
               type="password"
               value={password}
@@ -124,7 +124,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Confirm Password</label>
+            <label className="block text-sm font-medium mb-1.5">{t("register_confirm_password")}</label>
             <input
               type="password"
               value={confirm}
@@ -150,14 +150,14 @@ export default function RegisterPage() {
             disabled={isPending}
             className={cn(buttonVariants(), "w-full disabled:opacity-60")}
           >
-            {isPending ? "Creating account…" : "Create Account"}
+            {isPending ? `${t("register_submit")}…` : t("register_submit")}
           </button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           Already have an account?{" "}
           <Link href="/auth/login" className="text-foreground font-medium hover:underline">
-            Sign in
+            {t("login_submit")}
           </Link>
         </p>
       </div>

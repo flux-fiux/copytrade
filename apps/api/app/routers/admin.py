@@ -7,9 +7,11 @@ import asyncio
 from app.core.auth import require_admin, get_tenant_id
 from app.core.database import get_db
 from app.services.email_service import email_service
+from app.services.notification_service import notify
 from app.models.user import User
 from app.models.mt4_account import MT4Account
 from app.models.signal_subscription import SignalSubscription
+from app.models.subscription_plan import SubscriptionPlan
 from app.models.leaderboard_score import LeaderboardScore
 from app.models.tenant import Tenant
 
@@ -148,13 +150,22 @@ async def list_pending_masters(
         select(User).where(User.kyc_status == "PENDING", User.tenant_id == tenant_id).order_by(User.created_at.desc())
     )
     users = result.scalars().all()
+    if not users:
+        return []
+
+    # Single batch query for MT4 account counts — avoids N+1
+    user_ids = [u.id for u in users]
+    counts_result = await db.execute(
+        select(MT4Account.user_id, func.count().label("cnt"))
+        .where(MT4Account.user_id.in_(user_ids))
+        .group_by(MT4Account.user_id)
+    )
+    counts_map = {row.user_id: row.cnt for row in counts_result}
+
     out = []
     for u in users:
-        acct_count = await db.scalar(
-            select(func.count()).select_from(MT4Account).where(MT4Account.user_id == u.id)
-        )
         d = _user_dict(u)
-        d["mt4_account_count"] = acct_count or 0
+        d["mt4_account_count"] = counts_map.get(u.id, 0)
         out.append(d)
     return out
 
@@ -175,6 +186,29 @@ async def approve_master(
         roles.append("MASTER")
     user.roles = roles
     user.kyc_status = "VERIFIED"
+    await notify(db, user_id=user.id, type="MASTER_STATUS", title="Application Approved 🎉",
+                 body="Your signal provider application has been approved. You can now publish signals.",
+                 data={"status": "approved"})
+
+    # Auto-create default subscription plan from application price
+    existing_plan = await db.scalar(
+        select(SubscriptionPlan).where(SubscriptionPlan.master_id == uid, SubscriptionPlan.is_active == True)
+    )
+    if not existing_plan:
+        price = float(user.apply_price_usd or 29)
+        perf_fee = float(user.apply_perf_fee_pct or 0)
+        plan = SubscriptionPlan(
+            tenant_id=user.tenant_id,
+            master_id=uid,
+            name="Standard",
+            description="Copy all signals from this provider",
+            price_usd=price,
+            performance_fee_pct=perf_fee,
+            billing_cycle="MONTHLY",
+            features=["All signals", "Real-time copy", "Performance analytics"],
+        )
+        db.add(plan)
+
     await db.commit()
     asyncio.create_task(email_service.send_master_approved(to_email=user.email))
     return {"status": "approved", "user_id": user_id}
@@ -196,6 +230,9 @@ async def reject_master(
         raise HTTPException(404, "User not found")
     safe_reason = _html.escape(reason)[:500]
     user.kyc_status = "REJECTED"
+    await notify(db, user_id=user.id, type="MASTER_STATUS", title="Application Not Approved",
+                 body=safe_reason,
+                 data={"status": "rejected", "reason": safe_reason})
     await db.commit()
     asyncio.create_task(email_service.send_master_rejected(to_email=user.email, reason=safe_reason))
     return {"status": "rejected", "user_id": user_id, "reason": safe_reason}
@@ -239,8 +276,8 @@ async def trigger_leaderboard_recalculate(
     admin: dict = Depends(require_admin),
 ):
     """手动触发排行榜重算 Celery 任务。"""
-    from app.tasks.leaderboard import recalculate_leaderboard
-    task = recalculate_leaderboard.delay(full=full)
+    from app.workers.leaderboard_tasks import recalculate_all
+    task = recalculate_all.delay()
     return {"task_id": task.id, "full": full, "status": "queued"}
 
 

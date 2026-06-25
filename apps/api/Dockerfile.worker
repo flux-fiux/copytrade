@@ -17,4 +17,4 @@ COPY alembic.ini .
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-CMD ["celery", "-A", "app.core.celery_app", "worker", "--beat", "-l", "info", "--concurrency=2"]
+CMD ["celery", "-A", "app.celery_app:celery_app", "worker", "--beat", "-l", "info", "--concurrency=2"]

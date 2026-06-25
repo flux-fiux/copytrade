@@ -23,7 +23,7 @@ export interface CapturedSignal {
 interface ActiveSubscription {
   subscription_id: string;
   follower_id: string;
-  follower_account_id: string;
+  follower_account_id: string | null;
   tenant_id: string;
   lot_multiplier: number;
 }
@@ -117,9 +117,11 @@ export class SignalConsumer {
   private async recordCopyTrades(signal: CapturedSignal, signalId: string): Promise<void> {
     // Fetch active subscriptions for this master from the API
     let subscriptions: ActiveSubscription[] = [];
+    const internalToken = process.env.INTERNAL_API_TOKEN ?? '';
     try {
       const resp = await fetch(
         `${this.apiUrl}/api/v1/copy-trades/subscriptions?master_id=${signal.masterId}`,
+        { headers: { 'X-Internal-Token': internalToken } },
       );
       if (resp.ok) {
         subscriptions = (await resp.json()) as ActiveSubscription[];
@@ -141,7 +143,6 @@ export class SignalConsumer {
       subscriptions.map(async (sub) => {
         const scaledVolume = parseFloat((signal.volume * sub.lot_multiplier).toFixed(2));
         try {
-          const internalToken = process.env.INTERNAL_API_TOKEN ?? '';
           const resp = await fetch(`${this.apiUrl}/api/v1/copy-trades/`, {
             method: 'POST',
             headers: {

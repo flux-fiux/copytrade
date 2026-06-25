@@ -77,7 +77,7 @@ After API is deployed:
 
 1. Stripe Dashboard → Developers → Webhooks → Add endpoint:
    - URL: `https://your-api.railway.app/webhooks/stripe`
-   - Events: `payment_intent.succeeded`, `customer.subscription.deleted`, `account.updated`
+   - Events: `invoice.payment_succeeded`, `invoice.payment_failed`, `customer.subscription.deleted`, `customer.subscription.updated`
 2. Copy `Signing secret` → add as `STRIPE_WEBHOOK_SECRET` in Railway API service
 3. Redeploy API service
 

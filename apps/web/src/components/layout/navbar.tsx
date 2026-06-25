@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BarChart2, TrendingUp, Bell, ChevronDown, Loader2 } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { BarChart2, TrendingUp, ChevronDown, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,20 +19,20 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/auth-actions";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
-import { subscribeNotif, clearNotif } from "@/store/notifications";
-
-const navLinks = [
-  { href: "/leaderboard", label: "Leaderboard", icon: TrendingUp },
-  { href: "/terminal", label: "Terminal", icon: BarChart2 },
-];
+import { NotificationCenter } from "@/components/layout/notification-center";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("nav");
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
-  const [notifCount, setNotifCount] = useState(0);
+
+  const navLinks = [
+    { href: "/leaderboard", label: t("leaderboard"), icon: TrendingUp },
+    { href: "/terminal", label: t("terminal"), icon: BarChart2 },
+  ];
 
   useEffect(() => {
     const supabase = createClient();
@@ -48,8 +49,6 @@ export function Navbar() {
     });
     return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => subscribeNotif(setNotifCount), []);
 
   const shortName = displayName || (userEmail ? userEmail.split("@")[0] : null);
   const initials = shortName ? shortName.slice(0, 2).toUpperCase() : "U";
@@ -98,20 +97,7 @@ export function Navbar() {
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : userEmail ? (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                onClick={() => { clearNotif(); router.push("/dashboard/signals"); }}
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {notifCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground leading-none">
-                    {notifCount > 99 ? "99" : notifCount}
-                  </span>
-                )}
-              </Button>
+              <NotificationCenter />
 
               <DropdownMenu>
                 <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" }), "flex items-center gap-2 px-2")}>
@@ -124,25 +110,25 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-52">
                   <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{userEmail}</div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>My Accounts</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>Subscriptions</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>{t("dashboard")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>{t("accounts")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>{t("subscriptions")}</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>{t("settings")}</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={handleSignOut}
                     disabled={signingOut}
                   >
-                    {signingOut ? "Signing out…" : "Sign Out"}
+                    {signingOut ? t("signOut") + "…" : t("signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>Sign In</Link>
+              <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>{t("signIn")}</Link>
               <Link href="/auth/register" className={cn(buttonVariants({ size: "sm" }))}>Get Started</Link>
             </div>
           )}

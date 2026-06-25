@@ -41,6 +41,14 @@ export const api = {
     list: (masterId: string) =>
       apiFetch<SignalData[]>(`/api/v1/signals/?master_id=${masterId}`),
   },
+  copyTrades: {
+    list: (token: string, opts?: { subscription_id?: string; limit?: number }) => {
+      const params = new URLSearchParams();
+      if (opts?.subscription_id) params.set('subscription_id', opts.subscription_id);
+      if (opts?.limit) params.set('limit', String(opts.limit));
+      return apiFetch<CopyTradeData[]>(`/api/v1/copy-trades/?${params}`, { token });
+    },
+  },
   market: {
     quote: (symbol: string) =>
       apiFetch<{ c: number; h: number; l: number; o: number; pc: number; t: number }>(`/api/v1/market/quote?symbol=${symbol}`),
@@ -137,4 +145,26 @@ export interface SignalData {
   open_price?: number;
   profit?: number;
   opened_at: string;
+}
+
+export interface CopyTradeData {
+  id: string;
+  subscription_id: string;
+  signal_id: string;
+  follower_id: string;
+  follower_account_id: string;
+  symbol: string;
+  direction: string;
+  volume: number;
+  open_price: number | null;
+  close_price: number | null;
+  slippage_pips: number | null;
+  profit: number | null;
+  status: string;
+  fail_reason: string | null;
+  mt4_ticket: number | null;
+  opened_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+  master_name: string | null;
 }

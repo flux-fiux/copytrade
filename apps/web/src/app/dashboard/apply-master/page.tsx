@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Star, CheckCircle, Clock, XCircle, AlertTriangle,
   TrendingUp, Shield, DollarSign, Loader2, ChevronRight,
@@ -27,22 +28,17 @@ interface ApplicationStatus {
   roles: string[];
 }
 
-const TRADING_STYLES: { value: TradingStyle; label: string; desc: string }[] = [
-  { value: "SCALPING", label: "Scalping", desc: "Frequent trades, minutes to hours" },
-  { value: "SWING", label: "Swing", desc: "Days to weeks, trend-based" },
-  { value: "POSITION", label: "Position", desc: "Weeks to months, macro view" },
-  { value: "MIXED", label: "Mixed", desc: "Combines multiple styles" },
-];
+const TRADING_STYLE_VALUES: TradingStyle[] = ["SCALPING", "SWING", "POSITION", "MIXED"];
 
-function StatusBanner({ status }: { status: ApplicationStatus }) {
+function StatusBanner({ status, t }: { status: ApplicationStatus; t: ReturnType<typeof useTranslations> }) {
   if ((status.roles ?? []).includes("MASTER")) {
     return (
       <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 mb-6">
         <CheckCircle className="h-5 w-5 text-emerald-400 mt-0.5 shrink-0" />
         <div>
-          <div className="font-semibold text-emerald-400">You are a Master</div>
+          <div className="font-semibold text-emerald-400">{t("status_approved_title")}</div>
           <div className="text-sm text-muted-foreground mt-0.5">
-            Your account is verified. Go to <a href="/dashboard/earnings" className="underline">Earnings</a> to track your income.
+            {t("status_approved_desc")}
           </div>
         </div>
       </div>
@@ -53,17 +49,17 @@ function StatusBanner({ status }: { status: ApplicationStatus }) {
       <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 mb-6">
         <Clock className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
         <div>
-          <div className="font-semibold text-amber-400">Application Under Review</div>
+          <div className="font-semibold text-amber-400">{t("status_pending_title")}</div>
           <div className="text-sm text-muted-foreground mt-1 space-y-1">
-            <p>Strategy: <span className="text-foreground">{status.apply_strategy}</span></p>
+            <p>{t("status_pending_strategy")} <span className="text-foreground">{status.apply_strategy}</span></p>
             {status.apply_price_usd != null && (
-              <p>Subscription price: <span className="text-foreground">${status.apply_price_usd}/month</span></p>
+              <p>{t("status_pending_price")} <span className="text-foreground">${status.apply_price_usd}/month</span></p>
             )}
             {status.applied_at && (
-              <p>Submitted: <span className="text-foreground">{new Date(status.applied_at).toLocaleDateString()}</span></p>
+              <p>{t("status_pending_submitted")} <span className="text-foreground">{new Date(status.applied_at).toLocaleDateString()}</span></p>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-2">You will be notified by email within 1–3 business days.</p>
+          <p className="text-xs text-muted-foreground mt-2">{t("status_pending_email")}</p>
         </div>
       </div>
     );
@@ -73,9 +69,9 @@ function StatusBanner({ status }: { status: ApplicationStatus }) {
       <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 mb-6">
         <XCircle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
         <div>
-          <div className="font-semibold text-red-400">Previous Application Rejected</div>
+          <div className="font-semibold text-red-400">{t("status_rejected_title")}</div>
           <div className="text-sm text-muted-foreground mt-0.5">
-            You can submit a new application below with updated information.
+            {t("status_rejected_desc")}
           </div>
         </div>
       </div>
@@ -86,6 +82,7 @@ function StatusBanner({ status }: { status: ApplicationStatus }) {
 
 export default function ApplyMasterPage() {
   const router = useRouter();
+  const t = useTranslations("apply_master");
   const [appStatus, setAppStatus] = useState<ApplicationStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -127,7 +124,7 @@ export default function ApplyMasterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (description.length < 20) { setError("Description must be at least 20 characters."); return; }
+    if (description.length < 20) { setError(t("description_min")); return; }
 
     setSubmitting(true);
     try {
@@ -172,12 +169,12 @@ export default function ApplyMasterPage() {
           <div className="h-16 w-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4">
             <Clock className="h-8 w-8 text-amber-400" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Application Submitted</h1>
+          <h1 className="text-2xl font-bold mb-2">{t("submitted_title")}</h1>
           <p className="text-muted-foreground text-sm mb-6 max-w-sm">
-            Our team will review your application within 1–3 business days. You&apos;ll receive an email with the decision.
+            {t("submitted_desc")}
           </p>
           <button onClick={() => router.push("/dashboard")} className={cn(buttonVariants({ variant: "outline" }))}>
-            Back to Dashboard
+            {t("back_dashboard")}
           </button>
         </div>
       </div>
@@ -187,9 +184,9 @@ export default function ApplyMasterPage() {
   if ((appStatus?.roles ?? []).includes("MASTER")) {
     return (
       <div className="px-6 py-6 max-w-lg mx-auto">
-        <StatusBanner status={appStatus!} />
+        <StatusBanner status={appStatus!} t={t} />
         <button onClick={() => router.push("/dashboard/earnings")} className={cn(buttonVariants())}>
-          View Earnings
+          {t("view_earnings")}
         </button>
       </div>
     );
@@ -205,52 +202,52 @@ export default function ApplyMasterPage() {
               <Star className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Become a Master Trader</h1>
-              <p className="text-sm text-muted-foreground">Share your strategy and earn 80% of subscription revenue</p>
+              <h1 className="text-2xl font-bold">{t("title")}</h1>
+              <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
             </div>
           </div>
 
           {/* Perks */}
           <div className="grid grid-cols-3 gap-3 mt-4">
             {[
-              { icon: DollarSign, title: "80% Revenue", desc: "Keep 80% of all subscription fees" },
-              { icon: TrendingUp, title: "Auto Copy", desc: "Followers copy your trades automatically" },
-              { icon: Shield, title: "Full Control", desc: "Set your own price and trading rules" },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-lg border border-border/60 p-3 text-center">
+              { icon: DollarSign, titleKey: "perk_revenue" as const, descKey: "perk_revenue_desc" as const },
+              { icon: TrendingUp, titleKey: "perk_auto" as const, descKey: "perk_auto_desc" as const },
+              { icon: Shield, titleKey: "perk_control" as const, descKey: "perk_control_desc" as const },
+            ].map(({ icon: Icon, titleKey, descKey }) => (
+              <div key={titleKey} className="rounded-lg border border-border/60 p-3 text-center">
                 <Icon className="h-5 w-5 mx-auto mb-1.5 text-primary" />
-                <div className="text-xs font-semibold">{title}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{desc}</div>
+                <div className="text-xs font-semibold">{t(titleKey)}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{t(descKey)}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {appStatus && <StatusBanner status={appStatus} />}
+        {appStatus && <StatusBanner status={appStatus} t={t} />}
 
         {/* Application form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Strategy name */}
           <Card className="border-border/60">
             <CardContent className="p-5 space-y-4">
-              <h2 className="text-sm font-semibold">Strategy Details</h2>
+              <h2 className="text-sm font-semibold">{t("strategy_details")}</h2>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5">Strategy Name <span className="text-destructive">*</span></label>
+                <label className="block text-sm font-medium mb-1.5">{t("strategy_name")} <span className="text-destructive">*</span></label>
                 <input
                   required
                   value={strategyName}
                   onChange={e => setStrategyName(e.target.value)}
                   maxLength={100}
-                  placeholder="e.g. AlphaWave FX Momentum"
+                  placeholder={t("strategy_name_ph")}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Trading Style <span className="text-destructive">*</span></label>
+                <label className="block text-sm font-medium mb-2">{t("trading_style")} <span className="text-destructive">*</span></label>
                 <div className="grid grid-cols-2 gap-2">
-                  {TRADING_STYLES.map(({ value, label, desc }) => (
+                  {TRADING_STYLE_VALUES.map((value) => (
                     <label
                       key={value}
                       className={cn(
@@ -269,8 +266,8 @@ export default function ApplyMasterPage() {
                         className="mt-0.5 accent-primary"
                       />
                       <div>
-                        <div className="text-sm font-medium">{label}</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">{desc}</div>
+                        <div className="text-sm font-medium">{t(`style_${value.toLowerCase()}` as Parameters<typeof t>[0])}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{t(`style_${value.toLowerCase()}_desc` as Parameters<typeof t>[0])}</div>
                       </div>
                     </label>
                   ))}
@@ -279,8 +276,8 @@ export default function ApplyMasterPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1.5">
-                  Strategy Description <span className="text-destructive">*</span>
-                  <span className="text-muted-foreground font-normal ml-1">({description.length}/1000)</span>
+                  {t("description_label")} <span className="text-destructive">*</span>
+                  <span className="text-muted-foreground font-normal ml-1">{t("description_chars", { count: description.length })}</span>
                 </label>
                 <textarea
                   required
@@ -288,11 +285,11 @@ export default function ApplyMasterPage() {
                   onChange={e => setDescription(e.target.value)}
                   rows={4}
                   maxLength={1000}
-                  placeholder="Describe your trading approach, instruments traded, risk management, and why followers should trust your signals..."
+                  placeholder={t("description_ph")}
                   className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
                 />
                 {description.length > 0 && description.length < 20 && (
-                  <p className="text-xs text-destructive mt-1">At least 20 characters required.</p>
+                  <p className="text-xs text-destructive mt-1">{t("description_min")}</p>
                 )}
               </div>
             </CardContent>
@@ -301,12 +298,12 @@ export default function ApplyMasterPage() {
           {/* Performance targets */}
           <Card className="border-border/60">
             <CardContent className="p-5 space-y-4">
-              <h2 className="text-sm font-semibold">Historical Performance Targets</h2>
-              <p className="text-xs text-muted-foreground">Based on your actual track record. This will be displayed on your public profile.</p>
+              <h2 className="text-sm font-semibold">{t("perf_targets")}</h2>
+              <p className="text-xs text-muted-foreground">{t("perf_targets_subtitle")}</p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Target Monthly Return (%)</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("monthly_return")}</label>
                   <input
                     type="number"
                     value={monthlyReturn}
@@ -317,7 +314,7 @@ export default function ApplyMasterPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Max Drawdown (%)</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("max_drawdown_label")}</label>
                   <input
                     type="number"
                     value={maxDrawdown}
@@ -334,11 +331,11 @@ export default function ApplyMasterPage() {
           {/* Pricing */}
           <Card className="border-border/60">
             <CardContent className="p-5 space-y-4">
-              <h2 className="text-sm font-semibold">Your Pricing</h2>
+              <h2 className="text-sm font-semibold">{t("pricing")}</h2>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Monthly Subscription ($)</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("monthly_price")}</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                     <input
@@ -349,10 +346,10 @@ export default function ApplyMasterPage() {
                       className="w-full pl-7 pr-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50"
                     />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Set $0 for a free tier</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("free_tier")}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Performance Fee (%)</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("perf_fee")}</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -363,25 +360,25 @@ export default function ApplyMasterPage() {
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">High-water mark basis</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("hwm_basis")}</p>
                 </div>
               </div>
 
               {/* Revenue preview */}
               <div className="rounded-lg bg-muted/30 border border-border/50 p-3 text-sm">
                 <div className="flex justify-between text-muted-foreground mb-1.5">
-                  <span>At 10 followers:</span>
+                  <span>{t("preview_10")}</span>
                   <span className="text-foreground font-medium">
                     ${((parseFloat(priceUsd) || 0) * 10 * 0.8).toFixed(0)}/month
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>At 100 followers:</span>
+                  <span>{t("preview_100")}</span>
                   <span className="text-foreground font-medium">
                     ${((parseFloat(priceUsd) || 0) * 100 * 0.8).toFixed(0)}/month
                   </span>
                 </div>
-                <p className="text-[10px] text-muted-foreground/70 mt-2">Platform takes 20% — you keep 80%</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-2">{t("platform_takes")}</p>
               </div>
             </CardContent>
           </Card>
@@ -390,8 +387,7 @@ export default function ApplyMasterPage() {
           <div className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/20 p-4 text-xs text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
             <div>
-              By applying you confirm your trading history is genuine, you will not manipulate trades to deceive followers, and you agree to the Master Terms of Service.
-              Accounts found to violate these terms will be permanently suspended.
+              {t("terms")}
             </div>
           </div>
 
@@ -408,10 +404,10 @@ export default function ApplyMasterPage() {
               className={cn(buttonVariants(), "gap-2", (submitting || !strategyName || description.length < 20) && "opacity-60 cursor-not-allowed")}
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-              {submitting ? "Submitting…" : "Submit Application"}
+              {submitting ? t("submitting") : t("submit")}
             </button>
             <button type="button" onClick={() => router.back()} className={cn(buttonVariants({ variant: "ghost" }))}>
-              Cancel
+              {t("cancel")}
             </button>
           </div>
         </form>

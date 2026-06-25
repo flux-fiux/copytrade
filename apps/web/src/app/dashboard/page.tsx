@@ -2,15 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, ArrowUpRight, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { PnlCalendar } from "@/components/dashboard/pnl-calendar";
+import { MasterOnboardingCard } from "@/components/dashboard/master-onboarding-card";
+import { ConnectReturnBanner } from "@/components/dashboard/connect-return-banner";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api-client";
 import { useSocket } from "@/hooks/useSocket";
-import { incrementNotif } from "@/store/notifications";
+import { pushLocalNotification } from "@/store/notifications";
 
 interface CopyTradeRow {
   id: string;
@@ -30,6 +34,7 @@ interface Subscription {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
   const [displayName, setDisplayName] = useState("Trader");
   const [followerId, setFollowerId] = useState<string | undefined>();
   const [copyTrades, setCopyTrades] = useState<CopyTradeRow[]>([]);
@@ -88,7 +93,12 @@ export default function DashboardPage() {
       return [trade, ...filtered].slice(0, 50);
     });
     markNew(trade.id);
-    incrementNotif();
+    pushLocalNotification(
+      "COPYTRADE",
+      `Trade copied — ${trade.direction} ${trade.symbol}`,
+      trade.profit !== undefined ? `P&L: ${trade.profit >= 0 ? "+" : ""}$${trade.profit.toFixed(2)}` : undefined,
+      { trade_id: trade.id, symbol: trade.symbol },
+    );
   }, [markNew]);
 
   useSocket({ followerId, onCopytrade: handleCopytrade });
@@ -110,36 +120,42 @@ export default function DashboardPage() {
           {loading ? (
             <div className="h-7 w-48 rounded bg-muted/40 animate-pulse" />
           ) : (
-            <h1 className="text-2xl font-bold">Welcome back, {displayName}</h1>
+            <h1 className="text-2xl font-bold">{t("welcome")}, {displayName}</h1>
           )}
-          <p className="text-muted-foreground mt-1 text-sm">Here&apos;s your portfolio overview</p>
+          <p className="text-muted-foreground mt-1 text-sm">{t("portfolio_overview")}</p>
         </div>
+
+        {/* Stripe Connect return banner */}
+        <ConnectReturnBanner />
+
+        {/* Master onboarding checklist — only visible to newly approved Masters */}
+        <MasterOnboardingCard />
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             {
-              label: "Total P&L",
+              label: t("total_pnl"),
               value: loading ? "—" : `${totalPnl >= 0 ? "+" : ""}$${totalPnl.toFixed(2)}`,
-              sub: "All copy trades",
+              sub: t("all_copy_trades"),
               color: loading ? "" : totalPnl >= 0 ? "text-emerald-400" : "text-red-400",
             },
             {
-              label: "Active Subscriptions",
+              label: t("active_subscriptions"),
               value: loading ? "—" : String(activeSubs),
-              sub: activeSubs > 0 ? `${activeSubs} master${activeSubs !== 1 ? "s" : ""}` : "None yet",
+              sub: activeSubs > 0 ? t(activeSubs === 1 ? "active_subscriptions_sub" : "active_subscriptions_sub_plural", { count: activeSubs }) : t("none_yet"),
               color: "",
             },
             {
-              label: "Copy Trades Today",
+              label: t("trades_today"),
               value: loading ? "—" : String(todayTrades),
-              sub: todayTrades > 0 ? "Executed today" : "No trades today",
+              sub: todayTrades > 0 ? t("executed_today") : t("no_trades_today"),
               color: "",
             },
             {
-              label: "Total Copy Trades",
+              label: t("total_copy_trades"),
               value: loading ? "—" : String(copyTrades.length),
-              sub: "All time",
+              sub: t("all_time"),
               color: "",
             },
           ].map((s) => (
@@ -166,19 +182,19 @@ export default function DashboardPage() {
         <Card className="border-border/60 mb-6">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-sm">Recent Copy Trades</h2>
+              <h2 className="font-semibold text-sm">{t("recent_copy_trades")}</h2>
               {followerId && (
                 <span className="flex items-center gap-1 text-[10px] text-emerald-400">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                   </span>
-                  Live
+                  {t("live")}
                 </span>
               )}
             </div>
             <Link href="/dashboard/signals" className="text-xs text-muted-foreground hover:text-foreground">
-              View all
+              {t("view_all")}
             </Link>
           </div>
 
@@ -189,8 +205,8 @@ export default function DashboardPage() {
           ) : copyTrades.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
               <TrendingUp className="h-8 w-8 mb-2 opacity-30" />
-              <p className="text-sm">No copy trades yet.</p>
-              <p className="text-xs mt-1">Subscribe to a master to start copying.</p>
+              <p className="text-sm">{t("no_copy_trades")}</p>
+              <p className="text-xs mt-1">{t("no_copy_trades_hint")}</p>
             </div>
           ) : (
             <div className="divide-y divide-border/50">
@@ -234,17 +250,28 @@ export default function DashboardPage() {
           )}
         </Card>
 
+        {/* PnL Calendar */}
+        <Card className="border-border/60 mb-6">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <h2 className="font-semibold text-sm">{t("pnl_calendar")}</h2>
+            <span className="text-xs text-muted-foreground">{t("pnl_calendar_sub")}</span>
+          </div>
+          <CardContent className="pt-4">
+            <PnlCalendar />
+          </CardContent>
+        </Card>
+
         {/* Quick links */}
         <div className="flex gap-3 flex-wrap">
           <Link href="/dashboard/accounts" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}>
-            <Plus className="h-4 w-4" /> Connect MT4 Account
+            <Plus className="h-4 w-4" /> {t("connect_mt4")}
           </Link>
           <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}>
-            <ArrowUpRight className="h-4 w-4" /> Browse Masters
+            <ArrowUpRight className="h-4 w-4" /> {t("browse_masters")}
           </Link>
           {activeSubs > 0 && (
             <Link href="/dashboard/subscriptions" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              My Subscriptions
+              {t("my_subscriptions")}
             </Link>
           )}
         </div>

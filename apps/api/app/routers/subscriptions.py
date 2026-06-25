@@ -1,8 +1,12 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy import select
+from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
@@ -15,6 +19,7 @@ from app.models.user import User
 from app.schemas.subscription import (
     SubscriptionPlanCreate,
     SubscriptionPlanOut,
+    SubscriptionPlanUpdate,
     SubscribeRequest,
     SubscribeResponse,
     MySubscriptionOut,
@@ -30,6 +35,21 @@ DEFAULT_TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 # ── Plans ──────────────────────────────────────────────────────────────
+
+@router.get("/plans/mine", response_model=list[SubscriptionPlanOut])
+async def my_plans(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    master_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(
+        select(SubscriptionPlan).where(
+            SubscriptionPlan.master_id == master_id,
+            SubscriptionPlan.is_active == True,
+        )
+    )
+    return result.scalars().all()
+
 
 @router.get("/plans/{master_id}", response_model=list[SubscriptionPlanOut])
 async def list_plans(master_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
@@ -71,6 +91,39 @@ async def create_plan(
     return plan
 
 
+@router.patch("/plans/{plan_id}", response_model=SubscriptionPlanOut)
+async def update_plan(
+    plan_id: uuid.UUID,
+    payload: SubscriptionPlanUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    master_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(select(SubscriptionPlan).where(SubscriptionPlan.id == plan_id))
+    plan = result.scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Plan not found")
+    if plan.master_id != master_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your plan")
+
+    if payload.name is not None:
+        plan.name = payload.name
+    if payload.performance_fee_pct is not None:
+        plan.performance_fee_pct = payload.performance_fee_pct
+    if payload.features is not None:
+        plan.features = payload.features
+
+    # Price change → create new Stripe price (old price stays for existing subs)
+    if payload.price_usd is not None and float(payload.price_usd) != float(plan.price_usd):
+        new_stripe_price = await stripe_service.create_price(str(master_id), payload.price_usd)
+        plan.price_usd = payload.price_usd
+        plan.stripe_price_id = new_stripe_price
+
+    await db.commit()
+    await db.refresh(plan)
+    return plan
+
+
 # ── Subscribe ──────────────────────────────────────────────────────────
 
 @router.post("/subscribe", response_model=SubscribeResponse, status_code=status.HTTP_201_CREATED)
@@ -105,95 +158,119 @@ async def subscribe(
 
     plan_price = float(plan.price_usd) if plan else 29.0
     plan_id = plan.id if plan else None
+    is_paper = payload.mode == "paper"
 
-    # Get or create Stripe customer
     follower_result = await db.execute(select(User).where(User.id == follower_id))
     follower = follower_result.scalar_one_or_none()
     if not follower:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-    if not follower.stripe_customer_id:
-        customer_id = await stripe_service.create_customer(follower.email, follower.display_name or follower.email)
-        follower.stripe_customer_id = customer_id
-        await db.flush()
-    else:
-        customer_id = follower.stripe_customer_id
-
-    # Create Stripe subscription
-    stripe_price = (plan.stripe_price_id or "price_dev") if plan else "price_dev"
-    stripe_result = await stripe_service.create_subscription(customer_id, stripe_price)
-
-    # Wire up CopyFactory
-    master_account_result = await db.execute(
-        select(MT4Account).where(
-            MT4Account.user_id == master_id,
-            MT4Account.account_type == "MASTER",
-        )
-    )
-    master_account = master_account_result.scalars().first()
-
-    # Resolve follower MT4 account (explicit or auto-pick first)
+    stripe_result: dict = {"subscription_id": None, "client_secret": None, "status": "active"}
     follower_account = None
-    if follower_account_id:
-        fa_result = await db.execute(select(MT4Account).where(MT4Account.id == follower_account_id))
-        follower_account = fa_result.scalar_one_or_none()
-    else:
-        auto_result = await db.execute(
-            select(MT4Account).where(
-                MT4Account.user_id == follower_id,
-                MT4Account.account_type == "FOLLOWER",
-            )
-        )
-        follower_account = auto_result.scalars().first()
-
-    if not follower_account:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            "No FOLLOWER MT4 account found. Connect an MT4 account first.",
-        )
-
     copy_factory_sub_id = None
-    if master_account and master_account.copy_factory_strategy_id and follower_account:
-        try:
-            cf_result = await copyfactory_service.create_subscriber(
-                subscriber_meta_account_id=follower_account.meta_api_account_id,
-                strategy_id=master_account.copy_factory_strategy_id,
-                lot_multiplier=payload.lot_multiplier,
-                max_drawdown_pct=payload.max_drawdown_pct,
-            )
-            copy_factory_sub_id = cf_result.get("subscriberAccountId") or follower_account.meta_api_account_id
-        except Exception as exc:
-            # Non-fatal: subscription proceeds even if CopyFactory wiring fails
-            print(f"[subscribe] CopyFactory wiring failed: {exc}")
 
-    # Create SignalSubscription
-    stripe_sub_id = stripe_result.get("subscription_id") or ""
-    sub = SignalSubscription(
-        tenant_id=follower.tenant_id,
-        follower_id=follower_id,
-        master_id=master_id,
-        follower_account_id=follower_account.id,
-        plan_id=plan_id,
-        stripe_subscription_id=stripe_sub_id,
-        lot_multiplier=payload.lot_multiplier,
-        status="ACTIVE" if stripe_result.get("status") == "active" else "PENDING",
-        copy_factory_sub_id=copy_factory_sub_id,
-    )
+    if is_paper:
+        # Paper mode: no Stripe, no CopyFactory, no MT4 account required
+        sub = SignalSubscription(
+            tenant_id=follower.tenant_id,
+            follower_id=follower_id,
+            master_id=master_id,
+            follower_account_id=None,
+            plan_id=plan_id,
+            lot_multiplier=payload.lot_multiplier,
+            max_drawdown_pct=payload.max_drawdown_pct,
+            status="ACTIVE",
+            mode="paper",
+        )
+    else:
+        # Live mode: Stripe + CopyFactory
+        if not follower.stripe_customer_id:
+            customer_id = await stripe_service.create_customer(follower.email, follower.display_name or follower.email)
+            follower.stripe_customer_id = customer_id
+            await db.flush()
+        else:
+            customer_id = follower.stripe_customer_id
+
+        stripe_price = (plan.stripe_price_id or "price_dev") if plan else "price_dev"
+        stripe_result = await stripe_service.create_subscription(customer_id, stripe_price)
+
+        master_account_result = await db.execute(
+            select(MT4Account).where(MT4Account.user_id == master_id, MT4Account.account_type == "MASTER")
+        )
+        master_account = master_account_result.scalars().first()
+
+        if follower_account_id:
+            fa_result = await db.execute(select(MT4Account).where(MT4Account.id == follower_account_id))
+            follower_account = fa_result.scalar_one_or_none()
+        else:
+            auto_result = await db.execute(
+                select(MT4Account).where(MT4Account.user_id == follower_id, MT4Account.account_type == "FOLLOWER")
+            )
+            follower_account = auto_result.scalars().first()
+
+        if not follower_account:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "No FOLLOWER MT4 account found. Connect an MT4 account first.",
+            )
+
+        if master_account and master_account.copy_factory_strategy_id and follower_account:
+            try:
+                cf_result = await copyfactory_service.create_subscriber(
+                    subscriber_meta_account_id=follower_account.meta_api_account_id,
+                    strategy_id=master_account.copy_factory_strategy_id,
+                    lot_multiplier=payload.lot_multiplier,
+                    max_drawdown_pct=payload.max_drawdown_pct,
+                )
+                copy_factory_sub_id = cf_result.get("subscriberAccountId") or follower_account.meta_api_account_id
+            except Exception as exc:
+                logger.warning("[subscribe] CopyFactory wiring failed: %s", exc)
+
+        sub = SignalSubscription(
+            tenant_id=follower.tenant_id,
+            follower_id=follower_id,
+            master_id=master_id,
+            follower_account_id=follower_account.id,
+            plan_id=plan_id,
+            stripe_subscription_id=stripe_result.get("subscription_id") or "",
+            lot_multiplier=payload.lot_multiplier,
+            max_drawdown_pct=payload.max_drawdown_pct,
+            status="ACTIVE" if stripe_result.get("status") == "active" else "PENDING",
+            copy_factory_sub_id=copy_factory_sub_id,
+            mode="live",
+        )
+
     db.add(sub)
     await db.commit()
 
-    # Fire-and-forget email (non-blocking)
     import asyncio
     master_user_result = await db.execute(select(User).where(User.id == master_id))
     master_user = master_user_result.scalar_one_or_none()
     master_name = (master_user.display_name or master_user.username or "Master") if master_user else "Master"
-    asyncio.create_task(email_service.send_subscription_confirmed(
-        to_email=follower.email,
-        master_name=master_name,
-        price_usd=plan_price,
-        lot_multiplier=payload.lot_multiplier,
-        max_drawdown=payload.max_drawdown_pct,
-    ))
+
+    # Email follower confirmation for paper subs (live subs get it via Stripe webhook)
+    if is_paper:
+        asyncio.create_task(email_service.send_subscription_confirmed(
+            to_email=follower.email,
+            master_name=master_name,
+            price_usd=0.0,
+            lot_multiplier=payload.lot_multiplier,
+            max_drawdown=payload.max_drawdown_pct,
+        ))
+        # Notify master of new paper follower
+        if master_user:
+            from sqlalchemy import func as sqlfunc
+            follower_count = await db.scalar(
+                select(sqlfunc.count()).select_from(SignalSubscription)
+                .where(SignalSubscription.master_id == master_id, SignalSubscription.status == "ACTIVE")
+            ) or 0
+            follower_display = follower.display_name or follower.username or "A trader"
+            asyncio.create_task(email_service.send_new_follower(
+                to_email=master_user.email,
+                follower_name=follower_display,
+                price_usd=0.0,
+                total_followers=follower_count,
+            ))
 
     return SubscribeResponse(
         subscription_id=str(sub.id),
@@ -232,7 +309,7 @@ async def cancel_subscription(
                     master_account.copy_factory_strategy_id,
                 )
             except Exception as exc:
-                print(f"[cancel] CopyFactory removal failed: {exc}")
+                logger.warning("[cancel] CopyFactory removal failed: %s", exc)
 
     if sub.stripe_subscription_id:
         await stripe_service.cancel_subscription(sub.stripe_subscription_id)
@@ -270,20 +347,38 @@ async def my_subscriptions(
     )
     rows = result.all()
 
+    # Aggregate P&L per subscription in one query
+    from app.models.copy_trade import CopyTrade
+    sub_ids = [sub.id for sub, _, _, _ in rows]
+    pnl_by_sub: dict[str, float] = {}
+    if sub_ids:
+        pnl_rows = await db.execute(
+            select(CopyTrade.subscription_id, func.sum(CopyTrade.profit).label("total_pnl"))
+            .where(CopyTrade.subscription_id.in_(sub_ids))
+            .group_by(CopyTrade.subscription_id)
+        )
+        pnl_by_sub = {str(r.subscription_id): float(r.total_pnl or 0) for r in pnl_rows}
+
+    CAPITAL_BASE = 10_000.0  # $10k reference capital for return_pct
+
     out = []
     for sub, master_user, plan, score in rows:
+        pnl = pnl_by_sub.get(str(sub.id))
+        return_pct = round(pnl / CAPITAL_BASE * 100, 2) if pnl is not None else None
         out.append({
             "id": str(sub.id),
             "master_id": str(sub.master_id),
             "master_username": (master_user.display_name or master_user.username) if master_user else None,
             "master_grade": score.risk_grade if score else None,
-            "price_usd": float(plan.price_usd) if plan else None,
+            "price_usd": float(plan.price_usd) if plan else (0.0 if sub.mode == "paper" else None),
             "status": sub.status,
+            "mode": sub.mode or "live",
             "lot_multiplier": float(sub.lot_multiplier),
+            "max_drawdown_pct": float(sub.max_drawdown_pct) if sub.max_drawdown_pct else None,
             "created_at": sub.subscribed_at.isoformat() if sub.subscribed_at else "",
             "next_billing_date": None,
-            "pnl": None,
-            "return_pct": None,
+            "pnl": round(pnl, 2) if pnl is not None else None,
+            "return_pct": return_pct,
             "pause_reason": sub.pause_reason,
         })
     return out
@@ -326,6 +421,43 @@ async def resume_subscription_endpoint(
     if not ok:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Subscription cannot be resumed")
     return {"status": "resumed"}
+
+
+# ── Update subscription copy settings ─────────────────────────────────
+
+class SubscriptionSettingsUpdate(BaseModel):
+    lot_multiplier: float | None = Field(None, ge=0.01, le=10.0)
+    max_drawdown_pct: float | None = Field(None, ge=1.0, le=100.0)
+
+
+@router.patch("/{subscription_id}/settings")
+async def update_subscription_settings(
+    subscription_id: uuid.UUID,
+    payload: SubscriptionSettingsUpdate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(SignalSubscription).where(SignalSubscription.id == subscription_id))
+    sub = result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Subscription not found")
+    if str(sub.follower_id) != current_user["sub"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not authorized")
+    if sub.status == "CANCELLED":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Cannot update a cancelled subscription")
+
+    if payload.lot_multiplier is not None:
+        sub.lot_multiplier = payload.lot_multiplier
+    if payload.max_drawdown_pct is not None:
+        sub.max_drawdown_pct = payload.max_drawdown_pct
+
+    await db.commit()
+    await db.refresh(sub)
+    return {
+        "id": str(sub.id),
+        "lot_multiplier": float(sub.lot_multiplier),
+        "max_drawdown_pct": float(sub.max_drawdown_pct) if sub.max_drawdown_pct else None,
+    }
 
 
 # ── Stripe Connect onboarding ──────────────────────────────────────────

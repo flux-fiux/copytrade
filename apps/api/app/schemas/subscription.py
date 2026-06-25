@@ -23,12 +23,20 @@ class SubscriptionPlanOut(BaseModel):
     is_active: bool
 
 
+class SubscriptionPlanUpdate(BaseModel):
+    name: str | None = None
+    price_usd: float | None = None
+    performance_fee_pct: float | None = None
+    features: list[str] | None = None
+
+
 class SubscribeRequest(BaseModel):
     master_id: str
     plan_id: str | None = None
     follower_account_id: str | None = None
     lot_multiplier: float = 1.0
     max_drawdown_pct: float = 20.0
+    mode: str = "live"  # live | paper
 
 
 class SubscribeResponse(BaseModel):
@@ -44,7 +52,9 @@ class MySubscriptionOut(BaseModel):
     master_grade: str | None = None
     price_usd: float | None = None
     status: str
+    mode: str = "live"
     lot_multiplier: float
+    max_drawdown_pct: float | None = None
     created_at: str
     next_billing_date: str | None = None
     pnl: float | None = None
