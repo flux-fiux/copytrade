@@ -123,7 +123,7 @@ async def update_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(404, "User not found")
-    allowed = {"is_active", "roles", "kyc_status"}
+    allowed = {"is_active", "roles", "kyc_status", "is_certified"}
     for key, value in payload.items():
         if key not in allowed:
             continue
@@ -356,6 +356,7 @@ def _user_dict(u: User) -> dict:
         "roles": u.roles,
         "kyc_status": u.kyc_status,
         "is_active": u.is_active,
+        "is_certified": u.is_certified,
         "created_at": u.created_at.isoformat() if u.created_at else None,
         # Master application fields
         "apply_strategy": u.apply_strategy,

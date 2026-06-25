@@ -14,6 +14,7 @@ class LeaderboardEntry(BaseModel):
     risk_grade: str
     trading_days: int
     period: str
+    is_certified: bool = False
 
 
 class LeaderboardResponse(BaseModel):

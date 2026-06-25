@@ -625,7 +625,8 @@
     "cancel": "Cancelar",
     "save": "Guardar",
     "delete": "Eliminar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "certified": "Certificado"
   },
   "unsubscribe": {
     "processing": "Procesando…",

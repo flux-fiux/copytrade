@@ -75,6 +75,7 @@ export interface LeaderboardEntry {
   risk_grade: string;
   trading_days: number;
   period: string;
+  is_certified?: boolean;
 }
 
 export interface LeaderboardResponse {

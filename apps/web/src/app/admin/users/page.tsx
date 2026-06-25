@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Search, ChevronLeft, ChevronRight, MoreHorizontal,
-  ShieldCheck, ShieldOff, UserX, UserCheck, ExternalLink, RefreshCw,
+  ShieldCheck, ShieldOff, UserX, UserCheck, ExternalLink, RefreshCw, BadgeCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ interface AdminUser {
   roles: string[];
   kyc_status: string;
   is_active: boolean;
+  is_certified?: boolean;
   created_at: string;
   apply_strategy?: string | null;
 }
@@ -138,6 +139,10 @@ export default function UsersPage() {
 
   const setKyc = (u: AdminUser, status: string) =>
     patchAndUpdate(u, { kyc_status: status }, `KYC set to ${status}`);
+
+  const toggleCertify = (u: AdminUser) =>
+    patchAndUpdate(u, { is_certified: !u.is_certified },
+      u.is_certified ? `${u.email} certification removed` : `${u.email} certified`);
 
   const totalPages = Math.ceil(total / PER_PAGE);
   const isMaster = (u: AdminUser) => (u.roles ?? []).includes("MASTER");
@@ -276,6 +281,13 @@ export default function UsersPage() {
                       <DropdownMenuItem onClick={() => revokeMaster(u)} className="gap-2">
                         <ShieldOff className="h-3.5 w-3.5 text-amber-400" />
                         Revoke Master Role
+                      </DropdownMenuItem>
+                    )}
+
+                    {isMaster(u) && (
+                      <DropdownMenuItem onClick={() => toggleCertify(u)} className="gap-2">
+                        <BadgeCheck className="h-3.5 w-3.5 text-sky-400" />
+                        {u.is_certified ? "Remove Certification" : "Certify Master"}
                       </DropdownMenuItem>
                     )}
 

@@ -23,6 +23,7 @@ class User(Base):
     stripe_customer_id: Mapped[str | None] = mapped_column(String(100))
     stripe_connect_id: Mapped[str | None] = mapped_column(String(100))  # Master's Connect account
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_certified: Mapped[bool] = mapped_column(Boolean, default=False)  # platform-verified master badge
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     wallet_address: Mapped[str | None] = mapped_column(String(200))

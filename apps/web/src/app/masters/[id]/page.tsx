@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import {
   ArrowLeft, Shield, Users, Calendar,
-  Star, AlertTriangle, CheckCircle2, Loader2, FlaskConical,
+  Star, AlertTriangle, CheckCircle2, Loader2, FlaskConical, BadgeCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ import { ReviewsSection } from "@/components/masters/reviews-section";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface MasterDetail {
-  master: { id: string; username: string; display_name?: string; apply_strategy?: string };
+  master: { id: string; username: string; display_name?: string; apply_strategy?: string; is_certified?: boolean };
   score: {
     total_return_pct?: number;
     max_drawdown_pct?: number;
@@ -327,6 +327,7 @@ function SubscribeDrawer({
 
 export default function MasterDetailPage() {
   const t = useTranslations("master_profile");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const params = useParams();
   const router = useRouter();
@@ -429,6 +430,11 @@ export default function MasterDetailPage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold">{name}</h1>
+              {master.is_certified && (
+                <Badge variant="outline" className="gap-1 border-sky-500/40 bg-sky-500/10 text-sky-400">
+                  <BadgeCheck className="h-3.5 w-3.5" />{tc("certified")}
+                </Badge>
+              )}
               <Badge variant="outline" className={cn("text-base font-bold px-3 py-0.5", gs.bg, gs.text, gs.border)}>
                 {grade}
               </Badge>

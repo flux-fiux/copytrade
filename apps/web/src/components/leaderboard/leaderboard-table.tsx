@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Users, TrendingUp, TrendingDown } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, BadgeCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { LeaderboardEntry } from "@/lib/api-client";
 
@@ -19,6 +19,7 @@ interface Master {
   followers: number;
   trading_days: number;
   grade: string;
+  is_certified?: boolean;
 }
 
 const MOCK_DATA: Master[] = [
@@ -44,6 +45,7 @@ function apiEntriesToMasters(entries: LeaderboardEntry[]): Master[] {
     followers: e.followers_count,
     trading_days: e.trading_days,
     grade: e.risk_grade,
+    is_certified: e.is_certified,
   }));
 }
 
@@ -105,7 +107,10 @@ export function LeaderboardTable({ apiEntries, loading }: Props) {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <span className="font-semibold truncate block">{master.name}</span>
+              <span className="font-semibold truncate flex items-center gap-1">
+                {master.name}
+                {master.is_certified && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-400" />}
+              </span>
               <span className="text-xs text-muted-foreground">{t("track_days", { n: master.trading_days })}</span>
             </div>
           </div>

@@ -71,7 +71,7 @@ async def list_leaderboard(
         }
         order_col = _SORT_MAP.get(sort_by, LeaderboardScore.total_return_pct.desc())
 
-        base_query = select(LeaderboardScore, User.username).join(User, LeaderboardScore.master_id == User.id).where(*filters)
+        base_query = select(LeaderboardScore, User.username, User.is_certified).join(User, LeaderboardScore.master_id == User.id).where(*filters)
         if search:
             base_query = base_query.where(User.username.ilike(f"%{search}%"))
 
@@ -99,8 +99,9 @@ async def list_leaderboard(
                 risk_grade=score.risk_grade or "C",
                 trading_days=score.trading_days or 0,
                 period=period,
+                is_certified=bool(is_certified),
             )
-            for i, (score, username) in enumerate(rows)
+            for i, (score, username, is_certified) in enumerate(rows)
         ]
         return LeaderboardResponse(entries=entries, total=total, period=period)
 
@@ -211,6 +212,7 @@ async def get_master_detail(
             "username": user.username if user else "Unknown",
             "display_name": user.display_name if user else None,
             "apply_strategy": user.apply_strategy if user else None,
+            "is_certified": user.is_certified if user else False,
         },
         "score": {
             "total_return_pct": float(score.total_return_pct or 0) if score else None,

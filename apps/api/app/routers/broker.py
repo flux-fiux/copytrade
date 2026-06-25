@@ -41,6 +41,7 @@ async def list_masters(
             "id": str(u.id),
             "display_name": u.display_name or (u.username or "Master"),
             "kyc_status": u.kyc_status,
+            "is_certified": u.is_certified,
             "trading_style": u.apply_trading_style,
             "monthly_return_pct": _num(u.apply_monthly_return_pct),
             "since": u.created_at.isoformat() if u.created_at else None,
