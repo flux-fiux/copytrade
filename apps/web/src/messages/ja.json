@@ -642,5 +642,17 @@
     "title": "オフラインです",
     "desc": "CopyTrade はリアルタイム相場の取得に接続が必要です。ネットワークを確認して再試行してください。",
     "retry": "再試行"
+  },
+  "reviews": {
+    "title": "レビュー",
+    "count": "{count} 件のレビュー",
+    "no_reviews": "まだレビューはありません",
+    "your_rating": "あなたの評価",
+    "comment_placeholder": "感想を共有（任意）",
+    "submit": "レビューを送信",
+    "update": "レビューを更新",
+    "delete": "削除",
+    "login_to_review": "ログインしてレビュー",
+    "self_note": "自分のプロフィールはレビューできません"
   }
 }

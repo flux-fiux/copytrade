@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsTabs } from "@/components/masters/analytics-tabs";
+import { ReviewsSection } from "@/components/masters/reviews-section";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -491,13 +492,16 @@ export default function MasterDetailPage() {
 
         {/* Main layout: analytics tabs + right sidebar */}
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-          <AnalyticsTabs
-            masterId={masterId}
-            signals={recent_signals}
-            aiSummary={aiSummary}
-            aiLoading={aiLoading}
-            onLoadAi={loadAiSummary}
-          />
+          <div className="space-y-6">
+            <AnalyticsTabs
+              masterId={masterId}
+              signals={recent_signals}
+              aiSummary={aiSummary}
+              aiLoading={aiLoading}
+              onLoadAi={loadAiSummary}
+            />
+            <ReviewsSection masterId={masterId} />
+          </div>
 
           {/* Right sidebar */}
           <div className="space-y-4">

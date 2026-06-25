@@ -642,5 +642,17 @@
     "title": "You're offline",
     "desc": "CopyTrade needs a connection for live market data. Check your network and try again.",
     "retry": "Try again"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "count": "{count} reviews",
+    "no_reviews": "No reviews yet",
+    "your_rating": "Your rating",
+    "comment_placeholder": "Share your experience (optional)",
+    "submit": "Submit review",
+    "update": "Update review",
+    "delete": "Delete",
+    "login_to_review": "Sign in to leave a review",
+    "self_note": "You can't review your own profile"
   }
 }

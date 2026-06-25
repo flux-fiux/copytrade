@@ -642,5 +642,17 @@
     "title": "Estás sin conexión",
     "desc": "CopyTrade necesita conexión para los datos de mercado en vivo. Comprueba tu red e inténtalo de nuevo.",
     "retry": "Reintentar"
+  },
+  "reviews": {
+    "title": "Reseñas",
+    "count": "{count} reseñas",
+    "no_reviews": "Aún no hay reseñas",
+    "your_rating": "Tu valoración",
+    "comment_placeholder": "Comparte tu experiencia (opcional)",
+    "submit": "Enviar reseña",
+    "update": "Actualizar reseña",
+    "delete": "Eliminar",
+    "login_to_review": "Inicia sesión para reseñar",
+    "self_note": "No puedes reseñar tu propio perfil"
   }
 }

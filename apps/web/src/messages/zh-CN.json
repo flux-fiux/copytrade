@@ -642,5 +642,17 @@
     "title": "你已离线",
     "desc": "CopyTrade 需要联网获取实时行情。请检查网络后重试。",
     "retry": "重试"
+  },
+  "reviews": {
+    "title": "评价",
+    "count": "{count} 条评价",
+    "no_reviews": "暂无评价",
+    "your_rating": "你的评分",
+    "comment_placeholder": "分享你的体验（可选）",
+    "submit": "提交评价",
+    "update": "更新评价",
+    "delete": "删除",
+    "login_to_review": "登录后可评价",
+    "self_note": "不能评价自己"
   }
 }

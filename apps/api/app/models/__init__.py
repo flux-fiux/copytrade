@@ -10,9 +10,10 @@ from app.models.subscription_plan import SubscriptionPlan
 from app.models.payment import Payment
 from app.models.notification import Notification
 from app.models.api_key import ApiKey
+from app.models.master_review import MasterReview
 
 __all__ = [
     "Tenant", "User", "MT4Account", "Signal", "TradeHistory",
     "SignalSubscription", "CopyTrade", "LeaderboardScore",
-    "SubscriptionPlan", "Payment", "Notification", "ApiKey",
+    "SubscriptionPlan", "Payment", "Notification", "ApiKey", "MasterReview",
 ]
