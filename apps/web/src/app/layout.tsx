@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { PwaRegister } from "@/components/pwa-register";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -25,10 +26,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="CopyTrade" />
-        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground">
         <NextIntlClientProvider messages={messages}>
+          <PwaRegister />
           <Navbar />
           <main className="flex-1 pb-16 md:pb-0">{children}</main>
           <MobileNav />

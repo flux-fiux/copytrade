@@ -634,5 +634,10 @@
     "prompt": "点击下方将 {email} 从 CopyTrade 营销邮件中退订。",
     "invalid": "退订链接无效。",
     "button": "退订 {email}"
+  },
+  "offline": {
+    "title": "你已离线",
+    "desc": "CopyTrade 需要联网获取实时行情。请检查网络后重试。",
+    "retry": "重试"
   }
 }

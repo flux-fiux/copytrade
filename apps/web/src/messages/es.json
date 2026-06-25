@@ -634,5 +634,10 @@
     "prompt": "Haz clic abajo para dar de baja a {email} de los correos de marketing de CopyTrade.",
     "invalid": "Enlace de baja no válido.",
     "button": "Dar de baja a {email}"
+  },
+  "offline": {
+    "title": "Estás sin conexión",
+    "desc": "CopyTrade necesita conexión para los datos de mercado en vivo. Comprueba tu red e inténtalo de nuevo.",
+    "retry": "Reintentar"
   }
 }

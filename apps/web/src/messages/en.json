@@ -634,5 +634,10 @@
     "prompt": "Click below to unsubscribe {email} from CopyTrade marketing emails.",
     "invalid": "Invalid unsubscribe link.",
     "button": "Unsubscribe {email}"
+  },
+  "offline": {
+    "title": "You're offline",
+    "desc": "CopyTrade needs a connection for live market data. Check your network and try again.",
+    "retry": "Try again"
   }
 }
