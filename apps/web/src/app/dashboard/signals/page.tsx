@@ -1,26 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import {
-  LayoutDashboard, Cpu, BookOpen, Radio, DollarSign, Settings,
-  TrendingUp, TrendingDown, Loader2, RefreshCw,
+  Radio, TrendingUp, TrendingDown, Loader2, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-
-const sidebarLinks = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/accounts", label: "My Accounts", icon: Cpu },
-  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: BookOpen },
-  { href: "/dashboard/signals", label: "Signals", icon: Radio },
-  { href: "/dashboard/earnings", label: "Earnings", icon: DollarSign },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
 
 interface Signal {
   id: string;
@@ -36,35 +25,6 @@ interface Signal {
   opened_at: string;
   closed_at?: string;
   status?: string;
-}
-
-function Sidebar() {
-  const pathname = usePathname();
-  return (
-    <aside className="w-56 border-r border-border/50 shrink-0 flex flex-col">
-      <div className="px-4 py-4 border-b border-border/50">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dashboard</div>
-      </div>
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {sidebarLinks.map(({ href, label, icon: Icon, exact }) => {
-          const active = exact ? pathname === href : pathname.startsWith(href) && pathname !== "/dashboard";
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
-  );
 }
 
 const MOCK_SIGNALS: Signal[] = [
@@ -113,10 +73,8 @@ export default function SignalsPage() {
   const closedCount = signals.filter(s => s.signal_type === "CLOSE").length;
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-3xl mx-auto">
+    <div className="px-6 py-6">
+      <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold">Copy Signals</h1>
@@ -231,7 +189,6 @@ export default function SignalsPage() {
             </Card>
           )}
         </div>
-      </main>
     </div>
   );
 }
