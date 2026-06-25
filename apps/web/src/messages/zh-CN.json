@@ -160,7 +160,10 @@
     "register_confirm_password": "确认密码",
     "register_submit": "创建账户",
     "register_role_follower": "我想跟单交易",
-    "register_role_master": "我想成为信号提供者"
+    "register_role_master": "我想成为信号提供者",
+    "error_title": "认证失败",
+    "error_desc": "登录过程中出错，请重试。",
+    "error_back": "返回登录"
   },
   "dashboard": {
     "welcome": "欢迎回来",

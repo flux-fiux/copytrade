@@ -160,7 +160,10 @@
     "register_confirm_password": "パスワード確認",
     "register_submit": "アカウント作成",
     "register_role_follower": "トレードをフォローしたい",
-    "register_role_master": "シグナルプロバイダーになりたい"
+    "register_role_master": "シグナルプロバイダーになりたい",
+    "error_title": "認証に失敗しました",
+    "error_desc": "サインイン中に問題が発生しました。もう一度お試しください。",
+    "error_back": "ログインに戻る"
   },
   "dashboard": {
     "welcome": "おかえりなさい",

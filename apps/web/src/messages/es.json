@@ -160,7 +160,10 @@
     "register_confirm_password": "Confirmar contraseña",
     "register_submit": "Crear cuenta",
     "register_role_follower": "Quiero copiar operaciones",
-    "register_role_master": "Quiero ser proveedor de señales"
+    "register_role_master": "Quiero ser proveedor de señales",
+    "error_title": "Error de autenticación",
+    "error_desc": "Algo salió mal al iniciar sesión. Inténtalo de nuevo.",
+    "error_back": "Volver a iniciar sesión"
   },
   "dashboard": {
     "welcome": "Bienvenido de nuevo",

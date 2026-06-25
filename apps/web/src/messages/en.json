@@ -160,7 +160,10 @@
     "register_confirm_password": "Confirm Password",
     "register_submit": "Create Account",
     "register_role_follower": "I want to Follow trades",
-    "register_role_master": "I want to be a Signal Provider"
+    "register_role_master": "I want to be a Signal Provider",
+    "error_title": "Authentication failed",
+    "error_desc": "Something went wrong during sign in. Please try again.",
+    "error_back": "Back to Login"
   },
   "dashboard": {
     "welcome": "Welcome back",
