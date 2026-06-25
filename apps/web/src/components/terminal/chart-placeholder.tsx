@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createChart, ColorType, CandlestickSeries, LineSeries, HistogramSeries } from "lightweight-charts";
 
 interface Props { symbol: string; resolution?: number; timeframeLabel?: string }
@@ -91,6 +92,7 @@ function macd(closes: number[]): { macd: (number|null)[]; signal: (number|null)[
 }
 
 export function ChartPlaceholder({ symbol, resolution = 3600, timeframeLabel = "H1" }: Props) {
+  const t = useTranslations("terminal");
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndicators, setActiveIndicators] = useState<Set<IndicatorKey>>(new Set(["MA20", "MA50"]));
   const candleDataRef = useRef<{ time: number; open: number; high: number; low: number; close: number }[]>([]);
@@ -294,7 +296,7 @@ export function ChartPlaceholder({ symbol, resolution = 3600, timeframeLabel = "
         <span className="text-zinc-600">·</span>
         <span className="text-zinc-500 font-mono">{timeframeLabel}</span>
         <span className="text-emerald-400 font-mono ml-1">●</span>
-        <span className="text-emerald-400 text-[10px]">Live</span>
+        <span className="text-emerald-400 text-[10px]">{t("live")}</span>
       </div>
     </div>
   );

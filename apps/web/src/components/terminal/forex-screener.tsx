@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function ForexScreener({ onSymbolSelect }: Props) {
+  const t = useTranslations("terminal");
   const [rows, setRows] = useState<ScreenerRow[]>([]);
   const [sortBy, setSortBy] = useState<SortKey>("change_pct");
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export function ForexScreener({ onSymbolSelect }: Props) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 shrink-0">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Screener</span>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{t("screener_title")}</span>
         <div className="ml-auto flex items-center gap-1">
           {(["change_pct", "volatility"] as SortKey[]).map((k) => (
             <button
@@ -64,7 +66,7 @@ export function ForexScreener({ onSymbolSelect }: Props) {
                 sortBy === k ? "bg-primary/20 text-primary" : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              {k === "change_pct" ? "Change" : "Vol"}
+              {k === "change_pct" ? t("screener_change") : t("screener_vol")}
             </button>
           ))}
           <button
@@ -88,9 +90,9 @@ export function ForexScreener({ onSymbolSelect }: Props) {
           <table className="w-full text-[11px]">
             <thead className="sticky top-0 bg-zinc-950 z-10">
               <tr className="text-zinc-600 border-b border-zinc-800">
-                <th className="text-left px-3 py-1.5 font-normal">Symbol</th>
-                <th className="text-right px-2 py-1.5 font-normal">Price</th>
-                <th className="text-right px-3 py-1.5 font-normal">Change</th>
+                <th className="text-left px-3 py-1.5 font-normal">{t("screener_symbol")}</th>
+                <th className="text-right px-2 py-1.5 font-normal">{t("screener_price")}</th>
+                <th className="text-right px-3 py-1.5 font-normal">{t("screener_change")}</th>
               </tr>
             </thead>
             <tbody>
@@ -121,7 +123,7 @@ export function ForexScreener({ onSymbolSelect }: Props) {
 
       {lastUpdated && (
         <div className="px-3 py-1 text-[9px] text-zinc-700 border-t border-zinc-900 shrink-0">
-          Updated {lastUpdated.toLocaleTimeString()} · 60s refresh
+          {t("screener_updated", { time: lastUpdated.toLocaleTimeString() })}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMasterTrades } from "@/hooks/useMasterTrades";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,12 +23,13 @@ interface Props {
 }
 
 export function MasterTradesPanel({ symbol }: Props) {
+  const t = useTranslations("terminal");
   const { trades, loading } = useMasterTrades(symbol);
 
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Master Trades</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("master_trades_title")}</span>
         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">{symbol}</span>
       </div>
 
@@ -39,7 +41,7 @@ export function MasterTradesPanel({ symbol }: Props) {
         </div>
       ) : trades.length === 0 ? (
         <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-          No trades yet for {symbol}
+          {t("master_trades_empty", { symbol })}
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-border/30">

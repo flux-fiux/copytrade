@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Search, TrendingUp, Calendar, Newspaper, BarChart2, Zap, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,18 +13,6 @@ interface Command {
   action: "symbol" | "navigate";
   value: string;
 }
-
-const QUICK_COMMANDS: Command[] = [
-  { id: "eurusd", label: "EURUSD", description: "Euro / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "EURUSD" },
-  { id: "gbpusd", label: "GBPUSD", description: "British Pound / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "GBPUSD" },
-  { id: "usdjpy", label: "USDJPY", description: "US Dollar / Japanese Yen", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "USDJPY" },
-  { id: "xauusd", label: "XAUUSD", description: "Gold / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "XAUUSD" },
-  { id: "btcusd", label: "BTCUSD", description: "Bitcoin / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "BTCUSD" },
-  { id: "us30", label: "US30", description: "Dow Jones Industrial Average", icon: <BarChart2 className="h-4 w-4" />, action: "symbol", value: "US30" },
-  { id: "leaderboard", label: "Leaderboard", description: "View top masters", icon: <Zap className="h-4 w-4" />, action: "navigate", value: "/leaderboard" },
-  { id: "calendar", label: "Economic Calendar", description: "Upcoming market events", icon: <Calendar className="h-4 w-4" />, action: "navigate", value: "calendar" },
-  { id: "news", label: "Market News", description: "Latest financial news", icon: <Newspaper className="h-4 w-4" />, action: "navigate", value: "news" },
-];
 
 const FOREX_SYMBOLS = [
   "AUDUSD", "AUDCAD", "AUDCHF", "AUDJPY", "AUDNZD",
@@ -42,16 +31,29 @@ interface Props {
 }
 
 export function CommandPalette({ open, onClose, onSymbolSelect, onTabChange }: Props) {
+  const t = useTranslations("terminal");
   const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const QUICK_COMMANDS: Command[] = [
+    { id: "eurusd", label: "EURUSD", description: "Euro / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "EURUSD" },
+    { id: "gbpusd", label: "GBPUSD", description: "British Pound / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "GBPUSD" },
+    { id: "usdjpy", label: "USDJPY", description: "US Dollar / Japanese Yen", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "USDJPY" },
+    { id: "xauusd", label: "XAUUSD", description: "Gold / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "XAUUSD" },
+    { id: "btcusd", label: "BTCUSD", description: "Bitcoin / US Dollar", icon: <TrendingUp className="h-4 w-4" />, action: "symbol", value: "BTCUSD" },
+    { id: "us30", label: "US30", description: "Dow Jones Industrial Average", icon: <BarChart2 className="h-4 w-4" />, action: "symbol", value: "US30" },
+    { id: "leaderboard", label: "Leaderboard", description: t("cmd_leaderboard_desc"), icon: <Zap className="h-4 w-4" />, action: "navigate", value: "/leaderboard" },
+    { id: "calendar", label: t("cmd_calendar_label"), description: t("cmd_calendar_desc"), icon: <Calendar className="h-4 w-4" />, action: "navigate", value: "calendar" },
+    { id: "news", label: t("cmd_news_label"), description: t("cmd_news_desc"), icon: <Newspaper className="h-4 w-4" />, action: "navigate", value: "news" },
+  ];
 
   const filtered = query.trim()
     ? [
         ...FOREX_SYMBOLS.filter((s) => s.startsWith(query.toUpperCase())).map((s) => ({
           id: s,
           label: s,
-          description: "Forex symbol",
+          description: t("cmd_forex_symbol"),
           icon: <TrendingUp className="h-4 w-4" />,
           action: "symbol" as const,
           value: s,
@@ -116,7 +118,7 @@ export function CommandPalette({ open, onClose, onSymbolSelect, onTabChange }: P
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search symbols, go to news, calendar…"
+            placeholder={t("cmd_placeholder")}
             className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
           />
           <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300">
@@ -126,7 +128,7 @@ export function CommandPalette({ open, onClose, onSymbolSelect, onTabChange }: P
 
         <div className="max-h-72 overflow-y-auto py-1">
           {filtered.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-zinc-500">No results for "{query}"</div>
+            <div className="px-4 py-6 text-center text-sm text-zinc-500">{t("cmd_no_results", { query })}</div>
           )}
           {filtered.map((cmd, i) => (
             <button
@@ -147,7 +149,7 @@ export function CommandPalette({ open, onClose, onSymbolSelect, onTabChange }: P
               </div>
               {cmd.action === "symbol" && (
                 <span className="ml-auto text-[10px] text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5">
-                  ↵ chart
+                  ↵ {t("cmd_chart")}
                 </span>
               )}
             </button>
@@ -155,10 +157,10 @@ export function CommandPalette({ open, onClose, onSymbolSelect, onTabChange }: P
         </div>
 
         <div className="flex items-center gap-4 px-4 py-2 border-t border-zinc-800 text-[11px] text-zinc-600">
-          <span><kbd className="bg-zinc-800 px-1 rounded">↑↓</kbd> navigate</span>
-          <span><kbd className="bg-zinc-800 px-1 rounded">↵</kbd> select</span>
-          <span><kbd className="bg-zinc-800 px-1 rounded">esc</kbd> close</span>
-          <span className="ml-auto">Ctrl+K to open</span>
+          <span><kbd className="bg-zinc-800 px-1 rounded">↑↓</kbd> {t("cmd_nav")}</span>
+          <span><kbd className="bg-zinc-800 px-1 rounded">↵</kbd> {t("cmd_select")}</span>
+          <span><kbd className="bg-zinc-800 px-1 rounded">esc</kbd> {t("cmd_close")}</span>
+          <span className="ml-auto">{t("cmd_hint")}</span>
         </div>
       </div>
     </div>

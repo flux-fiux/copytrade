@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface MacroSeries {
@@ -22,6 +23,7 @@ const SERIES_META: Record<string, { label: string; unit: string; description: st
 const DEFAULT_SERIES = "FEDFUNDS,CPIAUCSL,UNRATE,T10Y2Y";
 
 export function MacroPanel() {
+  const t = useTranslations("terminal");
   const [data, setData] = useState<Record<string, MacroSeries[]>>({});
   const [loading, setLoading] = useState(true);
 
@@ -49,8 +51,8 @@ export function MacroPanel() {
   return (
     <div className="flex flex-col gap-0.5 p-3">
       <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Macro</span>
-        <span className="text-[9px] text-muted-foreground/50 ml-auto">FRED Data</span>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{t("macro_title")}</span>
+        <span className="text-[9px] text-muted-foreground/50 ml-auto">{t("macro_source_tag")}</span>
       </div>
       {seriesIds.map((sid) => {
         const meta = SERIES_META[sid] ?? { label: sid, unit: "", description: sid };
@@ -86,7 +88,7 @@ export function MacroPanel() {
         );
       })}
       <div className="mt-1 text-[9px] text-zinc-700 text-center">
-        Source: St. Louis Fed (FRED) · Monthly
+        {t("macro_footer")}
       </div>
     </div>
   );

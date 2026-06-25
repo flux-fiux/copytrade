@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface CorrelationData {
@@ -25,6 +26,7 @@ function corrColor(v: number): string {
 const SYMBOLS = "EURUSD,GBPUSD,USDJPY,XAUUSD,USDCAD,AUDUSD,USDCHF,BTCUSD";
 
 export function CorrelationHeatmap() {
+  const t = useTranslations("terminal");
   const [data, setData] = useState<CorrelationData | null>(null);
   const [period, setPeriod] = useState(30);
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,7 @@ export function CorrelationHeatmap() {
     <div className="flex flex-col gap-3 p-3">
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-          Correlation Matrix
+          {t("corr_title")}
         </span>
         <div className="ml-auto flex gap-1">
           {[14, 30, 60].map((p) => (
@@ -66,7 +68,7 @@ export function CorrelationHeatmap() {
           <div className="h-4 w-4 border-2 border-zinc-600 border-t-primary rounded-full animate-spin" />
         </div>
       ) : !data ? (
-        <div className="text-center text-xs text-zinc-600 py-8">Could not load correlation data</div>
+        <div className="text-center text-xs text-zinc-600 py-8">{t("corr_error")}</div>
       ) : (
         <>
           <div className="overflow-x-auto">
@@ -108,13 +110,13 @@ export function CorrelationHeatmap() {
 
           {/* Legend */}
           <div className="flex items-center gap-1.5 text-[9px] text-zinc-600">
-            <div className="h-2.5 w-2.5 rounded-sm bg-emerald-500/80" /> <span>Strong +</span>
-            <div className="h-2.5 w-2.5 rounded-sm bg-zinc-800 ml-1" /> <span>Neutral</span>
-            <div className="h-2.5 w-2.5 rounded-sm bg-red-500/80 ml-1" /> <span>Strong −</span>
-            {data.is_mock && <span className="ml-auto italic text-zinc-700">Historical mock</span>}
+            <div className="h-2.5 w-2.5 rounded-sm bg-emerald-500/80" /> <span>{t("corr_strong_pos")}</span>
+            <div className="h-2.5 w-2.5 rounded-sm bg-zinc-800 ml-1" /> <span>{t("corr_neutral")}</span>
+            <div className="h-2.5 w-2.5 rounded-sm bg-red-500/80 ml-1" /> <span>{t("corr_strong_neg")}</span>
+            {data.is_mock && <span className="ml-auto italic text-zinc-700">{t("corr_mock")}</span>}
           </div>
           <div className="text-[9px] text-zinc-700">
-            Based on {period}-day returns · Pearson correlation
+            {t("corr_basis", { days: period })}
           </div>
         </>
       )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, TrendingUp, TrendingDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { connectSocket } from "@/lib/socket";
 
@@ -31,6 +32,7 @@ function fmt(v: number): string {
 interface Props { activeSymbol: string; onSelect: (s: string) => void }
 
 export function WatchList({ activeSymbol, onSelect }: Props) {
+  const t = useTranslations("terminal");
   const [quotes, setQuotes] = useState<Record<string, QuoteState>>(FALLBACK);
 
   const onQuote = useCallback((data: { symbol?: string; c?: number; pc?: number; price?: number }) => {
@@ -65,7 +67,7 @@ export function WatchList({ activeSymbol, onSelect }: Props) {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Watchlist</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("watchlist")}</span>
         <Button variant="ghost" size="icon" className="h-6 w-6">
           <Plus className="h-3.5 w-3.5" />
         </Button>

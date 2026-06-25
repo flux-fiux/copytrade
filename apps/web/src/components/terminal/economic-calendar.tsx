@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -39,6 +40,7 @@ function formatDate(isoStr: string) {
 }
 
 export function EconomicCalendar() {
+  const t = useTranslations("terminal");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +66,7 @@ export function EconomicCalendar() {
   if (!events.length) {
     return (
       <div className="p-4 text-center">
-        <p className="text-xs text-muted-foreground">No events this week</p>
+        <p className="text-xs text-muted-foreground">{t("cal_empty")}</p>
       </div>
     );
   }

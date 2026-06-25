@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Calculator, X, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export function PositionCalculator({ open, onClose, symbol, currentPrice }: Props) {
+  const t = useTranslations("terminal");
   const [balance, setBalance] = useState("10000");
   const [riskPct, setRiskPct] = useState("1");
   const [stopPips, setStopPips] = useState("20");
@@ -60,7 +62,7 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
     <div className="fixed left-4 bottom-4 z-40 w-72 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
         <Calculator className="h-4 w-4 text-amber-400" />
-        <span className="text-sm font-semibold text-zinc-100">Position Calculator</span>
+        <span className="text-sm font-semibold text-zinc-100">{t("calc_title")}</span>
         <span className="ml-1 text-xs text-zinc-500 border border-zinc-700 rounded px-1.5">{symbol}</span>
         <button onClick={handleClose} className="ml-auto text-zinc-500 hover:text-zinc-300">
           <X className="h-4 w-4" />
@@ -89,7 +91,7 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
         {/* Inputs */}
         <div className="space-y-2">
           <label className="block">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Account Balance (USD)</span>
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wide">{t("calc_balance")}</span>
             <input
               type="number"
               value={balance}
@@ -99,7 +101,7 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
           </label>
           <div className="flex gap-2">
             <label className="flex-1 block">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Risk %</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wide">{t("calc_risk")}</span>
               <input
                 type="number"
                 value={riskPct}
@@ -111,7 +113,7 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
               />
             </label>
             <label className="flex-1 block">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Stop Loss (pips)</span>
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wide">{t("calc_stop")}</span>
               <input
                 type="number"
                 value={stopPips}
@@ -141,18 +143,18 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
         {/* Results */}
         <div className="bg-zinc-800/60 rounded-xl p-3 space-y-2 border border-zinc-700/50">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-400">Lot Size</span>
+            <span className="text-[11px] text-zinc-400">{t("calc_lot")}</span>
             <span className="text-lg font-bold font-mono text-amber-400">
               {roundedLots.toFixed(2)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-400">Max Risk</span>
+            <span className="text-[11px] text-zinc-400">{t("calc_maxrisk")}</span>
             <span className="text-sm font-mono text-red-400">${riskAmount.toFixed(2)}</span>
           </div>
           <div className="h-px bg-zinc-700" />
           <div className="space-y-1">
-            <span className="text-[10px] text-zinc-600 uppercase tracking-wide">Take Profit Targets</span>
+            <span className="text-[10px] text-zinc-600 uppercase tracking-wide">{t("calc_tp")}</span>
             {rrArr.map((rr) => {
               const tpPips = stop * rr;
               return (
@@ -170,7 +172,7 @@ export function PositionCalculator({ open, onClose, symbol, currentPrice }: Prop
         {currentPrice && (
           <div className="flex items-start gap-1.5 text-[10px] text-zinc-600">
             <Info className="h-3 w-3 mt-0.5 shrink-0" />
-            <span>Pip value estimate. Actual varies with broker leverage and account currency.</span>
+            <span>{t("calc_pip_note")}</span>
           </div>
         )}
       </div>

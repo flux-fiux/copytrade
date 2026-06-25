@@ -18,12 +18,14 @@ import { CorrelationHeatmap } from "./correlation-heatmap";
 import { PositionCalculator } from "./position-calculator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Bot, Command, Calculator } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const TF_TO_MINUTES: Record<string, number> = {
   "1m": 1, "5m": 5, "15m": 15, "1H": 60, "4H": 240, "1D": 1440, "1W": 10080,
 };
 
 export function TerminalLayout() {
+  const t = useTranslations("terminal");
   const [activeSymbol, setActiveSymbol] = useState("EURUSD");
   const [timeframe, setTimeframe] = useState<string>("1H");
   const [leftTab, setLeftTab] = useState("watchlist");
@@ -70,8 +72,8 @@ export function TerminalLayout() {
         <aside className="hidden lg:flex flex-col w-56 border-r border-border/50 shrink-0">
           <Tabs value={leftTab} onValueChange={setLeftTab} className="flex flex-col flex-1 overflow-hidden">
             <TabsList className="w-full rounded-none border-b border-border/50 h-8 bg-transparent shrink-0">
-              <TabsTrigger value="watchlist" className="flex-1 text-[11px] rounded-none h-7">Watch</TabsTrigger>
-              <TabsTrigger value="screener" className="flex-1 text-[11px] rounded-none h-7">Screen</TabsTrigger>
+              <TabsTrigger value="watchlist" className="flex-1 text-[11px] rounded-none h-7">{t("tab_watch")}</TabsTrigger>
+              <TabsTrigger value="screener" className="flex-1 text-[11px] rounded-none h-7">{t("tab_screen")}</TabsTrigger>
             </TabsList>
             <TabsContent value="watchlist" className="mt-0 overflow-y-auto flex-1">
               <WatchList activeSymbol={activeSymbol} onSelect={setActiveSymbol} />
@@ -96,7 +98,7 @@ export function TerminalLayout() {
             <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => setCmdOpen(true)}
-                title="Command palette (Ctrl+K)"
+                title={t("title_cmd")}
                 className="flex items-center gap-1 h-7 px-2 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors border border-transparent hover:border-border/50"
               >
                 <Command className="h-3.5 w-3.5" />
@@ -104,7 +106,7 @@ export function TerminalLayout() {
               </button>
               <button
                 onClick={() => setCalcOpen((v) => !v)}
-                title="Position calculator (Ctrl+P)"
+                title={t("title_calc")}
                 className={`flex items-center gap-1 h-7 px-2 rounded text-xs transition-colors border ${
                   calcOpen
                     ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
@@ -112,11 +114,11 @@ export function TerminalLayout() {
                 }`}
               >
                 <Calculator className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-[10px]">Calc</span>
+                <span className="hidden sm:inline text-[10px]">{t("btn_calc")}</span>
               </button>
               <button
                 onClick={() => setAiOpen((v) => !v)}
-                title="AI assistant (Ctrl+J)"
+                title={t("title_ai")}
                 className={`flex items-center gap-1 h-7 px-2 rounded text-xs transition-colors border ${
                   aiOpen
                     ? "text-violet-400 bg-violet-500/10 border-violet-500/30"
@@ -124,7 +126,7 @@ export function TerminalLayout() {
                 }`}
               >
                 <Bot className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-[10px]">AI</span>
+                <span className="hidden sm:inline text-[10px]">{t("btn_ai")}</span>
               </button>
             </div>
           </div>
@@ -137,12 +139,12 @@ export function TerminalLayout() {
           <div className="border-t border-border/50" />
           <Tabs value={rightTab} onValueChange={setRightTab}>
             <TabsList className="w-full rounded-none border-b border-border/50 h-9 bg-transparent">
-              <TabsTrigger value="signals" className="flex-1 text-[10px] rounded-none">Signals</TabsTrigger>
-              <TabsTrigger value="masters" className="flex-1 text-[10px] rounded-none">Masters</TabsTrigger>
-              <TabsTrigger value="macro" className="flex-1 text-[10px] rounded-none">Macro</TabsTrigger>
-              <TabsTrigger value="corr" className="flex-1 text-[10px] rounded-none">Corr</TabsTrigger>
-              <TabsTrigger value="news" className="flex-1 text-[10px] rounded-none">News</TabsTrigger>
-              <TabsTrigger value="calendar" className="flex-1 text-[10px] rounded-none">Cal</TabsTrigger>
+              <TabsTrigger value="signals" className="flex-1 text-[10px] rounded-none">{t("tab_signals")}</TabsTrigger>
+              <TabsTrigger value="masters" className="flex-1 text-[10px] rounded-none">{t("tab_masters")}</TabsTrigger>
+              <TabsTrigger value="macro" className="flex-1 text-[10px] rounded-none">{t("tab_macro")}</TabsTrigger>
+              <TabsTrigger value="corr" className="flex-1 text-[10px] rounded-none">{t("tab_corr")}</TabsTrigger>
+              <TabsTrigger value="news" className="flex-1 text-[10px] rounded-none">{t("tab_news")}</TabsTrigger>
+              <TabsTrigger value="calendar" className="flex-1 text-[10px] rounded-none">{t("tab_cal")}</TabsTrigger>
             </TabsList>
             <TabsContent value="signals" className="p-0 mt-0 overflow-y-auto max-h-[calc(100vh-240px)]">
               <TerminalSignalFeed />
