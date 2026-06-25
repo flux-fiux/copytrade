@@ -655,5 +655,13 @@
     "delete": "削除",
     "login_to_review": "ログインしてレビュー",
     "self_note": "自分のプロフィールはレビューできません"
+  },
+  "announcements": {
+    "title": "お知らせ",
+    "none": "お知らせはまだありません",
+    "new_title_ph": "お知らせのタイトル",
+    "new_body_ph": "フォロワーへの更新を書く…",
+    "post": "投稿",
+    "delete": "削除"
   }
 }

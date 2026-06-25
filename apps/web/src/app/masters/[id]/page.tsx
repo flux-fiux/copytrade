@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { AnalyticsTabs } from "@/components/masters/analytics-tabs";
 import { ReviewsSection } from "@/components/masters/reviews-section";
+import { AnnouncementsSection } from "@/components/masters/announcements-section";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -506,6 +507,7 @@ export default function MasterDetailPage() {
               aiLoading={aiLoading}
               onLoadAi={loadAiSummary}
             />
+            <AnnouncementsSection masterId={masterId} />
             <ReviewsSection masterId={masterId} />
           </div>
 

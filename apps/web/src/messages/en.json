@@ -655,5 +655,13 @@
     "delete": "Delete",
     "login_to_review": "Sign in to leave a review",
     "self_note": "You can't review your own profile"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "none": "No announcements yet",
+    "new_title_ph": "Announcement title",
+    "new_body_ph": "Write an update for your followers…",
+    "post": "Post",
+    "delete": "Delete"
   }
 }

@@ -655,5 +655,13 @@
     "delete": "Eliminar",
     "login_to_review": "Inicia sesión para reseñar",
     "self_note": "No puedes reseñar tu propio perfil"
+  },
+  "announcements": {
+    "title": "Anuncios",
+    "none": "Aún no hay anuncios",
+    "new_title_ph": "Título del anuncio",
+    "new_body_ph": "Escribe una novedad para tus seguidores…",
+    "post": "Publicar",
+    "delete": "Eliminar"
   }
 }

@@ -655,5 +655,13 @@
     "delete": "删除",
     "login_to_review": "登录后可评价",
     "self_note": "不能评价自己"
+  },
+  "announcements": {
+    "title": "公告",
+    "none": "暂无公告",
+    "new_title_ph": "公告标题",
+    "new_body_ph": "给关注者写点更新…",
+    "post": "发布",
+    "delete": "删除"
   }
 }
