@@ -61,6 +61,14 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
+
+@app.middleware("http")
+async def _reset_tenant_context(request, call_next):
+    """Start every request with a clean tenant context (fail-closed default)."""
+    from app.core.tenant_context import reset_current_tenant
+    reset_current_tenant()
+    return await call_next(request)
+
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(mt4_accounts.router, prefix="/api/v1/mt4-accounts", tags=["mt4-accounts"])
 app.include_router(signals.router, prefix="/api/v1/signals", tags=["signals"])

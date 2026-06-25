@@ -5,6 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
+from app.core.tenant_context import set_current_tenant
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -103,6 +104,7 @@ async def get_tenant_id(
                 result = await db.execute(select(User.tenant_id).where(User.id == user_id))
                 tenant_id = result.scalar_one_or_none()
                 if tenant_id:
+                    set_current_tenant(tenant_id)
                     return tenant_id
             except Exception:
                 pass
@@ -116,12 +118,14 @@ async def get_tenant_id(
             )
             tenant_id = result.scalar_one_or_none()
             if tenant_id:
+                set_current_tenant(tenant_id)
                 return tenant_id
 
         # 回退：默认租户（MVP 单租户）
         result = await db.execute(select(Tenant.id).where(Tenant.is_active.is_(True)).limit(1))
         tenant_id = result.scalar_one_or_none()
         if tenant_id:
+            set_current_tenant(tenant_id)
             return tenant_id
 
         raise HTTPException(status_code=503, detail="No active tenant found")

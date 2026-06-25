@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/copytrade"
     REDIS_URL: str = "redis://localhost:6379/0"
+    # When true, issue `SET LOCAL app.current_tenant` per transaction so Postgres
+    # RLS policies enforce tenant isolation. Requires connecting as a role WITHOUT
+    # BYPASSRLS and the RLS migration applied. Keep false until both are in place.
+    RLS_ENABLED: bool = False
 
     # Supabase
     SUPABASE_URL: str = ""

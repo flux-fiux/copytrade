@@ -8,9 +8,10 @@ from app.models.copy_trade import CopyTrade
 from app.models.leaderboard_score import LeaderboardScore
 from app.models.subscription_plan import SubscriptionPlan
 from app.models.payment import Payment
+from app.models.notification import Notification
 
 __all__ = [
     "Tenant", "User", "MT4Account", "Signal", "TradeHistory",
     "SignalSubscription", "CopyTrade", "LeaderboardScore",
-    "SubscriptionPlan", "Payment",
+    "SubscriptionPlan", "Payment", "Notification",
 ]
