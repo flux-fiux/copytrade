@@ -6,6 +6,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { PwaRegister } from "@/components/pwa-register";
+import { getTenantBranding } from "@/lib/tenant";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -17,12 +18,20 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const messages = await getMessages();
+  const branding = await getTenantBranding();
+
+  // White-label: a tenant-set brand color overrides --primary inline (wins over
+  // both :root and .dark stylesheet rules); default tenant keeps the native theme.
+  const htmlStyle = branding?.primaryColor
+    ? ({ "--primary": branding.primaryColor, "--primary-foreground": "#ffffff" } as React.CSSProperties)
+    : undefined;
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`} style={htmlStyle}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#3b82f6" />
+        {branding?.faviconUrl && <link rel="icon" href={branding.faviconUrl} />}
+        <meta name="theme-color" content={branding?.primaryColor ?? "#3b82f6"} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="CopyTrade" />
@@ -31,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground">
         <NextIntlClientProvider messages={messages}>
           <PwaRegister />
-          <Navbar />
+          <Navbar branding={branding} />
           <main className="flex-1 pb-16 md:pb-0">{children}</main>
           <MobileNav />
         </NextIntlClientProvider>

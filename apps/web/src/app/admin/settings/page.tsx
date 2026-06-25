@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Shield, DollarSign, Bell, Globe } from "lucide-react";
+import { Save, Shield, DollarSign, Bell, Globe, Palette } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +30,8 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<PlatformSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [branding, setBranding] = useState({ name: "", primary_color: "#6366f1", logo_url: "", favicon_url: "" });
+  const [brandSaved, setBrandSaved] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -43,6 +45,42 @@ export default function AdminSettingsPage() {
       } catch { /* use defaults */ }
     });
   }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/tenants/current`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (res.ok) {
+          const d = await res.json();
+          setBranding({
+            name: d.name ?? "",
+            primary_color: d.primary_color ?? "#6366f1",
+            logo_url: d.logo_url ?? "",
+            favicon_url: d.favicon_url ?? "",
+          });
+        }
+      } catch { /* use defaults */ }
+    });
+  }, []);
+
+  const saveBranding = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    try {
+      await fetch(`${API_BASE}/api/v1/tenants/current/branding`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(branding),
+      });
+      setBrandSaved(true);
+      setTimeout(() => setBrandSaved(false), 2000);
+    } catch { /* non-fatal in dev */ }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -195,6 +233,76 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Branding / White-Label */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Palette className="h-4 w-4" />
+            Branding (White-Label)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium block mb-1">Brand Name</label>
+              <input
+                type="text"
+                value={branding.name}
+                onChange={e => setBranding(p => ({ ...p, name: e.target.value }))}
+                placeholder="CopyTrade"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Primary Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={branding.primary_color}
+                  onChange={e => setBranding(p => ({ ...p, primary_color: e.target.value }))}
+                  className="h-9 w-12 rounded border border-input bg-background p-1"
+                />
+                <input
+                  type="text"
+                  value={branding.primary_color}
+                  onChange={e => setBranding(p => ({ ...p, primary_color: e.target.value }))}
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Logo URL</label>
+              <input
+                type="url"
+                value={branding.logo_url}
+                onChange={e => setBranding(p => ({ ...p, logo_url: e.target.value }))}
+                placeholder="https://…/logo.svg"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-1">Favicon URL</label>
+              <input
+                type="url"
+                value={branding.favicon_url}
+                onChange={e => setBranding(p => ({ ...p, favicon_url: e.target.value }))}
+                placeholder="https://…/favicon.ico"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={saveBranding} variant="outline" size="sm">
+              <Palette className="h-4 w-4 mr-2" />
+              {brandSaved ? "Saved!" : "Save Branding"}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Applies to this tenant&apos;s subdomain — brand color, logo and favicon.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

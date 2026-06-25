@@ -27,7 +27,9 @@ async def get_current_tenant(
         "name": tenant.name,
         "subdomain": tenant.subdomain,
         "plan": tenant.plan,
-        "primary_color": config.get("primary_color", "#6366f1"),
+        # null when unset so the default tenant keeps the app's native theme;
+        # white-label tenants that set a color get it applied on the frontend.
+        "primary_color": config.get("primary_color"),
         "logo_url": config.get("logo_url"),
         "favicon_url": config.get("favicon_url"),
     }

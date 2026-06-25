@@ -21,7 +21,12 @@ import { signOut } from "@/lib/auth-actions";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { NotificationCenter } from "@/components/layout/notification-center";
 
-export function Navbar() {
+interface NavBranding {
+  name: string;
+  logoUrl: string | null;
+}
+
+export function Navbar({ branding }: { branding?: NavBranding | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
@@ -64,11 +69,18 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <TrendingUp className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">CopyTrade</span>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
+          {branding?.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branding.logoUrl} alt={branding.name} className="h-8 w-auto max-w-[160px] object-contain" />
+          ) : (
+            <>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                <TrendingUp className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-lg tracking-tight">{branding?.name ?? "CopyTrade"}</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
+            </>
+          )}
         </Link>
 
         {/* Nav Links */}
