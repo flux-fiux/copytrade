@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api-client";
 import { useSocket } from "@/hooks/useSocket";
+import { incrementNotif } from "@/store/notifications";
 
 interface CopyTradeRow {
   id: string;
@@ -87,6 +88,7 @@ export default function DashboardPage() {
       return [trade, ...filtered].slice(0, 50);
     });
     markNew(trade.id);
+    incrementNotif();
   }, [markNew]);
 
   useSocket({ followerId, onCopytrade: handleCopytrade });

@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useSocket } from "@/hooks/useSocket";
+import { incrementNotif } from "@/store/notifications";
 
 interface Signal {
   id: string;
@@ -103,11 +104,11 @@ export default function SignalsPage() {
     const signal = data as unknown as Signal;
     if (!signal.id) return;
     setSignals(prev => {
-      // deduplicate and prepend
       const filtered = prev.filter(s => s.id !== signal.id);
       return [signal, ...filtered].slice(0, 100);
     });
     markNew(signal.id);
+    incrementNotif();
     setIsLive(true);
   }, [markNew]);
 

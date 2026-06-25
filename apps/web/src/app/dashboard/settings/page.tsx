@@ -1,55 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
-import {
-  LayoutDashboard, Cpu, BookOpen, Radio, DollarSign, Settings,
-  Loader2, Save, Bell, Shield, Wallet,
-} from "lucide-react";
+import { Loader2, Save, Bell, Shield, Wallet, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { api, type UserProfile } from "@/lib/api-client";
 
-const sidebarLinks = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/accounts", label: "My Accounts", icon: Cpu },
-  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: BookOpen },
-  { href: "/dashboard/signals", label: "Signals", icon: Radio },
-  { href: "/dashboard/earnings", label: "Earnings", icon: DollarSign },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
-
-function Sidebar() {
-  const pathname = usePathname();
-  return (
-    <aside className="w-56 border-r border-border/50 shrink-0 flex flex-col">
-      <div className="px-4 py-4 border-b border-border/50">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dashboard</div>
-      </div>
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {sidebarLinks.map(({ href, label, icon: Icon, exact }) => {
-          const active = exact ? pathname === href : pathname.startsWith(href) && pathname !== "/dashboard";
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
-  );
-}
 
 function FieldRow({ label, value, onChange, type = "text", disabled = false, hint }: {
   label: string;
@@ -131,10 +90,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-xl mx-auto">
+    <div className="px-6 py-6">
+      <div className="max-w-xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your profile, notifications, and payout details</p>
@@ -250,7 +207,6 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
-      </main>
     </div>
   );
 }

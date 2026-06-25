@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/auth-actions";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { subscribeNotif, clearNotif } from "@/store/notifications";
 
 const navLinks = [
   { href: "/leaderboard", label: "Leaderboard", icon: TrendingUp },
@@ -29,6 +30,7 @@ export function Navbar() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
   const [signingOut, setSigningOut] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,9 +43,9 @@ export function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const initials = userEmail
-    ? userEmail.slice(0, 2).toUpperCase()
-    : "U";
+  useEffect(() => subscribeNotif(setNotifCount), []);
+
+  const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : "U";
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -85,14 +87,23 @@ export function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
-          {/* Loading state */}
           {userEmail === undefined ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : userEmail ? (
             <>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => { clearNotif(); router.push("/dashboard/signals"); }}
+                title="Notifications"
+              >
                 <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+                {notifCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground leading-none">
+                    {notifCount > 99 ? "99" : notifCount}
+                  </span>
+                )}
               </Button>
 
               <DropdownMenu>
@@ -106,19 +117,11 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-52">
                   <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{userEmail}</div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>
-                    My Accounts
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>
-                    Subscriptions
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/accounts")}>My Accounts</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/subscriptions")}>Subscriptions</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-                    Settings
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
@@ -132,12 +135,8 @@ export function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-                Sign In
-              </Link>
-              <Link href="/auth/register" className={cn(buttonVariants({ size: "sm" }))}>
-                Get Started
-              </Link>
+              <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>Sign In</Link>
+              <Link href="/auth/register" className={cn(buttonVariants({ size: "sm" }))}>Get Started</Link>
             </div>
           )}
         </div>
