@@ -20,6 +20,14 @@ export interface CapturedSignal {
   tags: string[];
 }
 
+interface ActiveSubscription {
+  subscription_id: string;
+  follower_id: string;
+  follower_account_id: string;
+  tenant_id: string;
+  lot_multiplier: number;
+}
+
 export class SignalConsumer {
   private subscriber: Redis | null = null;
 
@@ -38,6 +46,7 @@ export class SignalConsumer {
     );
 
     // 2. Persist to DB via API
+    let signalId: string | null = null;
     try {
       const resp = await fetch(`${this.apiUrl}/api/v1/signals/ingest`, {
         method: 'POST',
@@ -59,12 +68,20 @@ export class SignalConsumer {
           closed_at: signal.closedAt ?? null,
         }),
       });
-      if (!resp.ok) {
+      if (resp.ok) {
+        const body = await resp.json() as { signal_id?: string };
+        signalId = body.signal_id ?? null;
+      } else {
         const body = await resp.text();
         logger.error({ status: resp.status, body }, 'Signal ingest API error');
       }
     } catch (err) {
       logger.error({ err }, 'Signal ingest fetch failed');
+    }
+
+    // 3. Record copy trades for all active followers of this master
+    if (signalId) {
+      await this.recordCopyTrades(signal, signalId);
     }
   }
 
@@ -91,9 +108,81 @@ export class SignalConsumer {
     }
   }
 
-  private async handleSignal(channel: string, signal: CapturedSignal) {
-    const masterId = channel.replace('signal:', '');
-    logger.info({ masterId, signalType: signal.signalType, symbol: signal.symbol }, 'Processing signal for copy-trade');
-    // CopyFactory handles follower execution; copy_trade records written here in Phase 1 Week 7-8
+  private async handleSignal(_channel: string, _signal: CapturedSignal) {
+    // publishSignal() is called directly by MetaAPIListener — this subscriber
+    // handles signals re-published by OTHER workers (future multi-instance setup).
+    // In single-worker mode this is a no-op to avoid double processing.
+  }
+
+  private async recordCopyTrades(signal: CapturedSignal, signalId: string): Promise<void> {
+    // Fetch active subscriptions for this master from the API
+    let subscriptions: ActiveSubscription[] = [];
+    try {
+      const resp = await fetch(
+        `${this.apiUrl}/api/v1/copy-trades/subscriptions?master_id=${signal.masterId}`,
+      );
+      if (resp.ok) {
+        subscriptions = (await resp.json()) as ActiveSubscription[];
+      }
+    } catch (err) {
+      logger.error({ err }, 'Failed to fetch active subscriptions');
+      return;
+    }
+
+    if (subscriptions.length === 0) return;
+
+    logger.info(
+      { masterId: signal.masterId, signalId, followerCount: subscriptions.length },
+      'Recording copy trades',
+    );
+
+    // Record a copy_trade entry for each follower and push real-time event
+    await Promise.allSettled(
+      subscriptions.map(async (sub) => {
+        const scaledVolume = parseFloat((signal.volume * sub.lot_multiplier).toFixed(2));
+        try {
+          const internalToken = process.env.INTERNAL_API_TOKEN ?? '';
+          const resp = await fetch(`${this.apiUrl}/api/v1/copy-trades/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Internal-Token': internalToken,
+            },
+            body: JSON.stringify({
+              tenant_id: sub.tenant_id,
+              subscription_id: sub.subscription_id,
+              signal_id: signalId,
+              follower_id: sub.follower_id,
+              follower_account_id: sub.follower_account_id,
+              symbol: signal.symbol,
+              direction: signal.direction,
+              volume: scaledVolume,
+              open_price: signal.openPrice ?? null,
+              close_price: signal.closePrice ?? null,
+              profit: signal.profit !== undefined ? signal.profit * sub.lot_multiplier : null,
+              status: signal.signalType === 'CLOSE' ? 'CLOSED' : 'OPEN',
+            }),
+          });
+
+          if (resp.ok) {
+            const copyTrade = await resp.json() as Record<string, unknown>;
+            // Push real-time event via Redis → worker-rt → follower's Socket.IO room
+            await this.redis.publish(
+              `copytrade:${sub.follower_id}`,
+              JSON.stringify({
+                ...copyTrade,
+                master_name: signal.masterId,  // worker-rt relays this to frontend
+              }),
+            );
+            logger.debug({ followerId: sub.follower_id, symbol: signal.symbol }, 'Copy trade recorded');
+          } else {
+            const body = await resp.text();
+            logger.warn({ followerId: sub.follower_id, status: resp.status, body }, 'Copy trade record failed');
+          }
+        } catch (err) {
+          logger.error({ err, followerId: sub.follower_id }, 'Copy trade processing error');
+        }
+      }),
+    );
   }
 }

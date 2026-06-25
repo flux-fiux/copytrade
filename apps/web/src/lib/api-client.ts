@@ -104,21 +104,27 @@ export interface UserProfile {
   username?: string;
   display_name?: string;
   avatar_url?: string;
+  wallet_address?: string;
   roles: string[];
   kyc_status: string;
   preferred_lang?: string;
+  email_notify_signals?: boolean;
+  email_notify_billing?: boolean;
   created_at: string;
 }
 
 export interface MasterDetail {
-  master: { id: string; username: string; display_name?: string };
+  master: { id: string; username: string; display_name?: string; apply_strategy?: string };
   score: {
     total_return_pct?: number;
     max_drawdown_pct?: number;
     sharpe_ratio?: number;
     win_rate_pct?: number;
     risk_grade?: string;
+    followers_count?: number;
+    trading_days?: number;
   } | null;
+  followers_count: number;
   recent_signals: SignalData[];
 }
 

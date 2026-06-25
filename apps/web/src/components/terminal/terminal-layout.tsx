@@ -10,8 +10,13 @@ import { EconomicCalendar } from "./economic-calendar";
 import { TerminalSignalFeed } from "./terminal-signal-feed";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+const TF_TO_MINUTES: Record<string, number> = {
+  "1m": 1, "5m": 5, "15m": 15, "1H": 60, "4H": 240, "1D": 1440, "1W": 10080,
+};
+
 export function TerminalLayout() {
   const [activeSymbol, setActiveSymbol] = useState("EURUSD");
+  const [timeframe, setTimeframe] = useState<string>("1H");
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
@@ -28,15 +33,15 @@ export function TerminalLayout() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center gap-3 px-4 py-2 border-b border-border/50">
             <SymbolSearch value={activeSymbol} onChange={setActiveSymbol} />
-            <Tabs defaultValue="1H" className="ml-auto">
+            <Tabs value={timeframe} onValueChange={setTimeframe} className="ml-auto">
               <TabsList className="h-7">
-                {["1m", "5m", "15m", "1H", "4H", "1D", "1W"].map((tf) => (
+                {Object.keys(TF_TO_MINUTES).map((tf) => (
                   <TabsTrigger key={tf} value={tf} className="text-[11px] px-2 h-6">{tf}</TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
           </div>
-          <ChartPlaceholder symbol={activeSymbol} />
+          <ChartPlaceholder symbol={activeSymbol} resolution={TF_TO_MINUTES[timeframe] * 60} timeframeLabel={timeframe} />
         </div>
 
         {/* Right sidebar — news + info */}

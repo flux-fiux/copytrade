@@ -10,6 +10,7 @@ from app.models.leaderboard_score import LeaderboardScore
 from app.models.user import User
 from app.models.signal import Signal
 from app.models.trade_history import TradeHistory
+from app.models.signal_subscription import SignalSubscription
 from app.schemas.leaderboard import LeaderboardEntry, LeaderboardResponse
 from app.services import ai_service
 
@@ -123,11 +124,19 @@ async def get_master_detail(
     )
     signals = signals_result.scalars().all()
 
+    followers_count = await db.scalar(
+        select(func.count()).select_from(SignalSubscription).where(
+            SignalSubscription.master_id == master_id,
+            SignalSubscription.status == "ACTIVE",
+        )
+    ) or 0
+
     return {
         "master": {
             "id": str(master_id),
             "username": user.username if user else "Unknown",
             "display_name": user.display_name if user else None,
+            "apply_strategy": user.apply_strategy if user else None,
         },
         "score": {
             "total_return_pct": float(score.total_return_pct or 0) if score else None,
@@ -135,7 +144,10 @@ async def get_master_detail(
             "sharpe_ratio": float(score.sharpe_ratio or 0) if score else None,
             "win_rate_pct": float(score.win_rate_pct or 0) if score else None,
             "risk_grade": score.risk_grade if score else None,
+            "followers_count": score.followers_count if score else followers_count,
+            "trading_days": score.trading_days if score else 0,
         } if score else None,
+        "followers_count": followers_count,
         "recent_signals": [
             {
                 "id": str(s.id),

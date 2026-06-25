@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
+from app.core.internal_auth import verify_internal
 from app.models.mt4_account import MT4Account
 from app.schemas.mt4_account import MT4AccountConnect, MT4AccountOut, MT4AccountSyncOut
 from app.services.copyfactory import copyfactory_service
@@ -100,7 +101,10 @@ async def sync_account(
 
 
 @router.get("/masters")
-async def list_master_accounts(db: AsyncSession = Depends(get_db)):
+async def list_master_accounts(
+    db: AsyncSession = Depends(get_db),
+    _auth: None = Depends(verify_internal),
+):
     """Internal endpoint for worker-ct to fetch active master accounts."""
     result = await db.execute(
         select(MT4Account).where(MT4Account.account_type == "MASTER")

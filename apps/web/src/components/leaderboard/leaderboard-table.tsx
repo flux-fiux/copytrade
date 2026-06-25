@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight, Users, TrendingUp } from "lucide-react";
+import { Users, TrendingUp, TrendingDown } from "lucide-react";
 import type { LeaderboardEntry } from "@/lib/api-client";
 
 interface Master {
@@ -65,13 +64,14 @@ function RankBadge({ rank }: { rank: number }) {
 
 interface Props {
   apiEntries?: LeaderboardEntry[] | null;
+  loading?: boolean;
 }
 
-export function LeaderboardTable({ apiEntries }: Props) {
+export function LeaderboardTable({ apiEntries, loading }: Props) {
   const data = apiEntries && apiEntries.length > 0 ? apiEntriesToMasters(apiEntries) : MOCK_DATA;
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
+    <div className={`rounded-lg border border-border overflow-hidden transition-opacity ${loading ? "opacity-60" : ""}`}>
       <div className="grid grid-cols-[2.5rem_1fr_auto_auto] md:grid-cols-[2.5rem_1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-3 bg-muted/40 text-xs text-muted-foreground font-medium uppercase tracking-wide border-b border-border">
         <div>#</div>
         <div>Provider</div>
@@ -81,6 +81,12 @@ export function LeaderboardTable({ apiEntries }: Props) {
         <div className="text-right hidden md:block">Followers</div>
         <div className="text-right">Grade</div>
       </div>
+
+      {loading && data.length === 0 && (
+        Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 border-b border-border/50 last:border-0 animate-pulse bg-muted/10" />
+        ))
+      )}
 
       {data.map((master) => (
         <Link
@@ -103,9 +109,9 @@ export function LeaderboardTable({ apiEntries }: Props) {
           </div>
 
           <div className="text-right hidden lg:block">
-            <div className="flex items-center justify-end gap-1 text-emerald-400 font-bold">
-              <TrendingUp className="h-3.5 w-3.5" />
-              +{master.return_pct.toFixed(1)}%
+            <div className={`flex items-center justify-end gap-1 font-bold ${master.return_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {master.return_pct >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+              {master.return_pct >= 0 ? "+" : ""}{master.return_pct.toFixed(1)}%
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">Win {master.win_rate.toFixed(0)}%</div>
           </div>
@@ -131,21 +137,10 @@ export function LeaderboardTable({ apiEntries }: Props) {
             <Badge className={`text-xs font-bold px-2 border ${gradeStyles[master.grade] ?? ""}`}>
               {master.grade}
             </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="hidden group-hover:flex h-7 px-2 gap-1 text-xs"
-              onClick={(e) => e.preventDefault()}
-            >
-              Copy <ArrowUpRight className="h-3 w-3" />
-            </Button>
           </div>
         </Link>
       ))}
 
-      <div className="px-4 py-4 text-center border-t border-border/50">
-        <Button variant="outline" size="sm">Load more traders</Button>
-      </div>
     </div>
   );
 }

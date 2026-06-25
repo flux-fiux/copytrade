@@ -2,10 +2,9 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  LayoutDashboard, Cpu, BookOpen, Radio, DollarSign, Settings,
-  ArrowUpRight, X, CheckCircle2, AlertTriangle, Play, ShieldAlert,
+  BookOpen, ArrowUpRight, X, CheckCircle2, AlertTriangle, Play, ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,14 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-const sidebarLinks = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/accounts", label: "My Accounts", icon: Cpu },
-  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: BookOpen },
-  { href: "/dashboard/signals", label: "Signals", icon: Radio },
-  { href: "/dashboard/earnings", label: "Earnings", icon: DollarSign },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-];
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const gradeStyles: Record<string, string> = {
   "A+": "border-emerald-500/50 text-emerald-400",
@@ -61,8 +53,7 @@ interface RiskStatus {
 function DrawdownBar({ current, limit }: { current: number; limit: number }) {
   const ratio = limit > 0 ? current / limit : 0;
   const pct = Math.min(ratio * 100, 100);
-  const color =
-    ratio < 0.5 ? "bg-emerald-500" : ratio < 0.8 ? "bg-yellow-500" : "bg-red-500";
+  const color = ratio < 0.5 ? "bg-emerald-500" : ratio < 0.8 ? "bg-yellow-500" : "bg-red-500";
   return (
     <div className="mt-1">
       <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5">
@@ -72,10 +63,7 @@ function DrawdownBar({ current, limit }: { current: number; limit: number }) {
         </span>
       </div>
       <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all", color)}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -83,7 +71,6 @@ function DrawdownBar({ current, limit }: { current: number; limit: number }) {
 
 function RiskIndicator({ subscriptionId, token }: { subscriptionId: string; token: string }) {
   const [risk, setRisk] = useState<RiskStatus | null>(null);
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     fetch(`${API}/api/v1/subscriptions/${subscriptionId}/risk`, {
@@ -92,55 +79,31 @@ function RiskIndicator({ subscriptionId, token }: { subscriptionId: string; toke
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setRisk(data); })
       .catch(() => {});
-  }, [subscriptionId, token, API]);
+  }, [subscriptionId, token]);
 
   if (!risk || risk.limit == null) return null;
   return <DrawdownBar current={risk.current_drawdown} limit={risk.limit} />;
 }
 
-function Sidebar() {
-  const pathname = usePathname();
-  return (
-    <aside className="w-56 border-r border-border/50 shrink-0 flex flex-col">
-      <div className="px-4 py-4 border-b border-border/50">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Dashboard</div>
-      </div>
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {sidebarLinks.map(({ href, label, icon: Icon, exact }) => {
-          const isActive = exact
-            ? pathname === href
-            : pathname.startsWith(href) && pathname !== "/dashboard";
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
-  );
-}
-
 function SubscriptionsContent() {
-  const [subs, setSubs] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [resumingId, setResumingId] = useState<string | null>(null);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const showSuccess = searchParams.get("success") === "1";
+  const [subs, setSubs]           = useState<Subscription[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [resumingId, setResumingId]     = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg]   = useState<string | null>(null);
+  const [successVisible, setSuccessVisible] = useState(searchParams.get("success") === "1");
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Clean up success param from URL so it doesn't persist on refresh
+  useEffect(() => {
+    if (searchParams.get("success") === "1") {
+      router.replace("/dashboard/subscriptions", { scroll: false });
+      const t = setTimeout(() => setSuccessVisible(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, []); // eslint-disable-line
 
   const fetchSubs = useCallback(async () => {
     const supabase = createClient();
@@ -153,27 +116,30 @@ function SubscriptionsContent() {
       });
       if (res.ok) setSubs(await res.json());
     } catch {
-      // API unavailable — keep empty list
+      // API unavailable — show empty list
     } finally {
       setLoading(false);
     }
-  }, [API]);
+  }, []);
 
   useEffect(() => { fetchSubs(); }, [fetchSubs]);
 
-  async function handleCancel(subId: string) {
+  async function handleCancel(subId: string, name: string) {
+    if (!confirm(`Cancel subscription to ${name}? This will stop all copy trading.`)) return;
     setCancellingId(subId);
+    setErrorMsg(null);
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setCancellingId(null); return; }
     try {
-      await fetch(`${API}/api/v1/subscriptions/cancel/${subId}`, {
+      const res = await fetch(`${API}/api/v1/subscriptions/cancel/${subId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
+      if (!res.ok) throw new Error("Cancel failed");
       await fetchSubs();
     } catch {
-      // ignore
+      setErrorMsg("Failed to cancel subscription. Please try again.");
     } finally {
       setCancellingId(null);
     }
@@ -181,17 +147,19 @@ function SubscriptionsContent() {
 
   async function handleResume(subId: string) {
     setResumingId(subId);
+    setErrorMsg(null);
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setResumingId(null); return; }
     try {
-      await fetch(`${API}/api/v1/subscriptions/${subId}/resume`, {
+      const res = await fetch(`${API}/api/v1/subscriptions/${subId}/resume`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
+      if (!res.ok) throw new Error("Resume failed");
       await fetchSubs();
     } catch {
-      // ignore
+      setErrorMsg("Failed to resume subscription. Please try again.");
     } finally {
       setResumingId(null);
     }
@@ -200,208 +168,188 @@ function SubscriptionsContent() {
   const activeSubs = subs.filter((s) => s.status === "ACTIVE");
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-3xl mx-auto">
-          {showSuccess && (
-            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3 mb-6">
-              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-              <p className="text-sm text-emerald-400 font-medium">
-                Subscription activated! You&apos;re now copying trades automatically.
-              </p>
-            </div>
-          )}
-
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">My Subscriptions</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {loading
-                ? "Loading..."
-                : `${activeSubs.length} active subscription${activeSubs.length !== 1 ? "s" : ""}`}
+    <div className="px-6 py-6">
+      <div className="max-w-3xl mx-auto">
+        {successVisible && (
+          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3 mb-6">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+            <p className="text-sm text-emerald-400 font-medium">
+              订阅成功！已开始自动复制交易。
             </p>
           </div>
+        )}
 
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-32 rounded-lg border border-border/50 bg-muted/20 animate-pulse" />
-              ))}
-            </div>
-          ) : subs.length === 0 ? (
-            <div className="text-center py-16 border border-border/50 rounded-lg">
-              <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-4" />
-              <p className="font-medium mb-2">No subscriptions yet</p>
-              <p className="text-sm text-muted-foreground mb-6">
-                Follow a signal provider to start copying trades automatically.
-              </p>
-              <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
-                <ArrowUpRight className="h-4 w-4" /> Browse Masters
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-3 mb-8">
-              {subs.map((s) => (
-                <Card
-                  key={s.id}
-                  className={cn(
-                    "border-border/60",
-                    s.status === "PAUSED" && "border-orange-500/40 bg-orange-500/5"
-                  )}
-                >
-                  <CardContent className="p-5">
-                    {s.status === "PAUSED" && (
-                      <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-md px-3 py-2 mb-4 text-sm">
-                        <ShieldAlert className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <span className="font-medium text-orange-400">Copy trading paused — drawdown limit reached.</span>
-                          {s.pause_reason && (
-                            <p className="text-xs text-orange-400/70 mt-0.5">{s.pause_reason}</p>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleResume(s.id)}
-                          disabled={resumingId === s.id}
-                          className={cn(
-                            buttonVariants({ variant: "outline", size: "sm" }),
-                            "shrink-0 gap-1.5 border-orange-500/40 text-orange-400 hover:bg-orange-500/10 disabled:opacity-50"
-                          )}
-                        >
-                          <Play className="h-3 w-3" />
-                          {resumingId === s.id ? "Resuming..." : "Resume"}
-                        </button>
-                      </div>
-                    )}
+        {errorMsg && (
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 mb-6">
+            <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
+            <p className="text-sm text-red-400">{errorMsg}</p>
+            <button onClick={() => setErrorMsg(null)} className="ml-auto text-red-400 hover:text-red-300">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
-                            {(s.master_username ?? "??").slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                              {s.master_username ?? s.master_id.slice(0, 8)}
-                            </span>
-                            {s.master_grade && (
-                              <Badge
-                                className={cn(
-                                  "text-[10px] border px-1.5 py-0",
-                                  gradeStyles[s.master_grade] ?? ""
-                                )}
-                              >
-                                {s.master_grade}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            Since {new Date(s.created_at).toLocaleDateString()}
-                            {s.next_billing_date &&
-                              ` · Next billing ${new Date(s.next_billing_date).toLocaleDateString()}`}
-                          </div>
-                        </div>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">我的订阅</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {loading ? "加载中…" : `${activeSubs.length} 个活跃订阅`}
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-32 rounded-lg border border-border/50 bg-muted/20 animate-pulse" />
+            ))}
+          </div>
+        ) : subs.length === 0 ? (
+          <div className="text-center py-16 border border-border/50 rounded-lg">
+            <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto mb-4" />
+            <p className="font-medium mb-2">还没有订阅</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              关注信号提供者，开始自动复制交易。
+            </p>
+            <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
+              <ArrowUpRight className="h-4 w-4" /> 浏览排行榜
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+            {subs.map((s) => (
+              <Card
+                key={s.id}
+                className={cn(
+                  "border-border/60",
+                  s.status === "PAUSED" && "border-orange-500/40 bg-orange-500/5"
+                )}
+              >
+                <CardContent className="p-5">
+                  {s.status === "PAUSED" && (
+                    <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-md px-3 py-2 mb-4 text-sm">
+                      <ShieldAlert className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-orange-400">已暂停 — 达到回撤上限</span>
+                        {s.pause_reason && (
+                          <p className="text-xs text-orange-400/70 mt-0.5">{s.pause_reason}</p>
+                        )}
                       </div>
-                      <Badge
-                        variant="outline"
+                      <button
+                        onClick={() => handleResume(s.id)}
+                        disabled={resumingId === s.id}
                         className={cn(
-                          "text-[10px] border shrink-0",
-                          statusStyles[s.status] ?? "border-border text-muted-foreground"
+                          buttonVariants({ variant: "outline", size: "sm" }),
+                          "shrink-0 gap-1.5 border-orange-500/40 text-orange-400 hover:bg-orange-500/10 disabled:opacity-50"
                         )}
                       >
-                        {s.status === "PAUSED" && <AlertTriangle className="h-2.5 w-2.5 mr-1" />}
-                        {s.status}
-                      </Badge>
+                        <Play className="h-3 w-3" />
+                        {resumingId === s.id ? "恢复中…" : "恢复"}
+                      </button>
                     </div>
+                  )}
 
-                    <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                          {(s.master_username ?? "??").slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        <div className="text-xs text-muted-foreground">Subscription</div>
-                        <div className="font-semibold text-sm mt-0.5">
-                          {s.price_usd != null ? `$${s.price_usd}/mo` : "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">P&L Since Start</div>
-                        <div
-                          className={cn(
-                            "font-semibold text-sm mt-0.5",
-                            (s.pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">
+                            {s.master_username ?? s.master_id.slice(0, 8)}
+                          </span>
+                          {s.master_grade && (
+                            <Badge className={cn("text-[10px] border px-1.5 py-0", gradeStyles[s.master_grade] ?? "")}>
+                              {s.master_grade}
+                            </Badge>
                           )}
-                        >
-                          {s.pnl != null
-                            ? `${s.pnl >= 0 ? "+" : ""}$${s.pnl.toFixed(2)}`
-                            : "—"}
                         </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">Return</div>
-                        <div
-                          className={cn(
-                            "font-semibold text-sm mt-0.5",
-                            (s.return_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
-                          )}
-                        >
-                          {s.return_pct != null
-                            ? `${s.return_pct >= 0 ? "+" : ""}${s.return_pct.toFixed(1)}%`
-                            : "—"}
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          自 {new Date(s.created_at).toLocaleDateString()}
+                          {s.next_billing_date && ` · 下次扣费 ${new Date(s.next_billing_date).toLocaleDateString()}`}
                         </div>
                       </div>
                     </div>
+                    <Badge
+                      variant="outline"
+                      className={cn("text-[10px] border shrink-0", statusStyles[s.status] ?? "border-border text-muted-foreground")}
+                    >
+                      {s.status === "PAUSED" && <AlertTriangle className="h-2.5 w-2.5 mr-1" />}
+                      {s.status}
+                    </Badge>
+                  </div>
 
-                    {sessionToken && s.status === "ACTIVE" && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
-                        <RiskIndicator subscriptionId={s.id} token={sessionToken} />
+                  <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
+                    <div>
+                      <div className="text-xs text-muted-foreground">月费</div>
+                      <div className="font-semibold text-sm mt-0.5">
+                        {s.price_usd != null ? `$${s.price_usd}/月` : "—"}
                       </div>
-                    )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">累计盈亏</div>
+                      <div className={cn("font-semibold text-sm mt-0.5", (s.pnl ?? 0) >= 0 ? "text-emerald-400" : "text-red-400")}>
+                        {s.pnl != null ? `${s.pnl >= 0 ? "+" : ""}$${s.pnl.toFixed(2)}` : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">收益率</div>
+                      <div className={cn("font-semibold text-sm mt-0.5", (s.return_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400")}>
+                        {s.return_pct != null ? `${s.return_pct >= 0 ? "+" : ""}${s.return_pct.toFixed(1)}%` : "—"}
+                      </div>
+                    </div>
+                  </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <Link
-                        href={`/masters/${s.master_id}`}
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+                  {sessionToken && s.status === "ACTIVE" && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <RiskIndicator subscriptionId={s.id} token={sessionToken} />
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-4">
+                    <Link
+                      href={`/masters/${s.master_id}`}
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+                    >
+                      <ArrowUpRight className="h-3.5 w-3.5" /> 查看 Master
+                    </Link>
+                    {(s.status === "ACTIVE" || s.status === "PAUSED") && (
+                      <button
+                        onClick={() => handleCancel(s.id, s.master_username ?? "this master")}
+                        disabled={cancellingId === s.id}
+                        className={cn(
+                          buttonVariants({ variant: "ghost", size: "sm" }),
+                          "gap-1.5 text-destructive hover:text-destructive disabled:opacity-50"
+                        )}
                       >
-                        <ArrowUpRight className="h-3.5 w-3.5" /> View Master
-                      </Link>
-                      {(s.status === "ACTIVE" || s.status === "PAUSED") && (
-                        <button
-                          onClick={() => handleCancel(s.id)}
-                          disabled={cancellingId === s.id}
-                          className={cn(
-                            buttonVariants({ variant: "ghost", size: "sm" }),
-                            "gap-1.5 text-destructive hover:text-destructive disabled:opacity-50"
-                          )}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          {cancellingId === s.id ? "Cancelling..." : "Unsubscribe"}
-                        </button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                        <X className="h-3.5 w-3.5" />
+                        {cancellingId === s.id ? "取消中…" : "取消订阅"}
+                      </button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-          {!loading && subs.length > 0 && (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-3">
-                Want to follow more signal providers?
-              </p>
-              <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
-                <ArrowUpRight className="h-4 w-4" /> Browse Masters
-              </Link>
-            </div>
-          )}
-        </div>
-      </main>
+        {!loading && subs.length > 0 && (
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-3">想关注更多信号提供者？</p>
+            <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
+              <ArrowUpRight className="h-4 w-4" /> 浏览排行榜
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function SubscriptionsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-muted-foreground">Loading...</div>}>
+    <Suspense fallback={<div className="p-8 text-muted-foreground">加载中…</div>}>
       <SubscriptionsContent />
     </Suspense>
   );

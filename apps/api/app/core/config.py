@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
 
+    # Internal service auth (worker-ct → API)
+    INTERNAL_API_TOKEN: str = "dev-internal-token-change-in-prod"
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 

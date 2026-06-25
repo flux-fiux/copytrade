@@ -1,16 +1,42 @@
 import Link from "next/link";
-import { TrendingUp, BarChart2, Shield, Users, ArrowRight, Star } from "lucide-react";
+import { TrendingUp, BarChart2, Shield, Users, ArrowRight, Star, CheckCircle2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const stats = [
-  { label: "Active Traders", value: "12,400+" },
-  { label: "Copy Trades Executed", value: "2.8M+" },
-  { label: "Avg Monthly Return", value: "8.4%" },
-  { label: "Countries", value: "80+" },
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+interface LiveMaster {
+  master_id: string;
+  username: string;
+  return_pct: number;
+  max_drawdown: number;
+  win_rate: number;
+  followers_count: number;
+  risk_grade: string;
+  trading_days: number;
+}
+
+const FALLBACK_MASTERS: LiveMaster[] = [
+  { master_id: "1", username: "AlphaWave FX", return_pct: 142.3, max_drawdown: 8.2, win_rate: 68.4, followers_count: 1240, risk_grade: "A+", trading_days: 385 },
+  { master_id: "2", username: "GoldTrader Pro", return_pct: 98.7, max_drawdown: 11.4, win_rate: 61.2, followers_count: 876, risk_grade: "A", trading_days: 248 },
+  { master_id: "3", username: "Momentum King", return_pct: 76.1, max_drawdown: 14.9, win_rate: 58.7, followers_count: 654, risk_grade: "B+", trading_days: 192 },
 ];
+
+async function fetchTopMasters(): Promise<LiveMaster[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/leaderboard/?period=1M&page=1&per_page=3`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return FALLBACK_MASTERS;
+    const data = await res.json();
+    const entries: LiveMaster[] = (data.entries ?? []).slice(0, 3);
+    return entries.length > 0 ? entries : FALLBACK_MASTERS;
+  } catch {
+    return FALLBACK_MASTERS;
+  }
+}
 
 const features = [
   {
@@ -35,12 +61,6 @@ const features = [
   },
 ];
 
-const topMasters = [
-  { name: "AlphaWave FX", return: "+142.3%", drawdown: "8.2%", followers: 1240, grade: "A+", period: "12M" },
-  { name: "GoldTrader Pro", return: "+98.7%", drawdown: "11.4%", followers: 876, grade: "A", period: "8M" },
-  { name: "Momentum King", return: "+76.1%", drawdown: "14.9%", followers: 654, grade: "B+", period: "6M" },
-];
-
 const gradeColor: Record<string, string> = {
   "A+": "text-emerald-400",
   "A": "text-green-400",
@@ -48,7 +68,15 @@ const gradeColor: Record<string, string> = {
   "B": "text-yellow-400",
 };
 
-export default function HomePage() {
+const trustPoints = [
+  "Verified track records — no demo accounts",
+  "Transparent drawdown & Sharpe ratio for every Master",
+  "Instant copy execution via MetaAPI (< 5ms)",
+];
+
+export default async function HomePage() {
+  const topMasters = await fetchTopMasters();
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -62,39 +90,35 @@ export default function HomePage() {
             Copy the World&apos;s Best<br />
             <span className="text-primary">Forex Traders</span>
           </h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
             Connect your MT4/MT5 account, subscribe to verified signal providers, and let our engine replicate every trade automatically.
           </p>
+          <ul className="flex flex-col sm:flex-row gap-2 justify-center mb-8">
+            {trustPoints.map((p) => (
+              <li key={p} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                {p}
+              </li>
+            ))}
+          </ul>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/leaderboard" className={cn(buttonVariants({ size: "lg" }))}>
-              Browse Traders <ArrowRight className="ml-2 h-4 w-4" />
+            <Link href="/auth/register" className={cn(buttonVariants({ size: "lg" }))}>
+              Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-            <Link href="/terminal" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
-              Open Terminal
+            <Link href="/leaderboard" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
+              Browse Masters
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="border-b border-border/40 bg-muted/20 py-10 px-4">
-        <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {stats.map((s) => (
-            <div key={s.label}>
-              <div className="text-2xl font-bold">{s.value}</div>
-              <div className="text-sm text-muted-foreground mt-1">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Top Masters Preview */}
+      {/* Top Masters Preview — SSR live data */}
       <section className="py-16 px-4 border-b border-border/40">
         <div className="container mx-auto max-w-4xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold">Top Signal Providers</h2>
-              <p className="text-muted-foreground mt-1">Ranked by risk-adjusted returns</p>
+              <p className="text-muted-foreground mt-1">Ranked by risk-adjusted returns this month</p>
             </div>
             <Link href="/leaderboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               View All <ArrowRight className="ml-1 h-3 w-3" />
@@ -102,36 +126,44 @@ export default function HomePage() {
           </div>
           <div className="space-y-3">
             {topMasters.map((m, i) => (
-              <Card key={m.name} className="hover:border-primary/40 transition-colors cursor-pointer">
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="text-2xl font-bold text-muted-foreground/40 w-8">#{i + 1}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate">{m.name}</div>
-                    <div className="text-xs text-muted-foreground">{m.period} verified • {m.followers.toLocaleString()} followers</div>
-                  </div>
-                  <div className="text-right hidden sm:block">
-                    <div className="text-xs text-muted-foreground">Max DD</div>
-                    <div className="text-sm font-medium text-destructive">{m.drawdown}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-muted-foreground">Return</div>
-                    <div className="text-sm font-bold text-emerald-400">{m.return}</div>
-                  </div>
-                  <div className={`text-lg font-bold ${gradeColor[m.grade] ?? "text-muted-foreground"}`}>
-                    {m.grade}
-                  </div>
-                </CardContent>
-              </Card>
+              <Link
+                key={m.master_id}
+                href={`/masters/${m.master_id}`}
+                className="block"
+              >
+                <Card className="hover:border-primary/40 transition-colors cursor-pointer">
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <div className="text-2xl font-bold text-muted-foreground/40 w-8 shrink-0">#{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{m.username}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {m.trading_days}d verified · {m.followers_count.toLocaleString()} followers · Win {m.win_rate.toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <div className="text-xs text-muted-foreground">Max DD</div>
+                      <div className="text-sm font-medium text-destructive">{m.max_drawdown.toFixed(1)}%</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">Return</div>
+                      <div className="text-sm font-bold text-emerald-400">+{m.return_pct.toFixed(1)}%</div>
+                    </div>
+                    <div className={cn("text-lg font-bold shrink-0", gradeColor[m.risk_grade] ?? "text-muted-foreground")}>
+                      {m.risk_grade}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 border-b border-border/40">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold text-center mb-12">Everything you need to trade smarter</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {features.map(({ icon: Icon, title, description }) => (
               <Card key={title} className="border-border/60">
                 <CardContent className="p-6">
@@ -148,13 +180,20 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-4 border-t border-border/40 bg-muted/20 text-center">
+      <section className="py-16 px-4 bg-muted/20 text-center">
         <div className="container mx-auto max-w-xl">
           <h2 className="text-2xl font-bold mb-3">Ready to start copying?</h2>
-          <p className="text-muted-foreground mb-8">Connect your MT4/MT5 account in minutes. No technical setup required.</p>
-          <Link href="/auth/register" className={cn(buttonVariants({ size: "lg" }))}>
-            Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+          <p className="text-muted-foreground mb-8">
+            Connect your MT4/MT5 account in minutes. No technical setup required.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/auth/register" className={cn(buttonVariants({ size: "lg" }))}>
+              Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link href="/terminal" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
+              Open Terminal
+            </Link>
+          </div>
         </div>
       </section>
     </div>

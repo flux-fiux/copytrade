@@ -6,7 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
+from app.core.rate_limit import rate_limit
 from app.models.signal_subscription import SignalSubscription
 from app.models.subscription_plan import SubscriptionPlan
 from app.models.user import User
@@ -73,20 +75,36 @@ async def create_plan(
 
 @router.post("/subscribe", response_model=SubscribeResponse, status_code=status.HTTP_201_CREATED)
 async def subscribe(
+    request: Request,
     payload: SubscribeRequest,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await rate_limit(request, "subscribe", max_calls=5, window_seconds=60)
     follower_id = uuid.UUID(current_user["sub"])
     master_id = uuid.UUID(payload.master_id)
-    plan_id = uuid.UUID(payload.plan_id)
     follower_account_id = uuid.UUID(payload.follower_account_id) if payload.follower_account_id else None
 
-    # Get plan
-    plan_result = await db.execute(select(SubscriptionPlan).where(SubscriptionPlan.id == plan_id))
-    plan = plan_result.scalar_one_or_none()
-    if not plan:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Plan not found")
+    # Get plan — optional; fall back to master's first active plan or a default price
+    plan: SubscriptionPlan | None = None
+    if payload.plan_id:
+        plan_result = await db.execute(
+            select(SubscriptionPlan).where(SubscriptionPlan.id == uuid.UUID(payload.plan_id))
+        )
+        plan = plan_result.scalar_one_or_none()
+
+    if plan is None:
+        # Auto-pick the master's first active plan
+        auto_result = await db.execute(
+            select(SubscriptionPlan).where(
+                SubscriptionPlan.master_id == master_id,
+                SubscriptionPlan.is_active == True,
+            ).order_by(SubscriptionPlan.price_usd.asc())
+        )
+        plan = auto_result.scalars().first()
+
+    plan_price = float(plan.price_usd) if plan else 29.0
+    plan_id = plan.id if plan else None
 
     # Get or create Stripe customer
     follower_result = await db.execute(select(User).where(User.id == follower_id))
@@ -102,7 +120,8 @@ async def subscribe(
         customer_id = follower.stripe_customer_id
 
     # Create Stripe subscription
-    stripe_result = await stripe_service.create_subscription(customer_id, plan.stripe_price_id or "price_dev")
+    stripe_price = (plan.stripe_price_id or "price_dev") if plan else "price_dev"
+    stripe_result = await stripe_service.create_subscription(customer_id, stripe_price)
 
     # Wire up CopyFactory
     master_account_result = await db.execute(
@@ -139,8 +158,8 @@ async def subscribe(
             cf_result = await copyfactory_service.create_subscriber(
                 subscriber_meta_account_id=follower_account.meta_api_account_id,
                 strategy_id=master_account.copy_factory_strategy_id,
-                lot_multiplier=1.0,
-                max_drawdown_pct=20.0,
+                lot_multiplier=payload.lot_multiplier,
+                max_drawdown_pct=payload.max_drawdown_pct,
             )
             copy_factory_sub_id = cf_result.get("subscriberAccountId") or follower_account.meta_api_account_id
         except Exception as exc:
@@ -148,14 +167,16 @@ async def subscribe(
             print(f"[subscribe] CopyFactory wiring failed: {exc}")
 
     # Create SignalSubscription
+    stripe_sub_id = stripe_result.get("subscription_id") or ""
     sub = SignalSubscription(
         tenant_id=follower.tenant_id,
         follower_id=follower_id,
         master_id=master_id,
         follower_account_id=follower_account.id,
         plan_id=plan_id,
-        stripe_subscription_id=stripe_result["subscription_id"],
-        status="ACTIVE" if stripe_result["status"] == "active" else "PENDING",
+        stripe_subscription_id=stripe_sub_id,
+        lot_multiplier=payload.lot_multiplier,
+        status="ACTIVE" if stripe_result.get("status") == "active" else "PENDING",
         copy_factory_sub_id=copy_factory_sub_id,
     )
     db.add(sub)
@@ -169,9 +190,9 @@ async def subscribe(
     asyncio.create_task(email_service.send_subscription_confirmed(
         to_email=follower.email,
         master_name=master_name,
-        price_usd=float(plan.price_usd),
-        lot_multiplier=float(payload.lot_multiplier) if hasattr(payload, "lot_multiplier") and payload.lot_multiplier else 1.0,
-        max_drawdown=float(payload.max_drawdown_pct) if hasattr(payload, "max_drawdown_pct") and payload.max_drawdown_pct else 20.0,
+        price_usd=plan_price,
+        lot_multiplier=payload.lot_multiplier,
+        max_drawdown=payload.max_drawdown_pct,
     ))
 
     return SubscribeResponse(
@@ -228,14 +249,44 @@ async def my_subscriptions(
     db: AsyncSession = Depends(get_db),
 ):
     follower_id = uuid.UUID(current_user["sub"])
+
+    # JOIN with User (master) and SubscriptionPlan to return rich response
+    from app.models.leaderboard_score import LeaderboardScore
+
     result = await db.execute(
-        select(SignalSubscription).where(
+        select(SignalSubscription, User, SubscriptionPlan, LeaderboardScore)
+        .join(User, User.id == SignalSubscription.master_id, isouter=True)
+        .join(SubscriptionPlan, SubscriptionPlan.id == SignalSubscription.plan_id, isouter=True)
+        .join(
+            LeaderboardScore,
+            (LeaderboardScore.master_id == SignalSubscription.master_id)
+            & (LeaderboardScore.period == "ALL"),
+            isouter=True,
+        )
+        .where(
             SignalSubscription.follower_id == follower_id,
             SignalSubscription.status != "CANCELLED",
         )
     )
-    subs = result.scalars().all()
-    return [MySubscriptionOut.from_orm_with_date(s) for s in subs]
+    rows = result.all()
+
+    out = []
+    for sub, master_user, plan, score in rows:
+        out.append({
+            "id": str(sub.id),
+            "master_id": str(sub.master_id),
+            "master_username": (master_user.display_name or master_user.username) if master_user else None,
+            "master_grade": score.risk_grade if score else None,
+            "price_usd": float(plan.price_usd) if plan else None,
+            "status": sub.status,
+            "lot_multiplier": float(sub.lot_multiplier),
+            "created_at": sub.subscribed_at.isoformat() if sub.subscribed_at else "",
+            "next_billing_date": None,
+            "pnl": None,
+            "return_pct": None,
+            "pause_reason": sub.pause_reason,
+        })
+    return out
 
 
 # ── RiskGuard ─────────────────────────────────────────────────────────
@@ -297,7 +348,7 @@ async def onboard_connect(
         user.stripe_connect_id = connect_id
         await db.commit()
 
-    base_url = "http://localhost:3000"
+    base_url = settings.FRONTEND_URL.rstrip("/")
     onboarding_url = await stripe_service.create_connect_onboarding_link(
         user.stripe_connect_id,
         return_url=f"{base_url}/dashboard?connect=success",

@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.mt4_account import MT4Account
 from app.models.signal_subscription import SignalSubscription
 from app.models.leaderboard_score import LeaderboardScore
+from app.models.tenant import Tenant
 
 router = APIRouter()
 
@@ -87,10 +88,11 @@ async def list_users(
 async def get_user(
     user_id: str,
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
     uid = uuid.UUID(user_id)
-    result = await db.execute(select(User).where(User.id == uid))
+    result = await db.execute(select(User).where(User.id == uid, User.tenant_id == tenant_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(404, "User not found")
@@ -103,22 +105,32 @@ async def get_user(
     return d
 
 
+_VALID_ROLES = {"FOLLOWER", "MASTER", "BROKER", "TENANT_ADMIN"}
+_VALID_KYC = {"NONE", "PENDING", "VERIFIED", "REJECTED"}
+
 @router.patch("/users/{user_id}")
 async def update_user(
     user_id: str,
     payload: dict,
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
     uid = uuid.UUID(user_id)
-    result = await db.execute(select(User).where(User.id == uid))
+    result = await db.execute(select(User).where(User.id == uid, User.tenant_id == tenant_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(404, "User not found")
     allowed = {"is_active", "roles", "kyc_status"}
     for key, value in payload.items():
-        if key in allowed:
-            setattr(user, key, value)
+        if key not in allowed:
+            continue
+        if key == "roles":
+            if not isinstance(value, list) or not all(r in _VALID_ROLES for r in value):
+                raise HTTPException(400, f"Invalid roles — allowed: {_VALID_ROLES}")
+        if key == "kyc_status" and value not in _VALID_KYC:
+            raise HTTPException(400, f"Invalid kyc_status — allowed: {_VALID_KYC}")
+        setattr(user, key, value)
     await db.commit()
     await db.refresh(user)
     return _user_dict(user)
@@ -129,10 +141,11 @@ async def update_user(
 @router.get("/masters/pending")
 async def list_pending_masters(
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(User).where(User.kyc_status == "PENDING").order_by(User.created_at.desc())
+        select(User).where(User.kyc_status == "PENDING", User.tenant_id == tenant_id).order_by(User.created_at.desc())
     )
     users = result.scalars().all()
     out = []
@@ -170,19 +183,22 @@ async def approve_master(
 @router.post("/masters/{user_id}/reject")
 async def reject_master(
     user_id: str,
-    reason: str = "Application rejected",
+    reason: str = Query(default="Application rejected", max_length=500),
     admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
+    import html as _html
     uid = uuid.UUID(user_id)
-    result = await db.execute(select(User).where(User.id == uid))
+    result = await db.execute(select(User).where(User.id == uid, User.tenant_id == tenant_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(404, "User not found")
+    safe_reason = _html.escape(reason)[:500]
     user.kyc_status = "REJECTED"
     await db.commit()
-    asyncio.create_task(email_service.send_master_rejected(to_email=user.email, reason=reason))
-    return {"status": "rejected", "user_id": user_id, "reason": reason}
+    asyncio.create_task(email_service.send_master_rejected(to_email=user.email, reason=safe_reason))
+    return {"status": "rejected", "user_id": user_id, "reason": safe_reason}
 
 
 # ── Leaderboard Management ────────────────────────────────────────────────────
@@ -193,25 +209,27 @@ async def admin_leaderboard(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(LeaderboardScore)
+        select(LeaderboardScore, User.username, User.display_name)
+        .join(User, User.id == LeaderboardScore.master_id, isouter=True)
         .where(LeaderboardScore.period == "ALL")
         .order_by(LeaderboardScore.total_return_pct.desc())
         .limit(100)
     )
-    scores = result.scalars().all()
+    rows = result.all()
     return [
         {
             "master_id": str(s.master_id),
+            "master_username": display_name or username or str(s.master_id)[:8],
             "period": s.period,
             "total_return_pct": float(s.total_return_pct or 0),
             "max_drawdown_pct": float(s.max_drawdown_pct or 0),
             "sharpe_ratio": float(s.sharpe_ratio or 0),
             "win_rate_pct": float(s.win_rate_pct or 0),
-            "followers_count": s.followers_count,
-            "risk_grade": s.risk_grade,
+            "followers_count": s.followers_count or 0,
+            "risk_grade": s.risk_grade or "C",
             "calculated_at": s.calculated_at.isoformat() if s.calculated_at else None,
         }
-        for s in scores
+        for s, username, display_name in rows
     ]
 
 
@@ -237,6 +255,56 @@ async def remove_from_leaderboard(
         delete(LeaderboardScore).where(LeaderboardScore.master_id == uid)
     )
     await db.commit()
+
+
+# ── Platform Settings ─────────────────────────────────────────────────────────
+
+_SETTINGS_DEFAULTS = {
+    "platform_commission_rate": 20,
+    "require_kyc_for_master": True,
+    "auto_approve_masters": False,
+    "max_followers_per_master": 500,
+    "maintenance_mode": False,
+    "allowed_countries": "All",
+}
+
+@router.get("/platform-settings")
+async def get_platform_settings(
+    admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        return _SETTINGS_DEFAULTS
+    merged = {**_SETTINGS_DEFAULTS, **(tenant.config.get("platform_settings", {}) if tenant.config else {})}
+    return merged
+
+
+@router.put("/platform-settings")
+async def update_platform_settings(
+    payload: dict,
+    admin: dict = Depends(require_admin),
+    tenant_id: uuid.UUID = Depends(get_tenant_id),
+    db: AsyncSession = Depends(get_db),
+):
+    allowed_keys = set(_SETTINGS_DEFAULTS.keys())
+    sanitized = {k: v for k, v in payload.items() if k in allowed_keys}
+
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(404, "Tenant not found")
+
+    current_config = dict(tenant.config or {})
+    current_config["platform_settings"] = {
+        **(current_config.get("platform_settings", {})),
+        **sanitized,
+    }
+    tenant.config = current_config
+    await db.commit()
+    return {**_SETTINGS_DEFAULTS, **current_config["platform_settings"]}
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

@@ -47,6 +47,7 @@ export default function SettingsPage() {
   const [walletAddress, setWalletAddress] = useState("");
   const [emailSignals, setEmailSignals] = useState(true);
   const [emailBilling, setEmailBilling] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const getToken = useCallback(async () => {
     const supabase = createClient();
@@ -63,6 +64,9 @@ export default function SettingsPage() {
         setProfile(data);
         setDisplayName(data.display_name ?? "");
         setUsername(data.username ?? "");
+        setWalletAddress(data.wallet_address ?? "");
+        setEmailSignals(data.email_notify_signals ?? true);
+        setEmailBilling(data.email_notify_billing ?? true);
       } catch {
         // API not available in dev
       } finally {
@@ -73,17 +77,21 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       const token = await getToken();
-      if (token && profile) {
-        await api.users.update(token, { display_name: displayName, username: username || undefined });
-      }
+      if (!token) throw new Error("Not authenticated");
+      await api.users.update(token, {
+        display_name: displayName || undefined,
+        username: username || undefined,
+        wallet_address: walletAddress || undefined,
+        email_notify_signals: emailSignals,
+        email_notify_billing: emailBilling,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch {
-      // silent in dev
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -135,9 +143,14 @@ export default function SettingsPage() {
                         <span key={r} className="text-xs px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">{r}</span>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      To become a Master, contact support or apply from the leaderboard.
-                    </p>
+                    {!(profile?.roles ?? []).includes("MASTER") && (
+                      <Link
+                        href="/dashboard/apply-master"
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-2 gap-1.5 text-xs")}
+                      >
+                        <ArrowUpRight className="h-3.5 w-3.5" /> Apply to become a Master
+                      </Link>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -191,17 +204,22 @@ export default function SettingsPage() {
               </Card>
 
               {/* Save */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={cn(buttonVariants(), "gap-2", saving && "opacity-60 cursor-not-allowed")}
-                >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {saving ? "Saving…" : "Save Changes"}
-                </button>
-                {saved && (
-                  <span className="text-sm text-emerald-400">Saved successfully!</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className={cn(buttonVariants(), "gap-2", saving && "opacity-60 cursor-not-allowed")}
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {saving ? "Saving…" : "Save Changes"}
+                  </button>
+                  {saved && (
+                    <span className="text-sm text-emerald-400">Saved successfully!</span>
+                  )}
+                </div>
+                {saveError && (
+                  <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{saveError}</p>
                 )}
               </div>
             </div>

@@ -27,7 +27,17 @@ export async function GET(request: Request) {
             },
             body: JSON.stringify({
               email: user.email,
-              username: user.user_metadata?.name ?? user.email?.split("@")[0] ?? "user",
+              // Sanitize: strip non-allowed chars, truncate, fallback to email prefix
+              username: (
+                (user.user_metadata?.preferred_username
+                  || user.user_metadata?.name
+                  || user.email?.split("@")[0]
+                  || "user")
+                  .replace(/[^a-zA-Z0-9_\-]/g, "_")
+                  .replace(/^_+|_+$/g, "")
+                  .slice(0, 30)
+                  || "user"
+              ),
               role: "FOLLOWER",
             }),
           }

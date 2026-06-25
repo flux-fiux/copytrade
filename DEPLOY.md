@@ -30,11 +30,16 @@
 1. Create Redis database at **upstash.com** (choose same region as Railway deployment)
 2. Copy `REDIS_URL` from the console (starts with `rediss://`)
 
-## Step 3 — Generate Encryption Key
+## Step 3 — Generate Secret Keys
 
 ```bash
+# MT4 password encryption key (must be exactly 32 bytes hex = 64 chars)
 openssl rand -hex 32
-# → paste as ENCRYPTION_KEY in all services that need it
+# → paste as ENCRYPTION_KEY in API service and Celery worker
+
+# Internal service-to-service token (worker-ct ↔ API)
+openssl rand -hex 32
+# → paste as INTERNAL_API_TOKEN in BOTH API service AND worker-ct service
 ```
 
 ## Step 4 — Railway (4 services)

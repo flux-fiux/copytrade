@@ -29,23 +29,30 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email ?? null);
+      const email = data.session?.user?.email ?? null;
+      setUserEmail(email);
+      const meta = data.session?.user?.user_metadata;
+      setDisplayName(meta?.display_name || meta?.full_name || meta?.username || null);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
+      const meta = session?.user?.user_metadata;
+      setDisplayName(meta?.display_name || meta?.full_name || meta?.username || null);
     });
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => subscribeNotif(setNotifCount), []);
 
-  const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : "U";
+  const shortName = displayName || (userEmail ? userEmail.split("@")[0] : null);
+  const initials = shortName ? shortName.slice(0, 2).toUpperCase() : "U";
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -111,7 +118,7 @@ export function Navbar() {
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm max-w-[120px] truncate">{userEmail}</span>
+                  <span className="hidden sm:block text-sm max-w-[120px] truncate">{shortName || userEmail}</span>
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">

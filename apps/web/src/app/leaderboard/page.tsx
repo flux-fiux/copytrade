@@ -1,11 +1,10 @@
-import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
-import { LeaderboardFilters } from "@/components/leaderboard/leaderboard-filters";
+import { LeaderboardContent } from "@/components/leaderboard/leaderboard-content";
 import { LeaderboardStats } from "@/components/leaderboard/leaderboard-stats";
 import { api, type LeaderboardEntry } from "@/lib/api-client";
 
-export const metadata = { title: "Leaderboard — CopyTrade" };
+export const metadata = { title: "Leaderboard — CopyTrade", description: "Ranked by verified performance. All accounts are independently audited via MetaAPI." };
 
-async function fetchEntries(): Promise<LeaderboardEntry[] | null> {
+async function fetchInitial(): Promise<LeaderboardEntry[] | null> {
   try {
     const data = await api.leaderboard.list("1M", 1);
     return data.entries;
@@ -15,7 +14,7 @@ async function fetchEntries(): Promise<LeaderboardEntry[] | null> {
 }
 
 export default async function LeaderboardPage() {
-  const entries = await fetchEntries();
+  const initial = await fetchInitial();
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -27,10 +26,7 @@ export default async function LeaderboardPage() {
       </div>
       <LeaderboardStats />
       <div className="mt-8">
-        <LeaderboardFilters />
-        <div className="mt-4">
-          <LeaderboardTable apiEntries={entries} />
-        </div>
+        <LeaderboardContent initial={initial} />
       </div>
     </div>
   );

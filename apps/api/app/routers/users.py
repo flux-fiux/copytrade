@@ -1,12 +1,14 @@
 import asyncio
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select, func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import rate_limit
 from app.models.user import User
 from app.models.payment import Payment
 from app.models.signal_subscription import SignalSubscription
@@ -31,10 +33,12 @@ async def get_me(
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def create_user(
+    request: Request,
     payload: UserCreate,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await rate_limit(request, "user_create", max_calls=10, window_seconds=300)
     user_id = uuid.UUID(current_user["sub"])
 
     result = await db.execute(select(User).where(User.id == user_id))
@@ -49,11 +53,19 @@ async def create_user(
         tenant_id=DEFAULT_TENANT_ID,
         email=payload.email,
         username=payload.username,
-        roles=[payload.role],
+        roles=["FOLLOWER"],  # MASTER role must be granted via admin approval only
     )
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    try:
+        await db.commit()
+        await db.refresh(user)
+    except IntegrityError:
+        await db.rollback()
+        result2 = await db.execute(select(User).where(User.id == user_id))
+        existing = result2.scalar_one_or_none()
+        if existing:
+            return existing
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
 
     asyncio.create_task(
         email_service.send_welcome(
@@ -67,10 +79,12 @@ async def create_user(
 
 @router.post("/me/apply-master", status_code=status.HTTP_200_OK)
 async def apply_master(
+    request: Request,
     payload: MasterApplyRequest,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await rate_limit(request, "apply_master", max_calls=3, window_seconds=3600)
     """提交 Master 申请。状态改为 PENDING，等待管理员审批。"""
     user_id = uuid.UUID(current_user["sub"])
     result = await db.execute(select(User).where(User.id == user_id))

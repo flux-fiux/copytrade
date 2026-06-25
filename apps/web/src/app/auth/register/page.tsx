@@ -92,8 +92,13 @@ export default function RegisterPage() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="tradername"
               required
+              minLength={3}
+              maxLength={30}
+              pattern="^[a-zA-Z0-9_\-]+$"
+              title="3–30 characters: letters, numbers, _ or -"
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors"
             />
+            <p className="text-[11px] text-muted-foreground mt-1">Letters, numbers, _ or - only</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Email</label>

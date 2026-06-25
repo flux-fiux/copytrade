@@ -6,8 +6,11 @@ export interface MasterAccount {
 }
 
 export async function fetchMasterAccounts(apiUrl: string): Promise<MasterAccount[]> {
+  const internalToken = process.env.INTERNAL_API_TOKEN ?? '';
   try {
-    const resp = await fetch(`${apiUrl}/api/v1/mt4-accounts/masters`);
+    const resp = await fetch(`${apiUrl}/api/v1/mt4-accounts/masters`, {
+      headers: { 'X-Internal-Token': internalToken },
+    });
     if (!resp.ok) {
       logger.warn({ status: resp.status }, 'API returned non-OK status for master accounts');
       return [];

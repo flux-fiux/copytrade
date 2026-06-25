@@ -17,8 +17,16 @@ const io = new Server(httpServer, {
   transports: ['websocket', 'polling'],
 });
 
-const redis = new Redis(REDIS_URL, { lazyConnect: true });
-const redisSub = new Redis(REDIS_URL, { lazyConnect: true });
+const redisOpts = {
+  lazyConnect: true,
+  retryStrategy: (times: number) => Math.min(times * 200, 5000),
+  maxRetriesPerRequest: null,
+};
+const redis = new Redis(REDIS_URL, redisOpts);
+const redisSub = new Redis(REDIS_URL, redisOpts);
+
+redis.on('error', (err: Error) => logger.error({ err }, 'Redis pub error'));
+redisSub.on('error', (err: Error) => logger.error({ err }, 'Redis sub error'));
 
 app.get('/health', (_req, res) =>
   res.json({ status: 'ok', connections: io.engine.clientsCount }),

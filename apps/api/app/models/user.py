@@ -25,6 +25,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    wallet_address: Mapped[str | None] = mapped_column(String(200))
+    email_notify_signals: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_notify_billing: Mapped[bool] = mapped_column(Boolean, default=True)
+
     # Master application fields (populated when user submits apply form)
     apply_strategy: Mapped[str | None] = mapped_column(String(200))
     apply_description: Mapped[str | None] = mapped_column(Text)
