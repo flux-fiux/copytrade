@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -7,6 +8,7 @@ from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, UserUpdate
+from app.services.email_service import email_service
 
 router = APIRouter()
 
@@ -51,6 +53,14 @@ async def create_user(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+
+    asyncio.create_task(
+        email_service.send_welcome(
+            to_email=user.email,
+            name=user.display_name or user.username,
+        )
+    )
+
     return user
 
 

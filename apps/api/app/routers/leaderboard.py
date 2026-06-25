@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_tenant_id
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.leaderboard_score import LeaderboardScore
 from app.models.user import User
@@ -12,7 +13,19 @@ from app.models.trade_history import TradeHistory
 from app.schemas.leaderboard import LeaderboardEntry, LeaderboardResponse
 from app.services import ai_service
 
+import redis.asyncio as aioredis
+
 router = APIRouter()
+
+_redis: aioredis.Redis | None = None
+
+def _get_redis() -> aioredis.Redis:
+    global _redis
+    if _redis is None:
+        _redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+    return _redis
+
+_AI_CACHE_TTL = 3600 * 6  # 6 小时
 
 _MOCK_ENTRIES = [
     LeaderboardEntry(rank=1, master_id="00000000-0000-0000-0000-000000000010", username="AlphaWave FX",
@@ -146,8 +159,17 @@ async def get_master_ai_summary(
     tenant_id: uuid.UUID = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """用 AI 解读 Master 的交易风格，帮助 Follower 做决策。"""
-    # 取最近 50 笔已平仓交易历史
+    """用 AI 解读 Master 的交易风格，帮助 Follower 做决策。结果缓存 6 小时。"""
+    cache_key = f"ai_summary:{master_id}:{lang}"
+    try:
+        r = _get_redis()
+        cached = await r.get(cache_key)
+        if cached:
+            import json as _json
+            return _json.loads(cached)
+    except Exception:
+        pass
+
     result = await db.execute(
         select(TradeHistory)
         .where(TradeHistory.master_id == master_id)
@@ -170,4 +192,24 @@ async def get_master_ai_summary(
     ]
 
     summary = await ai_service.explain_master(trade_data, lang=lang)
-    return {"summary": summary, "trade_count": len(trade_data), "lang": lang}
+    response = {"summary": summary, "trade_count": len(trade_data), "lang": lang}
+
+    try:
+        import json as _json
+        await _get_redis().setex(cache_key, _AI_CACHE_TTL, _json.dumps(response))
+    except Exception:
+        pass
+
+    return response
+
+
+@router.delete("/{master_id}/ai-summary/cache", include_in_schema=False)
+async def invalidate_ai_summary_cache(master_id: uuid.UUID):
+    """管理员手动清除 AI 摘要缓存（内部用）。"""
+    try:
+        r = _get_redis()
+        keys = [f"ai_summary:{master_id}:{lang}" for lang in ("en", "zh-CN", "ja", "es")]
+        await r.delete(*keys)
+    except Exception:
+        pass
+    return {"cleared": True}

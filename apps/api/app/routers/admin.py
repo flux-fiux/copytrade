@@ -194,7 +194,7 @@ async def admin_leaderboard(
 ):
     result = await db.execute(
         select(LeaderboardScore)
-        .where(LeaderboardScore.period == "ALL_TIME")
+        .where(LeaderboardScore.period == "ALL")
         .order_by(LeaderboardScore.total_return_pct.desc())
         .limit(100)
     )
@@ -213,6 +213,17 @@ async def admin_leaderboard(
         }
         for s in scores
     ]
+
+
+@router.post("/leaderboard/recalculate")
+async def trigger_leaderboard_recalculate(
+    full: bool = Query(False, description="True=全量所有周期, False=只算1M和ALL"),
+    admin: dict = Depends(require_admin),
+):
+    """手动触发排行榜重算 Celery 任务。"""
+    from app.tasks.leaderboard import recalculate_leaderboard
+    task = recalculate_leaderboard.delay(full=full)
+    return {"task_id": task.id, "full": full, "status": "queued"}
 
 
 @router.delete("/leaderboard/{master_id}", status_code=204)
