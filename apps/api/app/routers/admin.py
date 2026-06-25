@@ -252,4 +252,13 @@ def _user_dict(u: User) -> dict:
         "kyc_status": u.kyc_status,
         "is_active": u.is_active,
         "created_at": u.created_at.isoformat() if u.created_at else None,
+        # Master application fields
+        "apply_strategy": u.apply_strategy,
+        "apply_description": u.apply_description,
+        "apply_trading_style": u.apply_trading_style,
+        "apply_monthly_return_pct": float(u.apply_monthly_return_pct) if u.apply_monthly_return_pct is not None else None,
+        "apply_max_drawdown_pct": float(u.apply_max_drawdown_pct) if u.apply_max_drawdown_pct is not None else None,
+        "apply_price_usd": float(u.apply_price_usd) if u.apply_price_usd is not None else None,
+        "apply_perf_fee_pct": float(u.apply_perf_fee_pct) if u.apply_perf_fee_pct is not None else None,
+        "applied_at": u.applied_at.isoformat() if u.applied_at else None,
     }

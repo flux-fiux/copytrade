@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Numeric, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from app.core.database import Base
@@ -24,6 +24,16 @@ class User(Base):
     stripe_connect_id: Mapped[str | None] = mapped_column(String(100))  # Master's Connect account
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    # Master application fields (populated when user submits apply form)
+    apply_strategy: Mapped[str | None] = mapped_column(String(200))
+    apply_description: Mapped[str | None] = mapped_column(Text)
+    apply_trading_style: Mapped[str | None] = mapped_column(String(20))  # SCALPING|SWING|POSITION|MIXED
+    apply_monthly_return_pct: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    apply_max_drawdown_pct: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    apply_price_usd: Mapped[float | None] = mapped_column(Numeric(10, 2))
+    apply_perf_fee_pct: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    applied_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
 
     tenant: Mapped["Tenant"] = relationship(back_populates="users")  # type: ignore[name-defined]
     mt4_accounts: Mapped[list["MT4Account"]] = relationship(back_populates="user")  # type: ignore[name-defined]

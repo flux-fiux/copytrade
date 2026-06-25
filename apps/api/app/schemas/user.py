@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -19,6 +19,16 @@ class UserUpdate(BaseModel):
     risk_tolerance: str | None = None
 
 
+class MasterApplyRequest(BaseModel):
+    strategy_name: str = Field(..., min_length=2, max_length=200)
+    trading_style: Literal["SCALPING", "SWING", "POSITION", "MIXED"]
+    description: str = Field(..., min_length=20, max_length=1000)
+    monthly_return_pct: float = Field(..., ge=0, le=500)
+    max_drawdown_pct: float = Field(..., ge=0, le=100)
+    price_usd: float = Field(..., ge=0, le=500)
+    perf_fee_pct: float = Field(default=0, ge=0, le=50)
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,4 +40,24 @@ class UserOut(BaseModel):
     roles: list[str]
     kyc_status: str
     preferred_lang: str
+    created_at: datetime
+
+
+class MasterApplicationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    email: str
+    username: str | None
+    display_name: str | None
+    roles: list[str]
+    kyc_status: str
+    apply_strategy: str | None
+    apply_description: str | None
+    apply_trading_style: str | None
+    apply_monthly_return_pct: float | None
+    apply_max_drawdown_pct: float | None
+    apply_price_usd: float | None
+    apply_perf_fee_pct: float | None
+    applied_at: datetime | None
     created_at: datetime

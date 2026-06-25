@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.models.payment import Payment
 from app.models.signal_subscription import SignalSubscription
-from app.schemas.user import UserCreate, UserOut, UserUpdate
+from app.schemas.user import UserCreate, UserOut, UserUpdate, MasterApplyRequest, MasterApplicationOut
 from app.services.email_service import email_service
 
 router = APIRouter()
@@ -37,13 +37,11 @@ async def create_user(
 ):
     user_id = uuid.UUID(current_user["sub"])
 
-    # Upsert — return existing if already exists
     result = await db.execute(select(User).where(User.id == user_id))
     existing = result.scalar_one_or_none()
     if existing:
         return existing
 
-    # Resolve default tenant (platform tenant, id=1 placeholder)
     DEFAULT_TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
     user = User(
@@ -67,6 +65,57 @@ async def create_user(
     return user
 
 
+@router.post("/me/apply-master", status_code=status.HTTP_200_OK)
+async def apply_master(
+    payload: MasterApplyRequest,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """提交 Master 申请。状态改为 PENDING，等待管理员审批。"""
+    user_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if "MASTER" in (user.roles or []):
+        raise HTTPException(status_code=400, detail="Already a Master")
+
+    if user.kyc_status == "PENDING":
+        raise HTTPException(status_code=400, detail="Application already pending review")
+
+    if user.kyc_status == "VERIFIED":
+        raise HTTPException(status_code=400, detail="Already verified as Master")
+
+    user.kyc_status = "PENDING"
+    user.apply_strategy = payload.strategy_name
+    user.apply_description = payload.description
+    user.apply_trading_style = payload.trading_style
+    user.apply_monthly_return_pct = payload.monthly_return_pct
+    user.apply_max_drawdown_pct = payload.max_drawdown_pct
+    user.apply_price_usd = payload.price_usd
+    user.apply_perf_fee_pct = payload.perf_fee_pct
+    user.applied_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(user)
+    return {"status": "pending", "message": "Application submitted — you will be notified by email within 1-3 business days."}
+
+
+@router.get("/me/application", response_model=MasterApplicationOut)
+async def get_my_application(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """查看当前用户的 Master 申请状态。"""
+    user_id = uuid.UUID(current_user["sub"])
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
 @router.get("/me/earnings")
 async def get_my_earnings(
     current_user: dict = Depends(get_current_user),
@@ -75,7 +124,6 @@ async def get_my_earnings(
     """Master 收益汇总：历史付款记录 + 活跃 Follower 数。"""
     master_id = uuid.UUID(current_user["sub"])
 
-    # 活跃 Follower 数
     followers_result = await db.execute(
         select(func.count()).select_from(SignalSubscription).where(
             SignalSubscription.master_id == master_id,
@@ -84,7 +132,6 @@ async def get_my_earnings(
     )
     followers_count = followers_result.scalar_one() or 0
 
-    # 已完成的付款记录（payee = master）
     payments_result = await db.execute(
         select(Payment).where(
             Payment.payee_id == master_id,
@@ -95,7 +142,6 @@ async def get_my_earnings(
 
     total_earned = sum(float(p.master_earnings_usd or 0) for p in payments)
 
-    # 按月汇总
     monthly: dict[str, dict] = {}
     for p in payments:
         key = p.created_at.strftime("%b %Y") if p.created_at else "Unknown"
@@ -108,17 +154,8 @@ async def get_my_earnings(
         else:
             monthly[key]["subscription_usd"] += earnings
 
-    # 本月 pending（当月订阅费的 80%，尚未结算）
     now = datetime.now(timezone.utc)
     current_month_key = now.strftime("%b %Y")
-    pending_result = await db.execute(
-        select(func.count(), func.coalesce(func.sum(SignalSubscription.lot_multiplier), 0)).where(
-            SignalSubscription.master_id == master_id,
-            SignalSubscription.status == "ACTIVE",
-        )
-    )
-    sub_data = pending_result.one()
-    # 估算：followers × 平均订阅价 × 80% (简化：用 followers_count × $29 × 0.8)
     pending_estimate = followers_count * 29 * 0.8
 
     if current_month_key not in monthly:
@@ -130,13 +167,11 @@ async def get_my_earnings(
             "status": "PENDING",
         }
 
-    history = list(monthly.values())
-
     return {
         "total_earned": round(total_earned, 2),
         "pending": round(pending_estimate, 2),
         "followers_count": followers_count,
-        "monthly_history": history,
+        "monthly_history": list(monthly.values()),
     }
 
 
