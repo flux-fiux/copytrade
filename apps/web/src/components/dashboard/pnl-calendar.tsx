@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -12,10 +13,10 @@ interface DayData {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function PnlCalendar() {
+  const t = useTranslations("dashboard");
+  const locale = useLocale();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -54,6 +55,12 @@ export function PnlCalendar() {
   const winDays = data.filter((d) => d.profit > 0).length;
   const tradeDays = data.filter((d) => d.trades > 0).length;
 
+  const monthLabel = new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(year, month - 1, 1));
+  // Jan 1 2023 was a Sunday — generate localized weekday short names Sun..Sat.
+  const weekdays = Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(2023, 0, 1 + i))
+  );
+
   const cells: (DayData | null | "empty")[] = [
     ...Array(firstDay).fill("empty"),
     ...Array.from({ length: daysInMonth }, (_, i) => {
@@ -85,7 +92,7 @@ export function PnlCalendar() {
           <ChevronLeft className="h-4 w-4" />
         </button>
         <span className="font-semibold text-sm flex-1 text-center">
-          {MONTHS[month - 1]} {year}
+          {monthLabel} {year}
         </span>
         <button onClick={nextMonth} className="p-1 rounded hover:bg-muted/50 text-muted-foreground">
           <ChevronRight className="h-4 w-4" />
@@ -95,9 +102,9 @@ export function PnlCalendar() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Total P&L", value: `${totalProfit >= 0 ? "+" : ""}$${totalProfit.toFixed(2)}`, color: totalProfit >= 0 ? "text-emerald-400" : "text-red-400" },
-          { label: "Win Days", value: `${winDays}/${tradeDays}`, color: "text-zinc-300" },
-          { label: "Win Rate", value: tradeDays > 0 ? `${Math.round(winDays / tradeDays * 100)}%` : "—", color: "text-zinc-300" },
+          { label: t("cal_total_pnl"), value: `${totalProfit >= 0 ? "+" : ""}$${totalProfit.toFixed(2)}`, color: totalProfit >= 0 ? "text-emerald-400" : "text-red-400" },
+          { label: t("cal_win_days"), value: `${winDays}/${tradeDays}`, color: "text-zinc-300" },
+          { label: t("cal_win_rate"), value: tradeDays > 0 ? `${Math.round(winDays / tradeDays * 100)}%` : "—", color: "text-zinc-300" },
         ].map((stat) => (
           <div key={stat.label} className="bg-muted/30 rounded-lg p-2 text-center">
             <div className={cn("text-sm font-bold font-mono", stat.color)}>{loading ? "…" : stat.value}</div>
@@ -109,7 +116,7 @@ export function PnlCalendar() {
       {/* Calendar grid */}
       <div>
         <div className="grid grid-cols-7 mb-1">
-          {DAYS.map((d) => (
+          {weekdays.map((d) => (
             <div key={d} className="text-center text-[10px] text-zinc-600 py-1">{d}</div>
           ))}
         </div>
@@ -154,11 +161,11 @@ export function PnlCalendar() {
         <div className="bg-muted/30 rounded-lg p-3 text-sm space-y-1">
           <div className="font-medium text-zinc-300">{selected.date}</div>
           <div className="flex justify-between text-xs">
-            <span className="text-zinc-500">Trades</span>
+            <span className="text-zinc-500">{t("cal_trades")}</span>
             <span>{selected.trades}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-zinc-500">P&amp;L</span>
+            <span className="text-zinc-500">{t("cal_pnl")}</span>
             <span className={selected.profit >= 0 ? "text-emerald-400" : "text-red-400"}>
               {selected.profit >= 0 ? "+" : ""}${selected.profit.toFixed(2)}
             </span>

@@ -187,7 +187,18 @@
     "pnl_calendar_sub": "跟单交易表现",
     "connect_mt4": "绑定 MT4 账户",
     "browse_masters": "浏览 Master",
-    "my_subscriptions": "我的订阅"
+    "my_subscriptions": "我的订阅",
+    "cal_total_pnl": "总盈亏",
+    "cal_win_days": "盈利天数",
+    "cal_win_rate": "胜率",
+    "cal_trades": "交易数",
+    "cal_pnl": "盈亏",
+    "onboarding_title": "完成你的信号源设置",
+    "onboarding_steps": "已完成 {completed}/{total} 步——设置完成前跟随者无法订阅",
+    "onboarding_setup": "设置",
+    "onboarding_go": "前往",
+    "connect_success": "Stripe Connect 账户已关联——现在可以接收结算款项。",
+    "connect_expired": "Stripe Connect 会话已过期。请再次点击“设置”重新开始。"
   },
   "settings": {
     "title": "设置",
@@ -612,5 +623,16 @@
     "save": "保存",
     "delete": "删除",
     "confirm": "确认"
+  },
+  "unsubscribe": {
+    "processing": "处理中…",
+    "done_title": "你已退订",
+    "done_desc": "你将不再收到 CopyTrade 的营销邮件。交易类邮件（订阅收据、安全提醒）仍会发送。",
+    "back_home": "返回首页",
+    "title": "退订邮件",
+    "error": "出错了。请重试或联系客服。",
+    "prompt": "点击下方将 {email} 从 CopyTrade 营销邮件中退订。",
+    "invalid": "退订链接无效。",
+    "button": "退订 {email}"
   }
 }

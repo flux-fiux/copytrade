@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Circle, ChevronRight, X, Loader2, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ interface OnboardingStatus {
 }
 
 export function MasterOnboardingCard() {
+  const t = useTranslations("dashboard");
   const [status, setStatus]     = useState<OnboardingStatus | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -81,9 +83,9 @@ export function MasterOnboardingCard() {
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h3 className="text-sm font-semibold">Complete your Master setup</h3>
+            <h3 className="text-sm font-semibold">{t("onboarding_title")}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {status.completed}/{status.total} steps done — followers can&apos;t subscribe until setup is complete
+              {t("onboarding_steps", { completed: status.completed, total: status.total })}
             </p>
           </div>
           <button
@@ -135,14 +137,14 @@ export function MasterOnboardingCard() {
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         : <ExternalLink className="h-3.5 w-3.5" />
                       }
-                      Set up
+                      {t("onboarding_setup")}
                     </button>
                   ) : step.href ? (
                     <Link
                       href={step.href}
                       className="flex items-center gap-0.5 text-xs text-blue-400 hover:text-blue-300 shrink-0"
                     >
-                      Go <ChevronRight className="h-3.5 w-3.5" />
+                      {t("onboarding_go")} <ChevronRight className="h-3.5 w-3.5" />
                     </Link>
                   ) : null}
                 </>

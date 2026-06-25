@@ -187,7 +187,18 @@
     "pnl_calendar_sub": "コピートレードのパフォーマンス",
     "connect_mt4": "MT4 アカウントを接続",
     "browse_masters": "マスターを探す",
-    "my_subscriptions": "マイサブスクリプション"
+    "my_subscriptions": "マイサブスクリプション",
+    "cal_total_pnl": "損益合計",
+    "cal_win_days": "勝ち日数",
+    "cal_win_rate": "勝率",
+    "cal_trades": "取引数",
+    "cal_pnl": "損益",
+    "onboarding_title": "マスター設定を完了",
+    "onboarding_steps": "{completed}/{total} ステップ完了——設定が完了するまでフォロワーは購読できません",
+    "onboarding_setup": "設定",
+    "onboarding_go": "移動",
+    "connect_success": "Stripe Connect アカウントを連携しました——これで受取が可能です。",
+    "connect_expired": "Stripe Connect セッションの有効期限が切れました。「設定」を再度クリックしてやり直してください。"
   },
   "settings": {
     "title": "設定",
@@ -612,5 +623,16 @@
     "save": "保存",
     "delete": "削除",
     "confirm": "確認"
+  },
+  "unsubscribe": {
+    "processing": "処理中…",
+    "done_title": "配信を停止しました",
+    "done_desc": "今後 CopyTrade からのマーケティングメールは届きません。取引関連メール（購読領収書、セキュリティ通知）は引き続き送信されます。",
+    "back_home": "ホームに戻る",
+    "title": "メール配信を停止",
+    "error": "問題が発生しました。もう一度お試しいただくか、サポートにお問い合わせください。",
+    "prompt": "下のボタンをクリックして {email} を CopyTrade のマーケティングメールから配信停止します。",
+    "invalid": "無効な配信停止リンクです。",
+    "button": "{email} を配信停止"
   }
 }

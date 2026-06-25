@@ -2,9 +2,11 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
 
 function ConnectReturnBannerInner() {
+  const t = useTranslations("dashboard");
   const params = useSearchParams();
   const router = useRouter();
   const connect = params.get("connect");
@@ -36,9 +38,7 @@ function ConnectReturnBannerInner() {
         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
       )}
       <p className="flex-1">
-        {isSuccess
-          ? "Stripe Connect account linked — you can now receive payouts."
-          : "Stripe Connect session expired. Click \"Set up\" again to restart."}
+        {isSuccess ? t("connect_success") : t("connect_expired")}
       </p>
       <button onClick={() => setVisible(false)} className="opacity-60 hover:opacity-100 transition-opacity">
         <X className="h-4 w-4" />

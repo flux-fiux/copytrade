@@ -187,7 +187,18 @@
     "pnl_calendar_sub": "Tu rendimiento en operaciones copiadas",
     "connect_mt4": "Conectar cuenta MT4",
     "browse_masters": "Explorar Masters",
-    "my_subscriptions": "Mis suscripciones"
+    "my_subscriptions": "Mis suscripciones",
+    "cal_total_pnl": "P&L total",
+    "cal_win_days": "Días ganadores",
+    "cal_win_rate": "Tasa de acierto",
+    "cal_trades": "Operaciones",
+    "cal_pnl": "P&L",
+    "onboarding_title": "Completa tu configuración de Master",
+    "onboarding_steps": "{completed}/{total} pasos completados — los seguidores no pueden suscribirse hasta completar la configuración",
+    "onboarding_setup": "Configurar",
+    "onboarding_go": "Ir",
+    "connect_success": "Cuenta de Stripe Connect vinculada — ya puedes recibir pagos.",
+    "connect_expired": "La sesión de Stripe Connect expiró. Haz clic en «Configurar» de nuevo para reiniciar."
   },
   "settings": {
     "title": "Configuración",
@@ -612,5 +623,16 @@
     "save": "Guardar",
     "delete": "Eliminar",
     "confirm": "Confirmar"
+  },
+  "unsubscribe": {
+    "processing": "Procesando…",
+    "done_title": "Te has dado de baja",
+    "done_desc": "Ya no recibirás correos de marketing de CopyTrade. Los correos transaccionales (recibos de suscripción, alertas de seguridad) se seguirán enviando.",
+    "back_home": "Volver al inicio",
+    "title": "Darse de baja de los correos",
+    "error": "Algo salió mal. Inténtalo de nuevo o contacta con soporte.",
+    "prompt": "Haz clic abajo para dar de baja a {email} de los correos de marketing de CopyTrade.",
+    "invalid": "Enlace de baja no válido.",
+    "button": "Dar de baja a {email}"
   }
 }

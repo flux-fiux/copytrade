@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { CheckCircle, Loader2, MailX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function UnsubscribeContent() {
+  const t = useTranslations("unsubscribe");
   const params = useSearchParams();
   const token  = params.get("token");
   const email  = params.get("email");
@@ -35,20 +37,19 @@ function UnsubscribeContent() {
         {status === "loading" && (
           <>
             <Loader2 className="h-10 w-10 animate-spin text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Processing…</p>
+            <p className="text-muted-foreground">{t("processing")}</p>
           </>
         )}
 
         {status === "done" && (
           <>
             <CheckCircle className="h-10 w-10 text-emerald-400 mx-auto mb-4" />
-            <h1 className="text-xl font-semibold mb-2">You&apos;ve been unsubscribed</h1>
+            <h1 className="text-xl font-semibold mb-2">{t("done_title")}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              You&apos;ll no longer receive marketing emails from CopyTrade.
-              Transactional emails (subscription receipts, security alerts) will still be sent.
+              {t("done_desc")}
             </p>
             <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Back to home
+              {t("back_home")}
             </Link>
           </>
         )}
@@ -56,14 +57,12 @@ function UnsubscribeContent() {
         {(status === "idle" || status === "error") && (
           <>
             <MailX className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-xl font-semibold mb-2">Unsubscribe from emails</h1>
+            <h1 className="text-xl font-semibold mb-2">{t("title")}</h1>
             {status === "error" ? (
-              <p className="text-sm text-red-400 mb-4">Something went wrong. Please try again or contact support.</p>
+              <p className="text-sm text-red-400 mb-4">{t("error")}</p>
             ) : (
               <p className="text-sm text-muted-foreground mb-6">
-                {email
-                  ? `Click below to unsubscribe ${email} from CopyTrade marketing emails.`
-                  : "Invalid unsubscribe link."}
+                {email ? t("prompt", { email }) : t("invalid")}
               </p>
             )}
             {email && (
@@ -71,7 +70,7 @@ function UnsubscribeContent() {
                 onClick={() => setStatus("loading")}
                 className={cn(buttonVariants({ variant: "destructive", size: "sm" }))}
               >
-                Unsubscribe {email}
+                {t("button", { email })}
               </button>
             )}
           </>

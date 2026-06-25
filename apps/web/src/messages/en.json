@@ -187,7 +187,18 @@
     "pnl_calendar_sub": "Your copy trade performance",
     "connect_mt4": "Connect MT4 Account",
     "browse_masters": "Browse Masters",
-    "my_subscriptions": "My Subscriptions"
+    "my_subscriptions": "My Subscriptions",
+    "cal_total_pnl": "Total P&L",
+    "cal_win_days": "Win Days",
+    "cal_win_rate": "Win Rate",
+    "cal_trades": "Trades",
+    "cal_pnl": "P&L",
+    "onboarding_title": "Complete your Master setup",
+    "onboarding_steps": "{completed}/{total} steps done — followers can't subscribe until setup is complete",
+    "onboarding_setup": "Set up",
+    "onboarding_go": "Go",
+    "connect_success": "Stripe Connect account linked — you can now receive payouts.",
+    "connect_expired": "Stripe Connect session expired. Click \"Set up\" again to restart."
   },
   "settings": {
     "title": "Settings",
@@ -612,5 +623,16 @@
     "save": "Save",
     "delete": "Delete",
     "confirm": "Confirm"
+  },
+  "unsubscribe": {
+    "processing": "Processing…",
+    "done_title": "You've been unsubscribed",
+    "done_desc": "You'll no longer receive marketing emails from CopyTrade. Transactional emails (subscription receipts, security alerts) will still be sent.",
+    "back_home": "Back to home",
+    "title": "Unsubscribe from emails",
+    "error": "Something went wrong. Please try again or contact support.",
+    "prompt": "Click below to unsubscribe {email} from CopyTrade marketing emails.",
+    "invalid": "Invalid unsubscribe link.",
+    "button": "Unsubscribe {email}"
   }
 }
