@@ -69,7 +69,10 @@ class Settings(BaseSettings):
 
     # AI Analyst — TradingAgents multi-agent core (powered by DeepSeek for cost)
     ALPHA_VANTAGE_API_KEY: str = ""          # market data source for the agents (free tier)
-    AGENT_DEEP_MODEL: str = "deepseek-reasoner"   # deliberation / debate
+    # deepseek-chat = fast non-thinking mode (was deepseek-reasoner, ~5min/run).
+    # NOTE: deepseek-chat/-reasoner deprecate 2026-07-24 → migrate to
+    # deepseek-v4-flash (non-thinking) once the thinking-toggle param is confirmed.
+    AGENT_DEEP_MODEL: str = "deepseek-chat"       # deliberation / debate
     AGENT_QUICK_MODEL: str = "deepseek-chat"      # fast tool-calling steps
     AGENT_MAX_DEBATE_ROUNDS: int = 1
 
