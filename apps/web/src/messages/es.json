@@ -17,7 +17,8 @@
     "apply_pending": "Solicitud pendiente",
     "reapply_master": "Volver a solicitar",
     "home": "Inicio",
-    "leaderboard_short": "Líderes"
+    "leaderboard_short": "Líderes",
+    "ai_analyst": "Analista IA"
   },
   "home": {
     "hero_title": "Copia a los mejores",
@@ -673,5 +674,21 @@
     "terms": "Términos",
     "privacy": "Privacidad",
     "rights": "Todos los derechos reservados."
+  },
+  "analyst": {
+    "title": "Analista IA",
+    "subtitle": "Investigación multiagente: los analistas debaten y deciden. Con IA.",
+    "unavailable_title": "El Analista IA aún no está configurado",
+    "unavailable_desc": "Un administrador debe añadir el proveedor de IA y las claves de API de datos de mercado.",
+    "symbol_placeholder": "Símbolo, p. ej. AAPL, BTC, EURUSD",
+    "stock": "Acciones",
+    "crypto": "Cripto",
+    "forex": "Forex",
+    "analyze": "Analizar",
+    "hint": "Un análisis multiagente completo tarda 1–3 minutos y se ejecuta en segundo plano.",
+    "agents_working": "Agentes trabajando…",
+    "failed": "El análisis falló",
+    "rate_limited": "Demasiados análisis, ve más despacio.",
+    "history": "Historial"
   }
 }

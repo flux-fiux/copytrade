@@ -24,7 +24,7 @@ NIL_TENANT = uuid.UUID("00000000-0000-0000-0000-000000000000")
 TENANT_SCOPED_MODELS = [
     "User", "MT4Account", "Signal", "TradeHistory", "SignalSubscription",
     "CopyTrade", "LeaderboardScore", "SubscriptionPlan", "Payment", "Notification",
-    "MasterReview", "MasterAnnouncement",
+    "MasterReview", "MasterAnnouncement", "AgentAnalysis",
 ]
 
 

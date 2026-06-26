@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as aioredis
 from app.core.config import settings
-from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants, webhooks, admin, payments, analytics, notifications, broker, reviews, announcements
+from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, market_data, subscriptions, tenants, webhooks, admin, payments, analytics, notifications, broker, reviews, announcements, agents
 from app.services.market_data import market_data_service
 from app.services.copyfactory import copyfactory_service
 
@@ -94,6 +94,7 @@ app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["
 app.include_router(broker.router, prefix="/api/v1/broker", tags=["broker"])
 app.include_router(reviews.router, prefix="/api/v1/masters", tags=["reviews"])
 app.include_router(announcements.router, prefix="/api/v1/masters", tags=["announcements"])
+app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
 
 
 @app.get("/health")

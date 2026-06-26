@@ -17,7 +17,8 @@
     "apply_pending": "申请审核中",
     "reapply_master": "重新申请",
     "home": "首页",
-    "leaderboard_short": "排行"
+    "leaderboard_short": "排行",
+    "ai_analyst": "AI 分析师"
   },
   "home": {
     "hero_title": "复制全球顶尖",
@@ -673,5 +674,21 @@
     "terms": "服务条款",
     "privacy": "隐私政策",
     "rights": "保留所有权利。"
+  },
+  "analyst": {
+    "title": "AI 分析师",
+    "subtitle": "多智能体研究——分析师辩论后给出决策,AI 驱动。",
+    "unavailable_title": "AI 分析师尚未配置",
+    "unavailable_desc": "管理员需要配置 AI 服务商和行情数据 API 密钥。",
+    "symbol_placeholder": "代码,如 AAPL、BTC、EURUSD",
+    "stock": "股票",
+    "crypto": "加密货币",
+    "forex": "外汇",
+    "analyze": "分析",
+    "hint": "完整多智能体分析约需 1–3 分钟,在后台运行。",
+    "agents_working": "智能体分析中…",
+    "failed": "分析失败",
+    "rate_limited": "分析过于频繁,请稍后再试。",
+    "history": "历史记录"
   }
 }

@@ -17,7 +17,8 @@
     "apply_pending": "Application Pending",
     "reapply_master": "Reapply as Master",
     "home": "Home",
-    "leaderboard_short": "Leaders"
+    "leaderboard_short": "Leaders",
+    "ai_analyst": "AI Analyst"
   },
   "home": {
     "hero_title": "Copy the World's Best",
@@ -673,5 +674,21 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "rights": "All rights reserved."
+  },
+  "analyst": {
+    "title": "AI Analyst",
+    "subtitle": "Multi-agent research — analysts debate, then decide. Powered by AI.",
+    "unavailable_title": "AI Analyst not configured yet",
+    "unavailable_desc": "An administrator needs to add the AI provider and market-data API keys.",
+    "symbol_placeholder": "Symbol, e.g. AAPL, BTC, EURUSD",
+    "stock": "Stock",
+    "crypto": "Crypto",
+    "forex": "Forex",
+    "analyze": "Analyze",
+    "hint": "A full multi-agent run takes 1–3 minutes and runs in the background.",
+    "agents_working": "Agents working…",
+    "failed": "Analysis failed",
+    "rate_limited": "Too many analyses — please slow down.",
+    "history": "History"
   }
 }

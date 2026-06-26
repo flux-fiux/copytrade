@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
 
+    # AI Analyst — TradingAgents multi-agent core (powered by DeepSeek for cost)
+    ALPHA_VANTAGE_API_KEY: str = ""          # market data source for the agents (free tier)
+    AGENT_DEEP_MODEL: str = "deepseek-reasoner"   # deliberation / debate
+    AGENT_QUICK_MODEL: str = "deepseek-chat"      # fast tool-calling steps
+    AGENT_MAX_DEBATE_ROUNDS: int = 1
+
     # Internal service auth (worker-ct → API)
     INTERNAL_API_TOKEN: str = "dev-internal-token-change-in-prod"
 

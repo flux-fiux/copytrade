@@ -12,10 +12,11 @@ from app.models.notification import Notification
 from app.models.api_key import ApiKey
 from app.models.master_review import MasterReview
 from app.models.master_announcement import MasterAnnouncement
+from app.models.agent_analysis import AgentAnalysis
 
 __all__ = [
     "Tenant", "User", "MT4Account", "Signal", "TradeHistory",
     "SignalSubscription", "CopyTrade", "LeaderboardScore",
     "SubscriptionPlan", "Payment", "Notification", "ApiKey", "MasterReview",
-    "MasterAnnouncement",
+    "MasterAnnouncement", "AgentAnalysis",
 ]

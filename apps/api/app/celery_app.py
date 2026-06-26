@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.workers.settlement_tasks",
         "app.workers.mt4_sync_tasks",
         "app.workers.subscription_expiry_tasks",
+        "app.workers.agent_tasks",
     ],
 )
 

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   LayoutDashboard, Cpu, BookOpen, Radio, DollarSign, Settings,
-  Star, Clock, XCircle, Copy,
+  Star, Clock, XCircle, Copy, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -49,6 +49,7 @@ function Sidebar() {
     { href: "/dashboard/subscriptions", label: t("subscriptions"), icon: BookOpen },
     { href: "/dashboard/signals", label: t("signals"), icon: Radio },
     { href: "/dashboard/trades", label: t("trades"), icon: Copy },
+    { href: "/dashboard/analyst", label: t("ai_analyst"), icon: Sparkles },
     ...(isMaster
       ? [{ href: "/dashboard/earnings", label: t("earnings"), icon: DollarSign }]
       : []),

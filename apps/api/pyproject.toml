@@ -36,6 +36,11 @@ dev = [
     "ruff>=0.8.0",
     "mypy>=1.13.0",
 ]
+# AI Analyst core — heavy (langgraph/langchain + provider SDKs). Installed only in
+# the dedicated agent-worker image to avoid bloating/conflicting the main API.
+agents = [
+    "tradingagents @ git+https://github.com/TauricResearch/TradingAgents.git",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
