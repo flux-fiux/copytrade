@@ -65,7 +65,7 @@ export function Integrations() {
           className="mt-5 font-heading text-4xl font-bold tracking-tight md:text-5xl"
         >
           {t("int_title_a")}{" "}
-          <span className="bg-gradient-to-r from-primary via-indigo-400 to-primary bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
             {t("int_title_b")}
           </span>
         </motion.h2>

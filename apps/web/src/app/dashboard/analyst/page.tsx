@@ -38,12 +38,16 @@ async function token(): Promise<string | null> {
 
 function DecisionBadge({ d }: { d: string | null }) {
   const v = (d ?? "").toUpperCase();
-  const map: Record<string, { cls: string; icon: React.ReactNode }> = {
-    BUY: { cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <TrendingUp className="h-4 w-4" /> },
-    SELL: { cls: "text-red-400 bg-red-500/10 border-red-500/30", icon: <TrendingDown className="h-4 w-4" /> },
-    HOLD: { cls: "text-amber-400 bg-amber-500/10 border-amber-500/30", icon: <Minus className="h-4 w-4" /> },
-  };
-  const s = map[v] ?? { cls: "text-muted-foreground bg-muted/30 border-border", icon: null };
+  // The model also returns OVERWEIGHT / UNDERWEIGHT / ACCUMULATE / REDUCE etc.
+  const buy = v.includes("BUY") || v.includes("OVERWEIGHT") || v.includes("ACCUMULATE") || v.includes("LONG");
+  const sell = v.includes("SELL") || v.includes("UNDERWEIGHT") || v.includes("REDUCE") || v.includes("SHORT");
+  const s = buy
+    ? { cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <TrendingUp className="h-4 w-4" /> }
+    : sell
+    ? { cls: "text-red-400 bg-red-500/10 border-red-500/30", icon: <TrendingDown className="h-4 w-4" /> }
+    : v
+    ? { cls: "text-amber-400 bg-amber-500/10 border-amber-500/30", icon: <Minus className="h-4 w-4" /> }
+    : { cls: "text-muted-foreground bg-muted/30 border-border", icon: null };
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm font-semibold ${s.cls}`}>
       {s.icon}{v || "—"}

@@ -58,11 +58,21 @@ const gradeStyles: Record<string, string> = {
   "D": "border-red-500/50 text-red-400 bg-red-500/10",
 };
 
+const MEDAL: Record<number, string> = {
+  1: "bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950 shadow-sm shadow-amber-500/30",
+  2: "bg-gradient-to-br from-zinc-200 to-zinc-400 text-zinc-800 shadow-sm shadow-zinc-400/20",
+  3: "bg-gradient-to-br from-orange-300 to-orange-700 text-orange-50 shadow-sm shadow-orange-600/20",
+};
+
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-yellow-400 font-bold text-lg">🥇</span>;
-  if (rank === 2) return <span className="text-zinc-300 font-bold text-lg">🥈</span>;
-  if (rank === 3) return <span className="text-amber-600 font-bold text-lg">🥉</span>;
-  return <span className="text-muted-foreground font-medium text-sm">#{rank}</span>;
+  if (MEDAL[rank]) {
+    return (
+      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${MEDAL[rank]}`}>
+        {rank}
+      </span>
+    );
+  }
+  return <span className="text-sm font-semibold text-muted-foreground">{rank}</span>;
 }
 
 interface Props {

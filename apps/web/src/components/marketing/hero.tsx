@@ -44,7 +44,7 @@ export function Hero() {
           className="mx-auto mt-6 max-w-4xl font-heading text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl"
         >
           {t("title_a")}{" "}
-          <span className="bg-gradient-to-r from-primary via-indigo-400 to-primary bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
             {t("title_b")}
           </span>
         </motion.h1>
