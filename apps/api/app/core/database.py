@@ -1,18 +1,14 @@
-import uuid as _uuid
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker, with_loader_criteria
 from app.core.config import settings
 from app.core.tenant_context import get_current_tenant, TENANT_SCOPED_MODELS
 
-# Supabase's transaction pooler (PgBouncer) does not keep prepared statements
-# across checkouts. asyncpg caches/names them, causing DuplicatePreparedStatement
-# errors. Disable the cache and give each prepared statement a unique name.
+# PgBouncer-safe asyncpg: disable the prepared-statement cache. Use Supabase's
+# SESSION pooler (port 5432) for a long-running server — transaction mode (6543)
+# splits prepare/execute across backends and breaks prepared statements.
 _is_asyncpg = settings.DATABASE_URL.startswith("postgresql+asyncpg")
-_connect_args = (
-    {"statement_cache_size": 0, "prepared_statement_name_func": lambda: f"__asyncpg_{_uuid.uuid4()}__"}
-    if _is_asyncpg else {}
-)
+_connect_args = {"statement_cache_size": 0} if _is_asyncpg else {}
 
 engine = create_async_engine(
     settings.DATABASE_URL,
