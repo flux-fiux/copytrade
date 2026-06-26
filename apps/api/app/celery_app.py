@@ -36,10 +36,11 @@ celery_app.conf.update(
             "task": "app.workers.leaderboard_tasks.recalculate_all",
             "schedule": crontab(minute=0),
         },
-        # Risk guard: check every 15 min
+        # Risk guard backstop: poll every 5 min (CopyFactory native riskLimits is the
+        # real-time primary; this catches slower / cross-day drawdown).
         "risk-guard": {
             "task": "app.workers.risk_guard_tasks.check_all_subscriptions",
-            "schedule": crontab(minute="*/15"),
+            "schedule": crontab(minute="*/5"),
         },
         # OHLCV refresh: every hour at :05 (after leaderboard finishes at :00)
         "ohlcv-refresh": {

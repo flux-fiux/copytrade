@@ -1,6 +1,8 @@
+import logging
 import httpx
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
 COPYFACTORY_BASE = "https://copyfactory-api-v1.new-york.agiliumtrade.ai"
 
 
@@ -58,10 +60,26 @@ class CopyFactoryService:
         if allowed_symbols:
             subscription_config["symbolFilter"] = {"included": allowed_symbols}
 
-        r = await self._get_client().put(
-            f"{COPYFACTORY_BASE}/users/current/configuration/subscribers/{subscriber_meta_account_id}",
-            json={"name": "subscriber", "subscriptions": [subscription_config]},
-        )
+        url = f"{COPYFACTORY_BASE}/users/current/configuration/subscribers/{subscriber_meta_account_id}"
+
+        # Native CopyFactory stop-out: when the follower's daily loss reaches
+        # max_drawdown_pct of balance, CopyFactory halts copying AND closes open
+        # positions in real time (far better than the 5-min polling backstop).
+        risk_limits = [{
+            "type": "day",
+            "applyTo": "balance-difference",
+            "maxRelativeRisk": round(max_drawdown_pct / 100, 4),
+            "closePositions": True,
+        }]
+        with_risk = {"name": "subscriber", "subscriptions": [{**subscription_config, "riskLimits": risk_limits}]}
+
+        r = await self._get_client().put(url, json=with_risk)
+        if r.status_code == 400:
+            # Degrade gracefully — never block a subscription on risk-config shape.
+            logger.warning("[CopyFactory] riskLimits rejected, subscribing without it: %s", r.text[:160])
+            r = await self._get_client().put(
+                url, json={"name": "subscriber", "subscriptions": [subscription_config]}
+            )
         r.raise_for_status()
         return {"subscriberAccountId": subscriber_meta_account_id}
 
