@@ -117,12 +117,17 @@ class RiskGuard:
         follower = follower_result.scalar_one_or_none()
         if follower:
             from app.services.email_service import email_service
-            asyncio.create_task(email_service.send_drawdown_alert(
-                to_email=follower.email,
-                master_name=master_name,
-                current_drawdown=current_dd,
-                max_drawdown=max_dd,
-            ))
+            # await (not create_task): this runs inside the Celery task's asyncio.run,
+            # which cancels pending tasks on exit — fire-and-forget would drop the alert.
+            try:
+                await email_service.send_drawdown_alert(
+                    to_email=follower.email,
+                    master_name=master_name,
+                    current_drawdown=current_dd,
+                    max_drawdown=max_dd,
+                )
+            except Exception as e:
+                logger.warning("[RiskGuard] drawdown email failed: %s", e)
 
     async def resume_subscription(self, subscription_id: uuid.UUID, session: AsyncSession) -> bool:
         result = await session.execute(
@@ -146,6 +151,9 @@ class RiskGuard:
         follower_account = follower_result.scalar_one_or_none()
 
         if master_account and follower_account and master_account.copy_factory_strategy_id:
+            # The follower may have been undeployed (cost logic) — ensure it's
+            # broker-connected before re-wiring CopyFactory.
+            await metaapi_service.wait_until_connected(follower_account.meta_api_account_id, timeout=45)
             try:
                 await copyfactory_service.create_subscriber(
                     follower_account.meta_api_account_id,
@@ -154,7 +162,10 @@ class RiskGuard:
                     max_drawdown_pct=float(subscription.max_drawdown_pct or 20.0),
                 )
             except Exception as e:
-                logger.error("[RiskGuard] CopyFactory resume failed: %s", e)
+                # Do NOT mark ACTIVE without working copy wiring — the user would
+                # believe they're resumed while nothing is actually copied.
+                logger.error("[RiskGuard] CopyFactory resume failed, staying PAUSED: %s", e)
+                return False
 
         subscription.status = "ACTIVE"
         subscription.pause_reason = None

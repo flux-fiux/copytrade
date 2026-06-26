@@ -60,7 +60,17 @@ class CopyFactoryService:
         if allowed_symbols:
             subscription_config["symbolFilter"] = {"included": allowed_symbols}
 
+        client = self._get_client()
         url = f"{COPYFACTORY_BASE}/users/current/configuration/subscribers/{subscriber_meta_account_id}"
+
+        # The subscriber PUT is a FULL REPLACE. A follower account may follow several
+        # masters, so read-modify-write: keep existing subscriptions, drop any stale
+        # entry for this strategy, then append — otherwise following a 2nd master
+        # silently wipes the 1st.
+        existing: list[dict] = []
+        g = await client.get(url)
+        if g.status_code == 200:
+            existing = [s for s in g.json().get("subscriptions", []) if s.get("strategyId") != strategy_id]
 
         # Native CopyFactory stop-out: when the follower's daily loss reaches
         # max_drawdown_pct of balance, CopyFactory halts copying AND closes open
@@ -71,17 +81,26 @@ class CopyFactoryService:
             "maxRelativeRisk": round(max_drawdown_pct / 100, 4),
             "closePositions": True,
         }]
-        with_risk = {"name": "subscriber", "subscriptions": [{**subscription_config, "riskLimits": risk_limits}]}
 
-        r = await self._get_client().put(url, json=with_risk)
+        def _body(with_risk: bool) -> dict:
+            cfg = {**subscription_config, **({"riskLimits": risk_limits} if with_risk else {})}
+            return {"name": "subscriber", "subscriptions": existing + [cfg]}
+
+        risk_native = True
+        r = await client.put(url, json=_body(True))
         if r.status_code == 400:
-            # Degrade gracefully — never block a subscription on risk-config shape.
-            logger.warning("[CopyFactory] riskLimits rejected, subscribing without it: %s", r.text[:160])
-            r = await self._get_client().put(
-                url, json={"name": "subscriber", "subscriptions": [subscription_config]}
+            # Don't block the subscription on risk-config shape — but this is NOT
+            # silent: log loudly so ops know the native real-time stop-out is OFF and
+            # only the 5-min polling backstop guards this follower.
+            risk_native = False
+            logger.error(
+                "[CopyFactory] native riskLimits REJECTED for %s — copying will run "
+                "WITHOUT real-time stop-out (polling backstop only): %s",
+                subscriber_meta_account_id, r.text[:160],
             )
+            r = await client.put(url, json=_body(False))
         r.raise_for_status()
-        return {"subscriberAccountId": subscriber_meta_account_id}
+        return {"subscriberAccountId": subscriber_meta_account_id, "risk_native": risk_native}
 
     async def remove_subscriber_strategy(self, subscriber_meta_account_id: str, strategy_id: str) -> None:
         if self._is_mock():

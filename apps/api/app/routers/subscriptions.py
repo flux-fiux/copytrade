@@ -309,7 +309,7 @@ async def _undeploy_if_idle(db: AsyncSession, sub: SignalSubscription) -> None:
         n = (await db.execute(
             select(func.count()).select_from(SignalSubscription).where(
                 SignalSubscription.follower_account_id == sub.follower_account_id,
-                SignalSubscription.status == "ACTIVE",
+                SignalSubscription.status.in_(["ACTIVE", "PENDING"]),
             )
         )).scalar() or 0
         if n == 0:
@@ -327,7 +327,7 @@ async def _undeploy_if_idle(db: AsyncSession, sub: SignalSubscription) -> None:
     n2 = (await db.execute(
         select(func.count()).select_from(SignalSubscription).where(
             SignalSubscription.master_id == sub.master_id,
-            SignalSubscription.status == "ACTIVE",
+            SignalSubscription.status.in_(["ACTIVE", "PENDING"]),
         )
     )).scalar() or 0
     if n2 == 0:
