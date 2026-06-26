@@ -37,10 +37,7 @@ def _assert_production_config() -> None:
         errors.append("CRYPTOMUS_MERCHANT_UUID")
     if settings.SECRET_KEY in ("change-me-in-production", ""):
         errors.append("SECRET_KEY (still using default)")
-    if not settings.STRIPE_SECRET_KEY:
-        errors.append("STRIPE_SECRET_KEY")
-    if not settings.STRIPE_WEBHOOK_SECRET:
-        errors.append("STRIPE_WEBHOOK_SECRET")
+    # Stripe is optional — the platform runs on crypto (Cryptomus) by default.
     if not settings.METAAPI_TOKEN:
         errors.append("METAAPI_TOKEN")
     if errors:
