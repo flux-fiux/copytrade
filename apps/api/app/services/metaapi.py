@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 import httpx
 from fastapi import HTTPException
 from app.core.config import settings
@@ -58,6 +59,23 @@ class MetaAPIService:
             )
         if resp.status_code not in (200, 204):
             raise HTTPException(502, detail=f"MetaAPI deploy error: {resp.text[:200]}")
+
+    async def wait_until_connected(self, account_id: str, timeout: int = 45, interval: int = 5) -> bool:
+        """Poll until the account is broker-CONNECTED (CopyFactory strategy/subscriber
+        creation requires it). Returns False on timeout rather than raising."""
+        if self._dev_mode:
+            return True
+        elapsed = 0
+        while elapsed < timeout:
+            try:
+                info = await self.get_account_info(account_id)
+                if info.get("connectionStatus") == "CONNECTED":
+                    return True
+            except Exception:
+                pass
+            await asyncio.sleep(interval)
+            elapsed += interval
+        return False
 
     async def get_account_info(self, account_id: str) -> dict:
         if self._dev_mode:

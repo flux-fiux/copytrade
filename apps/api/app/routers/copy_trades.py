@@ -93,6 +93,10 @@ async def create_copy_trade(
     """Internal: record a copy trade execution. Called by worker-ct after CopyFactory executes."""
     try:
         faid = payload.get("follower_account_id")
+        if not faid:
+            # follower_account_id is NOT NULL — a copy trade can't exist without a
+            # follower MT4 account. Reject clearly instead of hitting a DB constraint.
+            raise HTTPException(status_code=422, detail="follower_account_id is required for a copy trade")
         trade = CopyTrade(
             tenant_id=uuid.UUID(payload["tenant_id"]),
             subscription_id=uuid.UUID(payload["subscription_id"]),

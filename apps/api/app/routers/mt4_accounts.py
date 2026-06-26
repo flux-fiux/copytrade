@@ -1,4 +1,5 @@
 import uuid
+import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -15,6 +16,7 @@ from app.services.encryption import encrypt
 from app.services.metaapi import metaapi_service
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 DEFAULT_TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
@@ -51,17 +53,21 @@ async def connect_account(
     )
     meta_api_account_id = meta_info["id"]
     await metaapi_service.deploy_account(meta_api_account_id)
+    # CopyFactory strategy/subscriber creation requires the account to be
+    # broker-CONNECTED, not just deployed — wait (bounded) before proceeding.
+    connected = await metaapi_service.wait_until_connected(meta_api_account_id, timeout=45)
 
     copy_factory_strategy_id = None
-    if payload.account_type == "MASTER":
+    if payload.account_type == "MASTER" and connected:
         # CopyFactory strategy IDs must be exactly 4 alphanumeric chars.
         strategy_id = uuid.uuid4().hex[:4]
-        await copyfactory_service.create_strategy(
-            strategy_id,
-            meta_api_account_id,
-            f"{payload.broker_name}-{payload.login}",
-        )
-        copy_factory_strategy_id = strategy_id
+        try:
+            await copyfactory_service.create_strategy(
+                strategy_id, meta_api_account_id, f"{payload.broker_name}-{payload.login}",
+            )
+            copy_factory_strategy_id = strategy_id
+        except Exception as e:  # don't fail the connect — sync backfills the strategy
+            logger.warning("[connect] strategy create deferred for %s: %s", meta_api_account_id, e)
 
     account = MT4Account(
         user_id=user_id,
@@ -72,7 +78,7 @@ async def connect_account(
         server=payload.server,
         account_type=payload.account_type,
         platform=payload.platform,
-        connection_status="CONNECTING",
+        connection_status="CONNECTED" if connected else "CONNECTING",
         encrypted_password=encrypt(payload.password),
         copy_factory_strategy_id=copy_factory_strategy_id,
     )
@@ -101,6 +107,22 @@ async def sync_account(
     account.equity = info.get("equity")
     account.connection_status = info.get("connectionStatus", "CONNECTED")
     account.last_synced_at = datetime.now(timezone.utc)
+
+    # Backfill the CopyFactory strategy if connect couldn't create it yet (account
+    # wasn't CONNECTED in time). Now that it's connected, create it lazily.
+    if (
+        account.account_type == "MASTER"
+        and account.connection_status == "CONNECTED"
+        and not account.copy_factory_strategy_id
+    ):
+        strategy_id = uuid.uuid4().hex[:4]
+        try:
+            await copyfactory_service.create_strategy(
+                strategy_id, account.meta_api_account_id, f"{account.broker_name}-{account.login}",
+            )
+            account.copy_factory_strategy_id = strategy_id
+        except Exception as e:
+            logger.warning("[sync] strategy backfill failed for %s: %s", account.meta_api_account_id, e)
 
     await db.commit()
     await db.refresh(account)

@@ -26,6 +26,7 @@ from app.schemas.subscription import (
 )
 from app.models.mt4_account import MT4Account
 from app.services.copyfactory import copyfactory_service
+from app.services.metaapi import metaapi_service
 from app.services.stripe_service import stripe_service
 from app.services.email_service import email_service
 
@@ -215,6 +216,9 @@ async def subscribe(
             )
 
         if master_account and master_account.copy_factory_strategy_id and follower_account:
+            # CopyFactory subscriber creation requires the follower account to be
+            # broker-CONNECTED, not just deployed — wait (bounded) first.
+            await metaapi_service.wait_until_connected(follower_account.meta_api_account_id, timeout=45)
             try:
                 cf_result = await copyfactory_service.create_subscriber(
                     subscriber_meta_account_id=follower_account.meta_api_account_id,
@@ -224,7 +228,17 @@ async def subscribe(
                 )
                 copy_factory_sub_id = cf_result.get("subscriberAccountId") or follower_account.meta_api_account_id
             except Exception as exc:
-                logger.warning("[subscribe] CopyFactory wiring failed: %s", exc)
+                # A subscription whose copy wiring failed is useless — fail loud so the
+                # user can retry, rather than silently creating a non-copying sub.
+                logger.error("[subscribe] CopyFactory subscriber creation failed: %s", exc)
+                raise HTTPException(
+                    status.HTTP_502_BAD_GATEWAY, f"Copy setup failed, please retry: {exc}"
+                ) from exc
+        elif master_account and not master_account.copy_factory_strategy_id:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "This master's copy strategy isn't ready yet — please try again in a moment.",
+            )
 
         sub = SignalSubscription(
             tenant_id=follower.tenant_id,

@@ -26,19 +26,19 @@ class CopyFactoryService:
     async def create_strategy(self, strategy_id: str, master_meta_account_id: str, name: str) -> dict:
         if self._is_mock():
             return {"id": strategy_id, "mock": True}
+        # Minimal payload — CopyFactory rejects extra/invalid fields like
+        # positionLifecycle / maxTradeRisk with a 400 ValidationError.
         r = await self._get_client().put(
             f"{COPYFACTORY_BASE}/users/current/configuration/strategies/{strategy_id}",
             json={
                 "name": name,
-                "positionLifecycle": "hedging",
+                "description": name,
                 "accountId": master_meta_account_id,
-                "maxTradeRisk": 0.1,
-                "riskLimits": [],
-                "timeSettings": {},
             },
         )
         r.raise_for_status()
-        return r.json()
+        # CopyFactory returns 204 No Content on success — don't parse a body.
+        return {"id": strategy_id}
 
     async def create_subscriber(
         self,
@@ -54,17 +54,16 @@ class CopyFactoryService:
         subscription_config: dict = {
             "strategyId": strategy_id,
             "multiplier": lot_multiplier,
-            "maxTradeRisk": max_drawdown_pct / 100,
         }
         if allowed_symbols:
             subscription_config["symbolFilter"] = {"included": allowed_symbols}
 
         r = await self._get_client().put(
             f"{COPYFACTORY_BASE}/users/current/configuration/subscribers/{subscriber_meta_account_id}",
-            json={"subscriptions": [subscription_config]},
+            json={"name": "subscriber", "subscriptions": [subscription_config]},
         )
         r.raise_for_status()
-        return r.json()
+        return {"subscriberAccountId": subscriber_meta_account_id}
 
     async def remove_subscriber_strategy(self, subscriber_meta_account_id: str, strategy_id: str) -> None:
         if self._is_mock():
