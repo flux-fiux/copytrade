@@ -1,5 +1,6 @@
 import uuid
 import jwt
+from jwt import PyJWKClient
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -9,6 +10,17 @@ from app.core.tenant_context import set_current_tenant
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+# Modern Supabase signs JWTs with asymmetric keys (ES256/RS256) verified via the
+# project's JWKS endpoint. Legacy projects use an HS256 shared secret. Support both.
+_jwks_client: PyJWKClient | None = None
+
+
+def _jwks() -> PyJWKClient | None:
+    global _jwks_client
+    if _jwks_client is None and settings.SUPABASE_URL:
+        _jwks_client = PyJWKClient(f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json")
+    return _jwks_client
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
@@ -16,28 +28,26 @@ async def get_current_user(
     if not credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
-    if not settings.SUPABASE_JWT_SECRET:
-        # No JWT secret configured — only acceptable in local dev with explicit flag
-        if settings.APP_ENV != "development":
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
-        # Dev mode: parse without verification so local testing works with a real Supabase token
-        try:
-            payload = jwt.decode(credentials.credentials, options={"verify_signature": False})
-            return payload
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
+    token = credentials.credentials
     try:
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        return payload
+        alg = jwt.get_unverified_header(token).get("alg", "HS256")
+        if alg in ("ES256", "RS256", "EdDSA"):
+            client = _jwks()
+            if not client:
+                raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
+            key = client.get_signing_key_from_jwt(token).key
+            return jwt.decode(token, key, algorithms=[alg], audience="authenticated")
+        # HS256 (legacy shared secret)
+        if not settings.SUPABASE_JWT_SECRET:
+            if settings.APP_ENV != "development":
+                raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
+            return jwt.decode(token, options={"verify_signature": False})
+        return jwt.decode(token, settings.SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+    except HTTPException:
+        raise
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-    except jwt.InvalidTokenError:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
