@@ -1,0 +1,17 @@
+# Auto-HTTPS reverse proxy. Domains come from the root .env (passed as env to caddy).
+# Requires: A/AAAA records for all three domains pointing at this server, ports 80+443 open.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8000
+}
+
+# Socket.IO — Caddy upgrades websockets automatically.
+{$WS_DOMAIN} {
+	reverse_proxy worker-rt:3001
+}

@@ -16,6 +16,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Self-host: emit a minimal standalone server for the Docker image. In the
+  // Docker build the context is apps/web alone (no monorepo parent), so the
+  // standalone output is flat at .next/standalone/server.js.
+  output: "standalone",
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
