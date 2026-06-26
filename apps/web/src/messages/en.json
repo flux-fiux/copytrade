@@ -726,6 +726,19 @@
     "ai_agent_news": "News & sentiment",
     "ai_agent_debate": "Bull vs bear debate",
     "ai_agent_verdict": "Risk-checked verdict",
-    "ai_cta": "Run an analysis"
+    "ai_cta": "Run an analysis",
+    "int_eyebrow": "Integrations",
+    "int_title_a": "Trade anywhere,",
+    "int_title_b": "execute everywhere",
+    "int_subtitle": "Mirror your MT4/MT5 brokers today, and soon route AI-driven strategies straight to the world's top crypto exchanges. Every decision reaches your accounts automatically.",
+    "int_live": "Live",
+    "int_soon": "Soon",
+    "int_fx_title": "Forex / CFD / Stocks",
+    "int_fx_desc": "Connect MetaTrader and major brokers via MetaAPI — copy trades mirror to your account in milliseconds.",
+    "int_crypto_title": "Crypto Exchanges",
+    "int_crypto_desc": "The Strategy Engine will execute agent and algo strategies across leading spot & derivatives venues.",
+    "int_stat_venues": "Venues & brokers",
+    "int_stat_latency": "Copy latency",
+    "int_stat_security": "Key encryption"
   }
 }

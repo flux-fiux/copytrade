@@ -726,6 +726,19 @@
     "ai_agent_news": "ニュースと心理",
     "ai_agent_debate": "強気vs弱気の議論",
     "ai_agent_verdict": "リスク検証済み判定",
-    "ai_cta": "分析を実行"
+    "ai_cta": "分析を実行",
+    "int_eyebrow": "連携",
+    "int_title_a": "どこでも取引、",
+    "int_title_b": "どこでも執行",
+    "int_subtitle": "今すぐ MT4/MT5 ブローカーをミラーし、まもなく AI 戦略を世界トップの暗号資産取引所へ直接執行。すべての判断が自動であなたの口座へ。",
+    "int_live": "稼働中",
+    "int_soon": "近日",
+    "int_fx_title": "FX / CFD / 株式",
+    "int_fx_desc": "MetaAPI 経由で MetaTrader と主要ブローカーに接続——コピーはミリ秒で口座へミラー。",
+    "int_crypto_title": "暗号資産取引所",
+    "int_crypto_desc": "戦略エンジンがエージェントとアルゴ戦略を主要な現物・デリバティブ取引所へ執行。",
+    "int_stat_venues": "取引所・ブローカー",
+    "int_stat_latency": "コピー遅延",
+    "int_stat_security": "鍵の暗号化"
   }
 }

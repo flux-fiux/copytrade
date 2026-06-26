@@ -726,6 +726,19 @@
     "ai_agent_news": "新闻与情绪",
     "ai_agent_debate": "多空辩论",
     "ai_agent_verdict": "风控后结论",
-    "ai_cta": "跑一次分析"
+    "ai_cta": "跑一次分析",
+    "int_eyebrow": "对接生态",
+    "int_title_a": "随处交易,",
+    "int_title_b": "处处执行",
+    "int_subtitle": "现在即可镜像你的 MT4/MT5 经纪商,很快还能把 AI 驱动的策略直达全球顶级数字货币交易所。每个决策都自动抵达你的账户。",
+    "int_live": "已上线",
+    "int_soon": "即将",
+    "int_fx_title": "外汇 / CFD / 股票",
+    "int_fx_desc": "通过 MetaAPI 对接 MetaTrader 和主流经纪商——跟单毫秒级镜像到你的账户。",
+    "int_crypto_title": "数字货币交易所",
+    "int_crypto_desc": "策略引擎将把智能体与量化策略执行到主流现货及衍生品交易所。",
+    "int_stat_venues": "交易所与经纪商",
+    "int_stat_latency": "跟单延迟",
+    "int_stat_security": "密钥加密"
   }
 }

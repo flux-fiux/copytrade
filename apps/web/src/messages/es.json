@@ -726,6 +726,19 @@
     "ai_agent_news": "Noticias y sentimiento",
     "ai_agent_debate": "Debate alcista/bajista",
     "ai_agent_verdict": "Veredicto con riesgo",
-    "ai_cta": "Ejecutar análisis"
+    "ai_cta": "Ejecutar análisis",
+    "int_eyebrow": "Integraciones",
+    "int_title_a": "Opera donde sea,",
+    "int_title_b": "ejecuta en todas partes",
+    "int_subtitle": "Replica tus brókers MT4/MT5 hoy y pronto enruta estrategias de IA directamente a los principales exchanges de cripto. Cada decisión llega a tus cuentas automáticamente.",
+    "int_live": "En vivo",
+    "int_soon": "Pronto",
+    "int_fx_title": "Forex / CFD / Acciones",
+    "int_fx_desc": "Conecta MetaTrader y brókers principales vía MetaAPI — el copy refleja en tu cuenta en milisegundos.",
+    "int_crypto_title": "Exchanges de cripto",
+    "int_crypto_desc": "El Motor de Estrategias ejecutará estrategias de agentes y algos en los principales exchanges spot y derivados.",
+    "int_stat_venues": "Exchanges y brókers",
+    "int_stat_latency": "Latencia de copia",
+    "int_stat_security": "Cifrado de claves"
   }
 }

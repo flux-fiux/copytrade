@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   TrendingUp, BarChart2, Shield, Users, ArrowRight, CheckCircle2,
-  Zap, FlaskConical, Brain, Calculator, Clock, Globe, ChevronRight,
+  Zap, FlaskConical, Brain, Calculator, Clock, Globe,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { Hero } from "@/components/marketing/hero";
 import { PriceTicker } from "@/components/marketing/price-ticker";
 import { Modules } from "@/components/marketing/modules";
 import { AiSpotlight } from "@/components/marketing/ai-spotlight";
+import { Integrations } from "@/components/marketing/integrations";
+import { Reveal } from "@/components/marketing/reveal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -53,12 +55,6 @@ const gradeColor: Record<string, string> = {
 
 export default async function HomePage() {
   const [topMasters, t] = await Promise.all([fetchTopMasters(), getTranslations("home")]);
-
-  const HOW_IT_WORKS = [
-    { step: "01", title: t("how1_title"), desc: t("how1_desc"), cta: "dashboard/accounts" },
-    { step: "02", title: t("how2_title"), desc: t("how2_desc"), cta: "leaderboard" },
-    { step: "03", title: t("how3_title"), desc: t("how3_desc"), cta: "dashboard" },
-  ];
 
   const FEATURES = [
     { icon: TrendingUp,   title: t("feat1_title"), desc: t("feat1_desc") },
@@ -119,26 +115,7 @@ export default async function HomePage() {
       <PriceTicker />
       <Modules />
       <AiSpotlight />
-
-      {/* ── How it Works ─────────────────────────────────────────────────── */}
-      <section className="py-20 px-4 border-b border-border/40">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-2">{t("how_title")}</h2>
-          <p className="text-center text-muted-foreground mb-12 text-sm">{t("how_subtitle")}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {HOW_IT_WORKS.map((step) => (
-              <div key={step.step} className="relative">
-                <div className="text-5xl font-black text-primary/10 mb-3 leading-none">{step.step}</div>
-                <h3 className="font-semibold text-base mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{step.desc}</p>
-                <Link href={`/${step.cta}`} className="text-xs text-primary hover:text-primary/80 inline-flex items-center gap-1 transition-colors">
-                  {t("how_get_started")} <ChevronRight className="h-3 w-3" />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Integrations />
 
       {/* ── Paper Trading Callout ─────────────────────────────────────────── */}
       <section className="py-10 px-4 border-b border-border/40 bg-amber-500/5">
@@ -162,7 +139,7 @@ export default async function HomePage() {
 
       {/* ── Top Masters ──────────────────────────────────────────────────── */}
       <section className="py-16 px-4 border-b border-border/40">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold">{t("top_providers")}</h2>
@@ -210,9 +187,9 @@ export default async function HomePage() {
       </section>
 
       {/* ── Features 8-grid ──────────────────────────────────────────────── */}
-      <section className="py-16 px-4 border-b border-border/40">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl font-bold text-center mb-3">{t("features_title")}</h2>
+      <section className="py-20 px-4 border-b border-border/40">
+        <Reveal className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-3">{t("features_title")}</h2>
           <p className="text-center text-muted-foreground text-sm mb-12">{t("features_subtitle")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
@@ -227,12 +204,12 @@ export default async function HomePage() {
               </Card>
             ))}
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
       <section className="py-16 px-4 border-b border-border/40 bg-muted/10">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-6xl">
           <h2 className="text-2xl font-bold text-center mb-3">{t("pricing_title")}</h2>
           <p className="text-center text-muted-foreground text-sm mb-12">{t("pricing_subtitle")}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -277,7 +254,7 @@ export default async function HomePage() {
 
       {/* ── Terminal Teaser ───────────────────────────────────────────────── */}
       <section className="py-16 px-4 border-b border-border/40">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row items-center gap-10">
             <div className="flex-1">
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary text-xs">
