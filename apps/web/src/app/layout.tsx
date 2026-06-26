@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { PwaRegister } from "@/components/pwa-register";
 import { getTenantBranding } from "@/lib/tenant";
 
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <PwaRegister />
           <Navbar branding={branding} />
           <main className="flex-1 pb-16 md:pb-0">{children}</main>
+          <SiteFooter />
           <MobileNav />
         </NextIntlClientProvider>
       </body>

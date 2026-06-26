@@ -663,5 +663,11 @@
     "new_body_ph": "Escribe una novedad para tus seguidores…",
     "post": "Publicar",
     "delete": "Eliminar"
+  },
+  "footer": {
+    "disclaimer": "Operar con derivados conlleva un riesgo sustancial de pérdida. Algunas cifras mostradas pueden ser datos de muestra ilustrativos. El rendimiento pasado no garantiza resultados futuros.",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "rights": "Todos los derechos reservados."
   }
 }

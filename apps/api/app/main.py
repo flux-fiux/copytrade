@@ -7,6 +7,18 @@ from app.routers import users, mt4_accounts, signals, copy_trades, leaderboard, 
 from app.services.market_data import market_data_service
 from app.services.copyfactory import copyfactory_service
 
+# Error monitoring — only active when SENTRY_DSN is configured.
+if settings.SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            environment=settings.APP_ENV,
+            traces_sample_rate=0.1,
+        )
+    except Exception:  # never let monitoring setup break startup
+        pass
+
 
 def _assert_production_config() -> None:
     """生产环境启动时校验关键配置，缺失直接拒绝启动。"""

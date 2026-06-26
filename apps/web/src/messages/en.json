@@ -663,5 +663,11 @@
     "new_body_ph": "Write an update for your followers…",
     "post": "Post",
     "delete": "Delete"
+  },
+  "footer": {
+    "disclaimer": "Trading derivatives carries a substantial risk of loss. Some figures shown may be illustrative sample data. Past performance does not guarantee future results.",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "rights": "All rights reserved."
   }
 }

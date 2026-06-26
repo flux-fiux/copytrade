@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # BYPASSRLS and the RLS migration applied. Keep false until both are in place.
     RLS_ENABLED: bool = False
 
+    # Error monitoring (optional — set to enable Sentry)
+    SENTRY_DSN: str = ""
+
     # Supabase
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
