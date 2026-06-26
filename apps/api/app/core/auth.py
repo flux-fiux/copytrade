@@ -36,13 +36,13 @@ async def get_current_user(
             if not client:
                 raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
             key = client.get_signing_key_from_jwt(token).key
-            return jwt.decode(token, key, algorithms=[alg], audience="authenticated")
+            return jwt.decode(token, key, algorithms=[alg], audience="authenticated", leeway=60)
         # HS256 (legacy shared secret)
         if not settings.SUPABASE_JWT_SECRET:
             if settings.APP_ENV != "development":
                 raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
             return jwt.decode(token, options={"verify_signature": False})
-        return jwt.decode(token, settings.SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+        return jwt.decode(token, settings.SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated", leeway=60)
     except HTTPException:
         raise
     except jwt.ExpiredSignatureError:
