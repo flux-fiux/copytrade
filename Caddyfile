@@ -1,17 +1,21 @@
-# Auto-HTTPS reverse proxy. Domains come from the root .env (passed as env to caddy).
-# Requires: A/AAAA records for all three domains pointing at this server, ports 80+443 open.
+# Single-domain, path-based routing + automatic HTTPS.
+# Requires: A record for $APP_DOMAIN → server IP, ports 80+443 open.
+#   /api/*        → FastAPI (keeps the /api/v1 prefix)
+#   /socket.io/*  → Socket.IO realtime (websocket upgrade handled automatically)
+#   everything else → Next.js web
 
 {$APP_DOMAIN} {
 	encode zstd gzip
-	reverse_proxy web:3000
-}
 
-{$API_DOMAIN} {
-	encode zstd gzip
-	reverse_proxy api:8000
-}
+	handle /api/* {
+		reverse_proxy api:8000
+	}
 
-# Socket.IO — Caddy upgrades websockets automatically.
-{$WS_DOMAIN} {
-	reverse_proxy worker-rt:3001
+	handle /socket.io/* {
+		reverse_proxy worker-rt:3001
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
 }

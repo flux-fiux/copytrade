@@ -1,7 +1,10 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# npm install (not ci): the committed lockfile is managed at the monorepo root,
+# so the per-package one can be stale. In this standalone context npm install
+# resolves correctly from package.json.
+RUN npm install --no-audit --no-fund
 COPY tsconfig*.json ./
 COPY src ./src
 # Build, then drop devDeps in place (single install — no second network fetch).

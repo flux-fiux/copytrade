@@ -3,7 +3,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm ci
+# npm install (not ci): per-package lockfile is managed at the monorepo root and
+# can be stale; in this standalone build context npm install resolves from package.json.
+RUN npm install --no-audit --no-fund
 COPY tsconfig*.json ./
 COPY src ./src
 # Build, then drop devDeps in place (single install — no second network fetch).
