@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { TrendingUp, BarChart2, LayoutDashboard, Home } from "lucide-react";
+import { TrendingUp, BarChart2, LayoutDashboard, Home, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
@@ -11,8 +11,9 @@ export function MobileNav() {
 
   const tabs = [
     { href: "/", label: t("home"), icon: Home, exact: true },
-    { href: "/leaderboard", label: t("leaderboard_short"), icon: TrendingUp },
     { href: "/terminal", label: t("terminal"), icon: BarChart2 },
+    { href: "/dashboard/analyst", label: t("ai_short"), icon: Sparkles },
+    { href: "/leaderboard", label: t("leaderboard_short"), icon: TrendingUp },
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
   ];
 

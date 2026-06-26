@@ -18,7 +18,8 @@
     "reapply_master": "Volver a solicitar",
     "home": "Inicio",
     "leaderboard_short": "Líderes",
-    "ai_analyst": "Analista IA"
+    "ai_analyst": "Analista IA",
+    "ai_short": "IA"
   },
   "home": {
     "hero_title": "Copia a los mejores",
@@ -693,7 +694,11 @@
     "depth_fast": "Rápido (2)",
     "depth_balanced": "Equilibrado (3)",
     "depth_deep": "Profundo (4)",
-    "depth_hint": "Más analistas = más profundo pero más lento"
+    "depth_hint": "Más analistas = más profundo pero más lento",
+    "signin_to_use": "Inicia sesión para usar el Analista IA",
+    "fast_note": "Modo rápido · ~2-3 min, en segundo plano",
+    "open_full": "Abrir análisis completo",
+    "decision": "Decisión"
   },
   "landing": {
     "eyebrow": "Terminal financiero nativo de IA",

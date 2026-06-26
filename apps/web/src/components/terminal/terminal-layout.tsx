@@ -9,7 +9,7 @@ import { MarketNews } from "./market-news";
 import { EconomicCalendar } from "./economic-calendar";
 import { TerminalSignalFeed } from "./terminal-signal-feed";
 import { CommandPalette } from "./command-palette";
-import { AiChatPanel } from "./ai-chat-panel";
+import { AiAnalystPanel } from "./ai-analyst-panel";
 import { MasterTradesPanel } from "./master-trades-panel";
 import { CommunitySentiment } from "./community-sentiment";
 import { MacroPanel } from "./macro-panel";
@@ -17,7 +17,7 @@ import { ForexScreener } from "./forex-screener";
 import { CorrelationHeatmap } from "./correlation-heatmap";
 import { PositionCalculator } from "./position-calculator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Bot, Command, Calculator } from "lucide-react";
+import { Sparkles, Command, Calculator } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const TF_TO_MINUTES: Record<string, number> = {
@@ -121,11 +121,11 @@ export function TerminalLayout() {
                 title={t("title_ai")}
                 className={`flex items-center gap-1 h-7 px-2 rounded text-xs transition-colors border ${
                   aiOpen
-                    ? "text-violet-400 bg-violet-500/10 border-violet-500/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border-transparent hover:border-border/50"
+                    ? "text-primary bg-primary/10 border-primary/30"
+                    : "text-primary/80 hover:text-primary hover:bg-primary/10 border-primary/20 hover:border-primary/40"
                 }`}
               >
-                <Bot className="h-3.5 w-3.5" />
+                <Sparkles className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline text-[10px]">{t("btn_ai")}</span>
               </button>
             </div>
@@ -174,7 +174,7 @@ export function TerminalLayout() {
         onSymbolSelect={setActiveSymbol}
         onTabChange={handleTabChange}
       />
-      <AiChatPanel
+      <AiAnalystPanel
         open={aiOpen}
         onClose={() => setAiOpen(false)}
         symbol={activeSymbol}

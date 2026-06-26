@@ -18,7 +18,8 @@
     "reapply_master": "重新申请",
     "home": "首页",
     "leaderboard_short": "排行",
-    "ai_analyst": "AI 分析师"
+    "ai_analyst": "AI 分析师",
+    "ai_short": "AI"
   },
   "home": {
     "hero_title": "复制全球顶尖",
@@ -693,7 +694,11 @@
     "depth_fast": "快速(2)",
     "depth_balanced": "均衡(3)",
     "depth_deep": "深度(4)",
-    "depth_hint": "分析师越多越深入但越慢"
+    "depth_hint": "分析师越多越深入但越慢",
+    "signin_to_use": "登录后使用 AI 分析师",
+    "fast_note": "快速模式 · 约 2-3 分钟,后台运行",
+    "open_full": "打开完整分析",
+    "decision": "决策"
   },
   "landing": {
     "eyebrow": "AI 原生金融终端",

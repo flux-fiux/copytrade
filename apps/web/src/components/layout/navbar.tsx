@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BarChart2, TrendingUp, ChevronDown, Loader2 } from "lucide-react";
+import { BarChart2, TrendingUp, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -35,8 +35,9 @@ export function Navbar({ branding }: { branding?: NavBranding | null }) {
   const [signingOut, setSigningOut] = useState(false);
 
   const navLinks = [
-    { href: "/leaderboard", label: t("leaderboard"), icon: TrendingUp },
     { href: "/terminal", label: t("terminal"), icon: BarChart2 },
+    { href: "/dashboard/analyst", label: t("ai_analyst"), icon: Sparkles },
+    { href: "/leaderboard", label: t("leaderboard"), icon: TrendingUp },
   ];
 
   useEffect(() => {

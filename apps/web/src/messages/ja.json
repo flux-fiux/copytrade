@@ -18,7 +18,8 @@
     "reapply_master": "再申請",
     "home": "ホーム",
     "leaderboard_short": "ランキング",
-    "ai_analyst": "AI アナリスト"
+    "ai_analyst": "AI アナリスト",
+    "ai_short": "AI"
   },
   "home": {
     "hero_title": "世界トップの",
@@ -693,7 +694,11 @@
     "depth_fast": "高速(2)",
     "depth_balanced": "バランス(3)",
     "depth_deep": "詳細(4)",
-    "depth_hint": "アナリストが多いほど詳細だが遅い"
+    "depth_hint": "アナリストが多いほど詳細だが遅い",
+    "signin_to_use": "ログインして AI アナリストを使用",
+    "fast_note": "高速モード · 約2〜3分、バックグラウンド実行",
+    "open_full": "完全な分析を開く",
+    "decision": "判定"
   },
   "landing": {
     "eyebrow": "AI ネイティブ金融ターミナル",

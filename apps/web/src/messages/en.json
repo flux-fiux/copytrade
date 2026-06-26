@@ -18,7 +18,8 @@
     "reapply_master": "Reapply as Master",
     "home": "Home",
     "leaderboard_short": "Leaders",
-    "ai_analyst": "AI Analyst"
+    "ai_analyst": "AI Analyst",
+    "ai_short": "AI"
   },
   "home": {
     "hero_title": "Copy the World's Best",
@@ -693,7 +694,11 @@
     "depth_fast": "Fast (2)",
     "depth_balanced": "Balanced (3)",
     "depth_deep": "Deep (4)",
-    "depth_hint": "More analysts = deeper but slower"
+    "depth_hint": "More analysts = deeper but slower",
+    "signin_to_use": "Sign in to use AI Analyst",
+    "fast_note": "Fast mode · ~2-3 min, runs in background",
+    "open_full": "Open full analysis",
+    "decision": "Decision"
   },
   "landing": {
     "eyebrow": "AI-Native Financial Terminal",

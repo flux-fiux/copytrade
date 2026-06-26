@@ -64,6 +64,12 @@ export default function AnalystPage() {
   const [open, setOpen] = useState<string | null>("final_decision");
   const poll = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Deep-link support: /dashboard/analyst?symbol=AAPL (e.g. from the terminal).
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get("symbol");
+    if (s) setSymbol(s.toUpperCase());
+  }, []);
+
   const loadHistory = useCallback(async () => {
     const tk = await token(); if (!tk) return;
     const res = await fetch(`${API}/api/v1/agents/analyses?limit=15`, { headers: { Authorization: `Bearer ${tk}` } });
