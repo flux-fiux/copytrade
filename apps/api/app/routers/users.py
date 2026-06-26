@@ -1,8 +1,11 @@
 import asyncio
 import uuid
+import httpx
 from datetime import datetime, timezone
+from pydantic import BaseModel, EmailStr
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select, func
+from app.core.config import settings
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -77,6 +80,55 @@ async def create_user(
     )
 
     return user
+
+
+class SignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+    username: str
+
+
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
+async def signup(payload: SignupRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    """Self-serve signup that auto-confirms the email (via Supabase admin), so the
+    user can log in immediately — no email round-trip. Also provisions the profile."""
+    await rate_limit(request, "signup", max_calls=10, window_seconds=600)
+    if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth not configured")
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{settings.SUPABASE_URL}/auth/v1/admin/users",
+            headers={
+                "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}",
+            },
+            json={
+                "email": payload.email,
+                "password": payload.password,
+                "email_confirm": True,
+                "user_metadata": {"username": payload.username},
+            },
+        )
+    if r.status_code not in (200, 201):
+        body = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+        raise HTTPException(status_code=400, detail=body.get("msg") or body.get("error_description") or "Signup failed")
+
+    uid = uuid.UUID(r.json()["id"])
+    existing = (await db.execute(select(User).where(User.id == uid))).scalar_one_or_none()
+    if not existing:
+        db.add(User(
+            id=uid,
+            tenant_id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            email=payload.email,
+            username=payload.username,
+            roles=["FOLLOWER"],
+        ))
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+    return {"ok": True, "user_id": str(uid)}
 
 
 @router.post("/me/apply-master", status_code=status.HTTP_200_OK)

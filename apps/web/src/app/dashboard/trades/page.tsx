@@ -6,7 +6,7 @@ import { Loader2, TrendingUp, TrendingDown, Activity } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { api, type CopyTradeData } from "@/lib/api-client";
+import { api, type ArbMindData } from "@/lib/api-client";
 
 const STATUS_STYLE: Record<string, string> = {
   OPEN: "text-blue-400 bg-blue-500/10 border-blue-500/30",
@@ -28,7 +28,7 @@ function fmtDate(iso: string | null) {
 
 export default function TradesPage() {
   const t = useTranslations("trades_page");
-  const [trades, setTrades] = useState<CopyTradeData[]>([]);
+  const [trades, setTrades] = useState<ArbMindData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

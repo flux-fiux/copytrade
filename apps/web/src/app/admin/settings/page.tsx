@@ -160,7 +160,7 @@ export default function AdminSettingsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Platform Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Global configuration for the CopyTrade platform</p>
+          <p className="text-sm text-muted-foreground mt-1">Global configuration for the ArbMind platform</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
@@ -302,7 +302,7 @@ export default function AdminSettingsPage() {
                 type="text"
                 value={branding.name}
                 onChange={e => setBranding(p => ({ ...p, name: e.target.value }))}
-                placeholder="CopyTrade"
+                placeholder="ArbMind"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>

@@ -16,7 +16,7 @@ import { api } from "@/lib/api-client";
 import { useSocket } from "@/hooks/useSocket";
 import { pushLocalNotification } from "@/store/notifications";
 
-interface CopyTradeRow {
+interface ArbMindRow {
   id: string;
   symbol: string;
   master_id: string;
@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const [displayName, setDisplayName] = useState("Trader");
   const [followerId, setFollowerId] = useState<string | undefined>();
-  const [copyTrades, setCopyTrades] = useState<CopyTradeRow[]>([]);
+  const [copyTrades, setArbMinds] = useState<ArbMindRow[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
@@ -75,7 +75,7 @@ export default function DashboardPage() {
         setDisplayName(user.value.display_name ?? user.value.username ?? session?.user?.email?.split("@")[0] ?? "Trader");
       }
       if (subs.status === "fulfilled" && Array.isArray(subs.value)) setSubscriptions(subs.value);
-      if (trades.status === "fulfilled" && Array.isArray(trades.value)) setCopyTrades(trades.value);
+      if (trades.status === "fulfilled" && Array.isArray(trades.value)) setArbMinds(trades.value);
     } catch {
       // use defaults
     } finally {
@@ -86,9 +86,9 @@ export default function DashboardPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleCopytrade = useCallback((data: Record<string, unknown>) => {
-    const trade = data as unknown as CopyTradeRow;
+    const trade = data as unknown as ArbMindRow;
     if (!trade.id) return;
-    setCopyTrades(prev => {
+    setArbMinds(prev => {
       const filtered = prev.filter(t => t.id !== trade.id);
       return [trade, ...filtered].slice(0, 50);
     });

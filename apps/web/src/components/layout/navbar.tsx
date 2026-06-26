@@ -77,7 +77,7 @@ export function Navbar({ branding }: { branding?: NavBranding | null }) {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <TrendingUp className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg tracking-tight">{branding?.name ?? "CopyTrade"}</span>
+              <span className="font-bold text-lg tracking-tight">{branding?.name ?? "ArbMind"}</span>
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
             </>
           )}

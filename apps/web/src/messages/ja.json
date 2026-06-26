@@ -148,7 +148,7 @@
     "providers_count": "{n}件のプロバイダー"
   },
   "auth": {
-    "login_title": "CopyTradeにサインイン",
+    "login_title": "ArbMindにサインイン",
     "login_google": "Googleで続ける",
     "login_email": "メールアドレス",
     "login_password": "パスワード",
@@ -635,17 +635,17 @@
   "unsubscribe": {
     "processing": "処理中…",
     "done_title": "配信を停止しました",
-    "done_desc": "今後 CopyTrade からのマーケティングメールは届きません。取引関連メール（購読領収書、セキュリティ通知）は引き続き送信されます。",
+    "done_desc": "今後 ArbMind からのマーケティングメールは届きません。取引関連メール（購読領収書、セキュリティ通知）は引き続き送信されます。",
     "back_home": "ホームに戻る",
     "title": "メール配信を停止",
     "error": "問題が発生しました。もう一度お試しいただくか、サポートにお問い合わせください。",
-    "prompt": "下のボタンをクリックして {email} を CopyTrade のマーケティングメールから配信停止します。",
+    "prompt": "下のボタンをクリックして {email} を ArbMind のマーケティングメールから配信停止します。",
     "invalid": "無効な配信停止リンクです。",
     "button": "{email} を配信停止"
   },
   "offline": {
     "title": "オフラインです",
-    "desc": "CopyTrade はリアルタイム相場の取得に接続が必要です。ネットワークを確認して再試行してください。",
+    "desc": "ArbMind はリアルタイム相場の取得に接続が必要です。ネットワークを確認して再試行してください。",
     "retry": "再試行"
   },
   "reviews": {

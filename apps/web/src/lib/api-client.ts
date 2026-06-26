@@ -46,7 +46,7 @@ export const api = {
       const params = new URLSearchParams();
       if (opts?.subscription_id) params.set('subscription_id', opts.subscription_id);
       if (opts?.limit) params.set('limit', String(opts.limit));
-      return apiFetch<CopyTradeData[]>(`/api/v1/copy-trades/?${params}`, { token });
+      return apiFetch<ArbMindData[]>(`/api/v1/copy-trades/?${params}`, { token });
     },
   },
   market: {
@@ -148,7 +148,7 @@ export interface SignalData {
   opened_at: string;
 }
 
-export interface CopyTradeData {
+export interface ArbMindData {
   id: string;
   subscription_id: string;
   signal_id: string;

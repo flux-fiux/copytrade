@@ -13,7 +13,7 @@ export function SiteFooter() {
           ⚠️ {t("disclaimer")}
         </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span>© 2024 CopyTrade · {t("rights")}</span>
+          <span>© 2024 ArbMind · {t("rights")}</span>
           <Link href="/terms" className="hover:text-foreground transition-colors">{t("terms")}</Link>
           <Link href="/privacy" className="hover:text-foreground transition-colors">{t("privacy")}</Link>
         </div>

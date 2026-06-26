@@ -148,7 +148,7 @@
     "providers_count": "{n} 个提供者"
   },
   "auth": {
-    "login_title": "登录 CopyTrade",
+    "login_title": "登录 ArbMind",
     "login_google": "使用 Google 继续",
     "login_email": "邮箱",
     "login_password": "密码",
@@ -635,17 +635,17 @@
   "unsubscribe": {
     "processing": "处理中…",
     "done_title": "你已退订",
-    "done_desc": "你将不再收到 CopyTrade 的营销邮件。交易类邮件（订阅收据、安全提醒）仍会发送。",
+    "done_desc": "你将不再收到 ArbMind 的营销邮件。交易类邮件（订阅收据、安全提醒）仍会发送。",
     "back_home": "返回首页",
     "title": "退订邮件",
     "error": "出错了。请重试或联系客服。",
-    "prompt": "点击下方将 {email} 从 CopyTrade 营销邮件中退订。",
+    "prompt": "点击下方将 {email} 从 ArbMind 营销邮件中退订。",
     "invalid": "退订链接无效。",
     "button": "退订 {email}"
   },
   "offline": {
     "title": "你已离线",
-    "desc": "CopyTrade 需要联网获取实时行情。请检查网络后重试。",
+    "desc": "ArbMind 需要联网获取实时行情。请检查网络后重试。",
     "retry": "重试"
   },
   "reviews": {

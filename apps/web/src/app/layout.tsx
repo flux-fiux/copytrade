@@ -13,7 +13,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CopyTrade — Signal Community & Financial Terminal",
+  title: "ArbMind — Signal Community & Financial Terminal",
   description: "Follow top traders, copy trades automatically, and analyze markets with professional tools.",
 };
 
@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="theme-color" content={branding?.primaryColor ?? "#3b82f6"} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="CopyTrade" />
+        <meta name="apple-mobile-web-app-title" content="ArbMind" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground">

@@ -26,7 +26,7 @@ export async function getTenantBranding(): Promise<TenantBranding | null> {
     if (!res.ok) return null;
     const d = await res.json();
     return {
-      name: d.name ?? "CopyTrade",
+      name: d.name ?? "ArbMind",
       primaryColor: d.primary_color ?? null,
       logoUrl: d.logo_url ?? null,
       faviconUrl: d.favicon_url ?? null,

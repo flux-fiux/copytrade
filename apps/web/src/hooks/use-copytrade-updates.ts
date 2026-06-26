@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { connectSocket } from "@/lib/socket";
 
-export interface CopyTradeEvent {
+export interface ArbMindEvent {
   type: string;
   symbol: string;
   direction?: string;
@@ -12,8 +12,8 @@ export interface CopyTradeEvent {
   receivedAt: number;
 }
 
-export function useCopyTradeUpdates(followerId: string): CopyTradeEvent[] {
-  const [events, setEvents] = useState<CopyTradeEvent[]>([]);
+export function useArbMindUpdates(followerId: string): ArbMindEvent[] {
+  const [events, setEvents] = useState<ArbMindEvent[]>([]);
 
   useEffect(() => {
     if (!followerId) return;
@@ -21,13 +21,13 @@ export function useCopyTradeUpdates(followerId: string): CopyTradeEvent[] {
 
     sock.emit("subscribe:copytrades", followerId);
 
-    function onCopyTrade(data: Omit<CopyTradeEvent, "receivedAt">) {
+    function onArbMind(data: Omit<ArbMindEvent, "receivedAt">) {
       setEvents((prev) => [{ ...data, receivedAt: Date.now() }, ...prev].slice(0, 100));
     }
-    sock.on("copytrade", onCopyTrade);
+    sock.on("copytrade", onArbMind);
 
     return () => {
-      sock.off("copytrade", onCopyTrade);
+      sock.off("copytrade", onArbMind);
     };
   }, [followerId]);
 

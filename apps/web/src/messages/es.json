@@ -148,7 +148,7 @@
     "providers_count": "{n} proveedores"
   },
   "auth": {
-    "login_title": "Iniciar sesión en CopyTrade",
+    "login_title": "Iniciar sesión en ArbMind",
     "login_google": "Continuar con Google",
     "login_email": "Correo electrónico",
     "login_password": "Contraseña",
@@ -635,17 +635,17 @@
   "unsubscribe": {
     "processing": "Procesando…",
     "done_title": "Te has dado de baja",
-    "done_desc": "Ya no recibirás correos de marketing de CopyTrade. Los correos transaccionales (recibos de suscripción, alertas de seguridad) se seguirán enviando.",
+    "done_desc": "Ya no recibirás correos de marketing de ArbMind. Los correos transaccionales (recibos de suscripción, alertas de seguridad) se seguirán enviando.",
     "back_home": "Volver al inicio",
     "title": "Darse de baja de los correos",
     "error": "Algo salió mal. Inténtalo de nuevo o contacta con soporte.",
-    "prompt": "Haz clic abajo para dar de baja a {email} de los correos de marketing de CopyTrade.",
+    "prompt": "Haz clic abajo para dar de baja a {email} de los correos de marketing de ArbMind.",
     "invalid": "Enlace de baja no válido.",
     "button": "Dar de baja a {email}"
   },
   "offline": {
     "title": "Estás sin conexión",
-    "desc": "CopyTrade necesita conexión para los datos de mercado en vivo. Comprueba tu red e inténtalo de nuevo.",
+    "desc": "ArbMind necesita conexión para los datos de mercado en vivo. Comprueba tu red e inténtalo de nuevo.",
     "retry": "Reintentar"
   },
   "reviews": {

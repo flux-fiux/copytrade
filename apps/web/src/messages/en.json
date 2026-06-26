@@ -148,7 +148,7 @@
     "providers_count": "{n} providers"
   },
   "auth": {
-    "login_title": "Sign in to CopyTrade",
+    "login_title": "Sign in to ArbMind",
     "login_google": "Continue with Google",
     "login_email": "Email",
     "login_password": "Password",
@@ -635,17 +635,17 @@
   "unsubscribe": {
     "processing": "Processing…",
     "done_title": "You've been unsubscribed",
-    "done_desc": "You'll no longer receive marketing emails from CopyTrade. Transactional emails (subscription receipts, security alerts) will still be sent.",
+    "done_desc": "You'll no longer receive marketing emails from ArbMind. Transactional emails (subscription receipts, security alerts) will still be sent.",
     "back_home": "Back to home",
     "title": "Unsubscribe from emails",
     "error": "Something went wrong. Please try again or contact support.",
-    "prompt": "Click below to unsubscribe {email} from CopyTrade marketing emails.",
+    "prompt": "Click below to unsubscribe {email} from ArbMind marketing emails.",
     "invalid": "Invalid unsubscribe link.",
     "button": "Unsubscribe {email}"
   },
   "offline": {
     "title": "You're offline",
-    "desc": "CopyTrade needs a connection for live market data. Check your network and try again.",
+    "desc": "ArbMind needs a connection for live market data. Check your network and try again.",
     "retry": "Try again"
   },
   "reviews": {

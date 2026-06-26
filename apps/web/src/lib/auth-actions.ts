@@ -41,28 +41,24 @@ export async function signUpWithEmail(
   email: string,
   password: string,
   username: string,
-  role: string
+  _role: string
 ) {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return { error: error.message };
-
-  if (data.user) {
-    try {
-      const session = data.session;
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1/users/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ email, username, role }),
-      });
-    } catch {
-      // Profile creation is best-effort; auth succeeded
-    }
+  // Auto-confirmed signup via the backend (admin) so the user can log in
+  // immediately — no email-confirmation round-trip. Also provisions the profile.
+  const api = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const res = await fetch(`${api}/api/v1/users/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, username }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    return { error: e.detail ?? "Sign up failed" };
   }
 
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
   redirect("/dashboard");
 }
 

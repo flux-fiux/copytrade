@@ -1,5 +1,5 @@
 // DRAFT TEMPLATE — replace with counsel-reviewed copy before public launch.
-export const metadata = { title: "Privacy Policy — CopyTrade" };
+export const metadata = { title: "Privacy Policy — ArbMind" };
 
 const SECTIONS: { h: string; p: string }[] = [
   { h: "1. Data We Collect", p: "Account details (email, profile), connected brokerage identifiers, trading and copy-trade records, payment metadata, and usage/diagnostic data." },

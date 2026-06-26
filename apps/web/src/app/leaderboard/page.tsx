@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const metadata = {
-  title: "Leaderboard — CopyTrade",
+  title: "Leaderboard — ArbMind",
   description: "Ranked by verified performance. All accounts are independently audited via MetaAPI.",
 };
 
