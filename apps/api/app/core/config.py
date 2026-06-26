@@ -75,6 +75,9 @@ class Settings(BaseSettings):
     AGENT_DEEP_MODEL: str = "deepseek-chat"       # deliberation / debate
     AGENT_QUICK_MODEL: str = "deepseek-chat"      # fast tool-calling steps
     AGENT_MAX_DEBATE_ROUNDS: int = 1
+    # Which analysts to run. Fewer = faster (each adds LLM calls + data fetches).
+    # Full: "market,social,news,fundamentals". Lean/fast: "market,news".
+    AGENT_ANALYSTS: str = "market,social,news,fundamentals"
 
     # Internal service auth (worker-ct → API)
     INTERNAL_API_TOKEN: str = "dev-internal-token-change-in-prod"

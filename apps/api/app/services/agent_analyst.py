@@ -76,8 +76,11 @@ def run_analysis(symbol: str, trade_date: str, asset_type: str = "stock") -> dic
         "news_data": "yfinance",
     }
 
-    logger.info("Running TradingAgents for %s (%s) on %s", symbol, asset_type, trade_date)
-    ta = TradingAgentsGraph(config=config)
+    analysts = tuple(a.strip() for a in settings.AGENT_ANALYSTS.split(",") if a.strip()) \
+        or ("market", "social", "news", "fundamentals")
+
+    logger.info("Running TradingAgents for %s (%s) on %s — analysts=%s", symbol, asset_type, trade_date, analysts)
+    ta = TradingAgentsGraph(config=config, selected_analysts=analysts)
     state, decision = ta.propagate(symbol, trade_date, asset_type=asset_type)
 
     reports: dict[str, str] = {}
