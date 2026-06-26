@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  TrendingUp, BarChart2, Shield, Users, ArrowRight, Star, CheckCircle2,
+  TrendingUp, BarChart2, Shield, Users, ArrowRight, CheckCircle2,
   Zap, FlaskConical, Brain, Calculator, Clock, Globe, ChevronRight,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -8,6 +8,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Hero } from "@/components/marketing/hero";
+import { PriceTicker } from "@/components/marketing/price-ticker";
+import { Modules } from "@/components/marketing/modules";
+import { AiSpotlight } from "@/components/marketing/ai-spotlight";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -49,13 +53,6 @@ const gradeColor: Record<string, string> = {
 
 export default async function HomePage() {
   const [topMasters, t] = await Promise.all([fetchTopMasters(), getTranslations("home")]);
-
-  const STATS = [
-    { value: "< 5ms",   label: t("stat_execution") },
-    { value: "AES-256", label: t("stat_encryption") },
-    { value: "24/7",    label: t("stat_guard") },
-    { value: "Free",    label: t("stat_paper") },
-  ];
 
   const HOW_IT_WORKS = [
     { step: "01", title: t("how1_title"), desc: t("how1_desc"), cta: "dashboard/accounts" },
@@ -117,44 +114,11 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col">
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-background to-background/80 py-24 px-4">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
-        <div className="container mx-auto relative text-center max-w-3xl">
-          <Badge variant="outline" className="mb-6 border-primary/30 text-primary">
-            <Star className="mr-1 h-3 w-3" /> {t("hero_badge")}
-          </Badge>
-          <h1 className="text-4xl sm:text-5xl xl:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            {t("hero_title")}<br />
-            <span className="text-primary">{t("hero_title_highlight")}</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
-            {t("hero_subtitle")}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-            <Link href="/auth/register" className={cn(buttonVariants({ size: "lg" }))}>
-              {t("hero_cta_start")} <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-            <Link href="/leaderboard" className={cn(buttonVariants({ size: "lg", variant: "outline" }))}>
-              {t("hero_cta_browse")}
-            </Link>
-            <Link href="/terminal" className={cn(buttonVariants({ size: "lg", variant: "ghost" }))}>
-              <BarChart2 className="mr-2 h-4 w-4" /> {t("hero_cta_terminal")}
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-xl mx-auto">
-            {STATS.map((s) => (
-              <div key={s.label} className="text-center p-3 rounded-xl border border-border/40 bg-card/50">
-                <div className="text-lg font-bold text-primary font-mono">{s.value}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Hero + repositioned landing ──────────────────────────────────── */}
+      <Hero />
+      <PriceTicker />
+      <Modules />
+      <AiSpotlight />
 
       {/* ── How it Works ─────────────────────────────────────────────────── */}
       <section className="py-20 px-4 border-b border-border/40">

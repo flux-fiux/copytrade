@@ -694,5 +694,33 @@
     "depth_balanced": "Balanced (3)",
     "depth_deep": "Deep (4)",
     "depth_hint": "More analysts = deeper but slower"
+  },
+  "landing": {
+    "eyebrow": "AI-Native Financial Terminal",
+    "title_a": "The quant mind for",
+    "title_b": "global markets",
+    "subtitle": "Analyze any market with a team of AI agents, execute strategies across every exchange, and copy the world's best traders — all in one terminal.",
+    "cta_terminal": "Launch Terminal",
+    "cta_analyst": "Try AI Analyst",
+    "card_title": "AI verdict",
+    "modules_title": "One platform, four engines",
+    "modules_subtitle": "From research to execution — powered by AI agents.",
+    "soon": "Soon",
+    "mod_terminal_title": "Financial Terminal",
+    "mod_terminal_desc": "Real-time charts, quotes, screeners and news — a Bloomberg-grade workspace.",
+    "mod_analyst_title": "AI Analyst",
+    "mod_analyst_desc": "A team of agents debates the data and hands you a BUY/SELL/HOLD call.",
+    "mod_copy_title": "Copy Trading",
+    "mod_copy_desc": "Follow verified pros and mirror every trade to your account automatically.",
+    "mod_strategy_title": "Strategy Engine",
+    "mod_strategy_desc": "Deploy strategies to any exchange via API — the execution layer.",
+    "ai_eyebrow": "Powered by TradingAgents",
+    "ai_title": "Your AI research team, on every ticker",
+    "ai_desc": "Market, sentiment, news and fundamentals analysts debate bull vs bear, a trader drafts the plan, and a risk team stress-tests it — in minutes, for any symbol.",
+    "ai_agent_market": "Market analyst",
+    "ai_agent_news": "News & sentiment",
+    "ai_agent_debate": "Bull vs bear debate",
+    "ai_agent_verdict": "Risk-checked verdict",
+    "ai_cta": "Run an analysis"
   }
 }

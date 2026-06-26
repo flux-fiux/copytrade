@@ -694,5 +694,33 @@
     "depth_balanced": "均衡(3)",
     "depth_deep": "深度(4)",
     "depth_hint": "分析师越多越深入但越慢"
+  },
+  "landing": {
+    "eyebrow": "AI 原生金融终端",
+    "title_a": "驾驭全球市场的",
+    "title_b": "量化大脑",
+    "subtitle": "用一支 AI 智能体团队分析任意市场,把策略执行到任意交易所,并复制全球顶级交易员——尽在一个终端。",
+    "cta_terminal": "打开终端",
+    "cta_analyst": "体验 AI 分析师",
+    "card_title": "AI 决策",
+    "modules_title": "一个平台,四大引擎",
+    "modules_subtitle": "从研究到执行——由 AI 智能体驱动。",
+    "soon": "即将推出",
+    "mod_terminal_title": "金融终端",
+    "mod_terminal_desc": "实时图表、报价、筛选、新闻——彭博级工作台。",
+    "mod_analyst_title": "AI 分析师",
+    "mod_analyst_desc": "一队智能体辩论数据,给你 买入/卖出/持有 的明确结论。",
+    "mod_copy_title": "跟单交易",
+    "mod_copy_desc": "跟随认证高手,自动把每一笔交易复制到你的账户。",
+    "mod_strategy_title": "策略引擎",
+    "mod_strategy_desc": "通过 API 把策略部署到任意交易所——执行层。",
+    "ai_eyebrow": "由 TradingAgents 驱动",
+    "ai_title": "每一个标的,都有你的 AI 研究团队",
+    "ai_desc": "技术、情绪、新闻、基本面分析师多空辩论,交易员制定方案,风控团队压力测试——几分钟内,适用任意标的。",
+    "ai_agent_market": "技术分析师",
+    "ai_agent_news": "新闻与情绪",
+    "ai_agent_debate": "多空辩论",
+    "ai_agent_verdict": "风控后结论",
+    "ai_cta": "跑一次分析"
   }
 }

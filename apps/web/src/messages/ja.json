@@ -694,5 +694,33 @@
     "depth_balanced": "バランス(3)",
     "depth_deep": "詳細(4)",
     "depth_hint": "アナリストが多いほど詳細だが遅い"
+  },
+  "landing": {
+    "eyebrow": "AI ネイティブ金融ターミナル",
+    "title_a": "世界の市場を動かす",
+    "title_b": "クオンツの頭脳",
+    "subtitle": "AI エージェントチームであらゆる市場を分析し、あらゆる取引所へ戦略を執行し、世界トップのトレーダーをコピー——すべて一つのターミナルで。",
+    "cta_terminal": "ターミナルを開く",
+    "cta_analyst": "AI アナリストを試す",
+    "card_title": "AI 判定",
+    "modules_title": "一つのプラットフォーム、四つのエンジン",
+    "modules_subtitle": "リサーチから執行まで——AI エージェントが駆動。",
+    "soon": "近日公開",
+    "mod_terminal_title": "金融ターミナル",
+    "mod_terminal_desc": "リアルタイムチャート・気配値・スクリーナー・ニュース——ブルームバーグ級。",
+    "mod_analyst_title": "AI アナリスト",
+    "mod_analyst_desc": "エージェントチームがデータを議論し、買い/売り/ホールドを提示。",
+    "mod_copy_title": "コピートレード",
+    "mod_copy_desc": "認証されたプロをフォローし、全取引を自動でコピー。",
+    "mod_strategy_title": "戦略エンジン",
+    "mod_strategy_desc": "API であらゆる取引所へ戦略を展開——執行レイヤー。",
+    "ai_eyebrow": "TradingAgents 搭載",
+    "ai_title": "すべての銘柄に、あなたの AI リサーチチーム",
+    "ai_desc": "テクニカル・センチメント・ニュース・ファンダメンタルズのアナリストが強気と弱気を議論し、トレーダーが計画を立て、リスクチームが検証——数分で、あらゆる銘柄に。",
+    "ai_agent_market": "テクニカル分析",
+    "ai_agent_news": "ニュースと心理",
+    "ai_agent_debate": "強気vs弱気の議論",
+    "ai_agent_verdict": "リスク検証済み判定",
+    "ai_cta": "分析を実行"
   }
 }

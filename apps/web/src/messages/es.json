@@ -694,5 +694,33 @@
     "depth_balanced": "Equilibrado (3)",
     "depth_deep": "Profundo (4)",
     "depth_hint": "Más analistas = más profundo pero más lento"
+  },
+  "landing": {
+    "eyebrow": "Terminal financiero nativo de IA",
+    "title_a": "La mente cuantitativa para",
+    "title_b": "los mercados globales",
+    "subtitle": "Analiza cualquier mercado con un equipo de agentes de IA, ejecuta estrategias en cualquier exchange y copia a los mejores traders del mundo — todo en un terminal.",
+    "cta_terminal": "Abrir Terminal",
+    "cta_analyst": "Probar Analista IA",
+    "card_title": "Veredicto IA",
+    "modules_title": "Una plataforma, cuatro motores",
+    "modules_subtitle": "De la investigación a la ejecución — impulsado por agentes de IA.",
+    "soon": "Pronto",
+    "mod_terminal_title": "Terminal financiero",
+    "mod_terminal_desc": "Gráficos, cotizaciones, screeners y noticias en tiempo real — nivel Bloomberg.",
+    "mod_analyst_title": "Analista IA",
+    "mod_analyst_desc": "Un equipo de agentes debate los datos y te da una decisión COMPRAR/VENDER/MANTENER.",
+    "mod_copy_title": "Copy Trading",
+    "mod_copy_desc": "Sigue a profesionales verificados y replica cada operación automáticamente.",
+    "mod_strategy_title": "Motor de estrategias",
+    "mod_strategy_desc": "Despliega estrategias en cualquier exchange vía API — la capa de ejecución.",
+    "ai_eyebrow": "Impulsado por TradingAgents",
+    "ai_title": "Tu equipo de análisis IA, en cada activo",
+    "ai_desc": "Analistas de mercado, sentimiento, noticias y fundamentales debaten alcista vs bajista, un trader traza el plan y un equipo de riesgo lo prueba — en minutos, para cualquier símbolo.",
+    "ai_agent_market": "Analista de mercado",
+    "ai_agent_news": "Noticias y sentimiento",
+    "ai_agent_debate": "Debate alcista/bajista",
+    "ai_agent_verdict": "Veredicto con riesgo",
+    "ai_cta": "Ejecutar análisis"
   }
 }
