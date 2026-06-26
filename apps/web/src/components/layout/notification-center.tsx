@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bell, X, Check, TrendingDown, Zap, Award, Info } from "lucide-react";
 import {
@@ -9,7 +9,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useNotifications } from "@/lib/queries";
 import { connectSocket } from "@/lib/socket";
 import {
   AppNotification,
@@ -21,8 +23,6 @@ import {
   subscribeNotif,
   subscribeNotifList,
 } from "@/store/notifications";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
   COPYTRADE:    Zap,
@@ -59,30 +59,18 @@ export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<AppNotification[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => subscribeNotif(setCount), []);
   useEffect(() => subscribeNotifList(setItems), []);
 
-  // Fetch persisted notifications from API on mount
-  const loadFromApi = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-      setLoading(true);
-      const res = await fetch(`${API_URL}/api/v1/notifications/`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (!res.ok) return;
-      const data: AppNotification[] = await res.json();
-      setNotifications(data);
-    } catch { /* ignore */ } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadFromApi(); }, [loadFromApi]);
+  // Persisted notifications via React Query (typed client + built-in auth).
+  const { data: apiNotifs, isLoading: loading, error } = useNotifications();
+  useEffect(() => {
+    if (apiNotifs) setNotifications(apiNotifs as AppNotification[]);
+  }, [apiNotifs]);
+  useEffect(() => {
+    if (error) toast.error(t("load_failed"));
+  }, [error, t]);
 
   // Wire WebSocket copytrade + signal events → local notifications
   useEffect(() => {
@@ -121,46 +109,22 @@ export function NotificationCenter() {
 
   const handleMarkAllRead = async () => {
     markAllRead();
-    try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        await fetch(`${API_URL}/api/v1/notifications/read-all`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-      }
-    } catch { /* ignore */ }
+    try { await api.notifications.markAllRead(); }
+    catch { toast.error(t("action_failed")); }
   };
 
   const handleClearAll = async () => {
     clearAllNotifications();
     setOpen(false);
-    try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        await fetch(`${API_URL}/api/v1/notifications/`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-      }
-    } catch { /* ignore */ }
+    try { await api.notifications.clearAll(); }
+    catch { toast.error(t("action_failed")); }
   };
 
   const handleDelete = async (id: string, isLocal: boolean) => {
     removeNotification(id);
     if (!isLocal) {
-      try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          await fetch(`${API_URL}/api/v1/notifications/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-        }
-      } catch { /* ignore */ }
+      try { await api.notifications.remove(id); }
+      catch { toast.error(t("action_failed")); }
     }
   };
 

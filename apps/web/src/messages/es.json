@@ -507,7 +507,9 @@
     "minutes_ago": "hace {n}m",
     "hours_ago": "hace {n}h",
     "days_ago": "hace {n}d",
-    "session": "sesión"
+    "session": "sesión",
+    "load_failed": "No se pudieron cargar las notificaciones",
+    "action_failed": "Acción fallida, reintenta"
   },
   "master_profile": {
     "back": "Volver al ranking",

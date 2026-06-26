@@ -507,7 +507,9 @@
     "minutes_ago": "{n}m ago",
     "hours_ago": "{n}h ago",
     "days_ago": "{n}d ago",
-    "session": "session"
+    "session": "session",
+    "load_failed": "Couldn't load notifications",
+    "action_failed": "Action failed, please retry"
   },
   "master_profile": {
     "back": "Back to Leaderboard",

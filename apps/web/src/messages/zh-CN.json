@@ -507,7 +507,9 @@
     "minutes_ago": "{n} 分钟前",
     "hours_ago": "{n} 小时前",
     "days_ago": "{n} 天前",
-    "session": "本次会话"
+    "session": "本次会话",
+    "load_failed": "通知加载失败",
+    "action_failed": "操作失败,请重试"
   },
   "master_profile": {
     "back": "返回排行榜",

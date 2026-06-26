@@ -507,7 +507,9 @@
     "minutes_ago": "{n}分前",
     "hours_ago": "{n}時間前",
     "days_ago": "{n}日前",
-    "session": "セッション"
+    "session": "セッション",
+    "load_failed": "通知の読み込みに失敗しました",
+    "action_failed": "操作に失敗しました。再試行してください"
   },
   "master_profile": {
     "back": "ランキングへ戻る",
