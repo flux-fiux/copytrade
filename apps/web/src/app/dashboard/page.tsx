@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PnlCalendar } from "@/components/dashboard/pnl-calendar";
 import { MasterOnboardingCard } from "@/components/dashboard/master-onboarding-card";
 import { RecentAnalyses } from "@/components/dashboard/recent-analyses";
+import { MarketOverview } from "@/components/dashboard/market-overview";
 import { ConnectReturnBanner } from "@/components/dashboard/connect-return-banner";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -179,9 +180,10 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* AI Analyst — recent multi-agent analyses */}
-        <div className="mb-6">
+        {/* AI cockpit row — recent analyses + live market overview */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-6">
           <RecentAnalyses />
+          <MarketOverview />
         </div>
 
         {/* Recent copy trades */}

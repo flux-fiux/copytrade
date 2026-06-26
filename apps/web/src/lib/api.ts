@@ -109,4 +109,9 @@ export const api = {
   signals: {
     list: (masterId: string) => request<SignalData[]>(`/api/v1/signals/?master_id=${masterId}`, { auth: false }),
   },
+  market: {
+    quote: (symbol: string) =>
+      request<{ c: number; h: number; l: number; o: number; pc: number; t: number }>(
+        `/api/v1/market/quote?symbol=${encodeURIComponent(symbol)}`, { auth: false }),
+  },
 };

@@ -203,7 +203,9 @@
     "onboarding_setup": "Set up",
     "onboarding_go": "Go",
     "connect_success": "Stripe Connect account linked — you can now receive payouts.",
-    "connect_expired": "Stripe Connect session expired. Click \"Set up\" again to restart."
+    "connect_expired": "Stripe Connect session expired. Click \"Set up\" again to restart.",
+    "market_overview": "Market Overview",
+    "open_terminal": "Terminal"
   },
   "settings": {
     "title": "Settings",

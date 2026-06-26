@@ -203,7 +203,9 @@
     "onboarding_setup": "设置",
     "onboarding_go": "前往",
     "connect_success": "Stripe Connect 账户已关联——现在可以接收结算款项。",
-    "connect_expired": "Stripe Connect 会话已过期。请再次点击“设置”重新开始。"
+    "connect_expired": "Stripe Connect 会话已过期。请再次点击“设置”重新开始。",
+    "market_overview": "市场概览",
+    "open_terminal": "终端"
   },
   "settings": {
     "title": "设置",

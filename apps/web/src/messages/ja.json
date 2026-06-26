@@ -203,7 +203,9 @@
     "onboarding_setup": "設定",
     "onboarding_go": "移動",
     "connect_success": "Stripe Connect アカウントを連携しました——これで受取が可能です。",
-    "connect_expired": "Stripe Connect セッションの有効期限が切れました。「設定」を再度クリックしてやり直してください。"
+    "connect_expired": "Stripe Connect セッションの有効期限が切れました。「設定」を再度クリックしてやり直してください。",
+    "market_overview": "マーケット概況",
+    "open_terminal": "ターミナル"
   },
   "settings": {
     "title": "設定",

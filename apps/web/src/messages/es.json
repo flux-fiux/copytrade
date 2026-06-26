@@ -203,7 +203,9 @@
     "onboarding_setup": "Configurar",
     "onboarding_go": "Ir",
     "connect_success": "Cuenta de Stripe Connect vinculada — ya puedes recibir pagos.",
-    "connect_expired": "La sesión de Stripe Connect expiró. Haz clic en «Configurar» de nuevo para reiniciar."
+    "connect_expired": "La sesión de Stripe Connect expiró. Haz clic en «Configurar» de nuevo para reiniciar.",
+    "market_overview": "Resumen del mercado",
+    "open_terminal": "Terminal"
   },
   "settings": {
     "title": "Configuración",
