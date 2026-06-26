@@ -15,7 +15,8 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+# node:20 already ships a uid-1000 `node` user — reuse it (useradd -u 1000 would fail).
+RUN chown -R node:node /app
+USER node
 EXPOSE 3001
 CMD ["node", "dist/index.js"]
