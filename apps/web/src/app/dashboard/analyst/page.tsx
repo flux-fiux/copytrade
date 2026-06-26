@@ -57,6 +57,7 @@ export default function AnalystPage() {
   const [reason, setReason] = useState("");
   const [symbol, setSymbol] = useState("");
   const [assetType, setAssetType] = useState("stock");
+  const [depth, setDepth] = useState("full");
   const [current, setCurrent] = useState<Analysis | null>(null);
   const [history, setHistory] = useState<Analysis[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -104,7 +105,7 @@ export default function AnalystPage() {
       const res = await fetch(`${API}/api/v1/agents/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${tk}` },
-        body: JSON.stringify({ symbol: sym, asset_type: assetType }),
+        body: JSON.stringify({ symbol: sym, asset_type: assetType, depth }),
       });
       if (res.status === 429) { alert(t("rate_limited")); return; }
       if (res.status === 503) { const e = await res.json(); alert(e.detail); return; }
@@ -156,6 +157,16 @@ export default function AnalystPage() {
             <option value="stock">{t("stock")}</option>
             <option value="crypto">{t("crypto")}</option>
             <option value="forex">{t("forex")}</option>
+          </select>
+          <select
+            value={depth}
+            onChange={(e) => setDepth(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            title={t("depth_hint")}
+          >
+            <option value="fast">{t("depth_fast")}</option>
+            <option value="balanced">{t("depth_balanced")}</option>
+            <option value="full">{t("depth_deep")}</option>
           </select>
           <button
             onClick={analyze}

@@ -689,6 +689,10 @@
     "agents_working": "智能体分析中…",
     "failed": "分析失败",
     "rate_limited": "分析过于频繁,请稍后再试。",
-    "history": "历史记录"
+    "history": "历史记录",
+    "depth_fast": "快速(2)",
+    "depth_balanced": "均衡(3)",
+    "depth_deep": "深度(4)",
+    "depth_hint": "分析师越多越深入但越慢"
   }
 }

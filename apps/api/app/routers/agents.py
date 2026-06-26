@@ -16,10 +16,19 @@ from app.workers.agent_tasks import run_agent_analysis
 router = APIRouter()
 
 
+# Depth presets → analyst set. Fewer analysts = faster (fewer LLM calls + fetches).
+DEPTH_PRESETS = {
+    "fast": "market,news",
+    "balanced": "market,news,fundamentals",
+    "full": "market,social,news,fundamentals",
+}
+
+
 class AnalyzeRequest(BaseModel):
     symbol: str
     asset_type: str = "stock"  # stock|crypto|forex
     trade_date: str | None = None  # YYYY-MM-DD; defaults to today
+    depth: str = "full"  # fast|balanced|full
 
 
 def _dict(a: AgentAnalysis) -> dict:
@@ -77,7 +86,8 @@ async def analyze(
     await db.commit()
     await db.refresh(row)
 
-    run_agent_analysis.delay(str(row.id))
+    analysts_csv = DEPTH_PRESETS.get(payload.depth, DEPTH_PRESETS["full"])
+    run_agent_analysis.delay(str(row.id), analysts_csv)
     return _dict(row)
 
 

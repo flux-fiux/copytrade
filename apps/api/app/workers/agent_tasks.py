@@ -19,7 +19,7 @@ _CONNECT_ARGS = {"statement_cache_size": 0} if settings.DATABASE_URL.startswith(
 
 
 @celery_app.task(name="app.workers.agent_tasks.run_agent_analysis", bind=True, max_retries=0)
-def run_agent_analysis(self, analysis_id: str):
+def run_agent_analysis(self, analysis_id: str, analysts_csv: str | None = None):
     """Run the TradingAgents multi-agent analysis for a queued AgentAnalysis row."""
 
     async def _run():
@@ -37,7 +37,7 @@ def run_agent_analysis(self, analysis_id: str):
 
             # Heavy + blocking: run off the event loop so the loop stays free.
             try:
-                result = await asyncio.to_thread(agent_analyst.run_analysis, symbol, trade_date, asset_type)
+                result = await asyncio.to_thread(agent_analyst.run_analysis, symbol, trade_date, asset_type, analysts_csv)
                 status, fields = "DONE", {"decision": result["decision"], "reports": result["reports"]}
                 logger.info("AgentAnalysis %s done: %s %s", analysis_id, symbol, result["decision"])
             except Exception as e:  # noqa: BLE001 — record the failure for the user

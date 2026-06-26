@@ -46,8 +46,11 @@ def _flatten_debate(state: dict, key: str) -> str | None:
     return d if isinstance(d, str) else None
 
 
-def run_analysis(symbol: str, trade_date: str, asset_type: str = "stock") -> dict:
-    """Run the multi-agent graph. Returns {decision, reports}. Raises on failure."""
+def run_analysis(symbol: str, trade_date: str, asset_type: str = "stock", analysts_csv: str | None = None) -> dict:
+    """Run the multi-agent graph. Returns {decision, reports}. Raises on failure.
+
+    analysts_csv overrides the configured analyst set (per-request depth preset).
+    """
     ok, reason = is_available()
     if not ok:
         raise RuntimeError(reason)
@@ -76,7 +79,8 @@ def run_analysis(symbol: str, trade_date: str, asset_type: str = "stock") -> dic
         "news_data": "yfinance",
     }
 
-    analysts = tuple(a.strip() for a in settings.AGENT_ANALYSTS.split(",") if a.strip()) \
+    source = analysts_csv or settings.AGENT_ANALYSTS
+    analysts = tuple(a.strip() for a in source.split(",") if a.strip()) \
         or ("market", "social", "news", "fundamentals")
 
     logger.info("Running TradingAgents for %s (%s) on %s — analysts=%s", symbol, asset_type, trade_date, analysts)

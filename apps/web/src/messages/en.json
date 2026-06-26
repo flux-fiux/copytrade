@@ -689,6 +689,10 @@
     "agents_working": "Agents working…",
     "failed": "Analysis failed",
     "rate_limited": "Too many analyses — please slow down.",
-    "history": "History"
+    "history": "History",
+    "depth_fast": "Fast (2)",
+    "depth_balanced": "Balanced (3)",
+    "depth_deep": "Deep (4)",
+    "depth_hint": "More analysts = deeper but slower"
   }
 }

@@ -689,6 +689,10 @@
     "agents_working": "エージェントが分析中…",
     "failed": "分析に失敗しました",
     "rate_limited": "分析が多すぎます。少し時間をおいてください。",
-    "history": "履歴"
+    "history": "履歴",
+    "depth_fast": "高速(2)",
+    "depth_balanced": "バランス(3)",
+    "depth_deep": "詳細(4)",
+    "depth_hint": "アナリストが多いほど詳細だが遅い"
   }
 }

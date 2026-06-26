@@ -689,6 +689,10 @@
     "agents_working": "Agentes trabajando…",
     "failed": "El análisis falló",
     "rate_limited": "Demasiados análisis, ve más despacio.",
-    "history": "Historial"
+    "history": "Historial",
+    "depth_fast": "Rápido (2)",
+    "depth_balanced": "Equilibrado (3)",
+    "depth_deep": "Profundo (4)",
+    "depth_hint": "Más analistas = más profundo pero más lento"
   }
 }
