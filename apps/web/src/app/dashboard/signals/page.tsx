@@ -135,7 +135,7 @@ export default function SignalsPage() {
 
   return (
     <div className="px-6 py-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">{t("title")}</h1>

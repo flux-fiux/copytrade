@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PnlCalendar } from "@/components/dashboard/pnl-calendar";
 import { MasterOnboardingCard } from "@/components/dashboard/master-onboarding-card";
+import { RecentAnalyses } from "@/components/dashboard/recent-analyses";
 import { ConnectReturnBanner } from "@/components/dashboard/connect-return-banner";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -115,7 +116,7 @@ export default function DashboardPage() {
 
   return (
     <div className="px-6 py-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           {loading ? (
             <div className="h-7 w-48 rounded bg-muted/40 animate-pulse" />
@@ -176,6 +177,11 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* AI Analyst — recent multi-agent analyses */}
+        <div className="mb-6">
+          <RecentAnalyses />
         </div>
 
         {/* Recent copy trades */}

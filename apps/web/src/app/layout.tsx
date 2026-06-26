@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { PwaRegister } from "@/components/pwa-register";
 import { getTenantBranding } from "@/lib/tenant";
 import { Providers } from "@/components/providers";
+import { AiCommandBar } from "@/components/ai-command-bar";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="flex-1 pb-16 md:pb-0">{children}</main>
             <SiteFooter />
             <MobileNav />
+            <AiCommandBar />
           </Providers>
         </NextIntlClientProvider>
       </body>

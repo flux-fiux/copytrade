@@ -702,7 +702,11 @@
     "signin_to_use": "Sign in to use AI Analyst",
     "fast_note": "Fast mode · ~2-3 min, runs in background",
     "open_full": "Open full analysis",
-    "decision": "Decision"
+    "decision": "Decision",
+    "command_placeholder": "Ask the AI analyst — type a symbol (AAPL, BTC, EURUSD)…",
+    "recent_title": "Recent AI Analyses",
+    "empty_cta_title": "Run your first AI analysis",
+    "empty_cta_desc": "Let a team of AI agents analyze any symbol"
   },
   "landing": {
     "eyebrow": "AI-Native Financial Terminal",

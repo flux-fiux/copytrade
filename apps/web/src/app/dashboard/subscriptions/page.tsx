@@ -240,7 +240,7 @@ function SubscriptionsContent() {
 
   return (
     <div className="px-6 py-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {successVisible && (
           <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3 mb-6">
             <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />

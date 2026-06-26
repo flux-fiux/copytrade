@@ -702,7 +702,11 @@
     "signin_to_use": "ログインして AI アナリストを使用",
     "fast_note": "高速モード · 約2〜3分、バックグラウンド実行",
     "open_full": "完全な分析を開く",
-    "decision": "判定"
+    "decision": "判定",
+    "command_placeholder": "AI アナリストに質問 — 銘柄を入力(AAPL、BTC、EURUSD)…",
+    "recent_title": "最近の AI 分析",
+    "empty_cta_title": "初めての AI 分析を実行",
+    "empty_cta_desc": "AI エージェントが任意の銘柄を分析"
   },
   "landing": {
     "eyebrow": "AI ネイティブ金融ターミナル",

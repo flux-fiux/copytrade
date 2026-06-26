@@ -702,7 +702,11 @@
     "signin_to_use": "Inicia sesión para usar el Analista IA",
     "fast_note": "Modo rápido · ~2-3 min, en segundo plano",
     "open_full": "Abrir análisis completo",
-    "decision": "Decisión"
+    "decision": "Decisión",
+    "command_placeholder": "Pregunta al Analista IA — escribe un símbolo (AAPL, BTC, EURUSD)…",
+    "recent_title": "Análisis IA recientes",
+    "empty_cta_title": "Ejecuta tu primer análisis IA",
+    "empty_cta_desc": "Deja que agentes de IA analicen cualquier símbolo"
   },
   "landing": {
     "eyebrow": "Terminal financiero nativo de IA",

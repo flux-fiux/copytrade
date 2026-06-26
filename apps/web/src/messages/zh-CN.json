@@ -702,7 +702,11 @@
     "signin_to_use": "登录后使用 AI 分析师",
     "fast_note": "快速模式 · 约 2-3 分钟,后台运行",
     "open_full": "打开完整分析",
-    "decision": "决策"
+    "decision": "决策",
+    "command_placeholder": "问 AI 分析师 — 输入代码(AAPL、BTC、EURUSD)…",
+    "recent_title": "最近 AI 分析",
+    "empty_cta_title": "跑一次 AI 分析",
+    "empty_cta_desc": "让 AI 智能体团队分析任意标的"
   },
   "landing": {
     "eyebrow": "AI 原生金融终端",
