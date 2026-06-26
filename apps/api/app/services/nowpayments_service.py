@@ -52,6 +52,10 @@ class NowPaymentsService:
         }
         pay_currency = _USDT_BY_NETWORK.get(network.upper())
         if pay_currency:
+            # Price in the SAME stablecoin (USDT≈USD) → no fiat conversion, which
+            # avoids NOWPayments' ~$18.79 conversion floor and uses the cheap
+            # per-chain network floor (BSC ~$0.05 vs TRON ~$11).
+            body["price_currency"] = pay_currency
             body["pay_currency"] = pay_currency
 
         async with httpx.AsyncClient(timeout=20.0) as client:

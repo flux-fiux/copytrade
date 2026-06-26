@@ -19,7 +19,7 @@ router = APIRouter()
 class CreatePaymentRequest(BaseModel):
     subscription_id: uuid.UUID
     currency: str = "USDT"
-    network: str = "TRON"
+    network: str = "BSC"  # BEP20 — far lower network fee than TRON on NOWPayments
 
 
 @router.post("/create")
