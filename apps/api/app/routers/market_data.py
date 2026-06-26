@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time as _time
 from fastapi import APIRouter, Query, HTTPException, Depends
@@ -65,24 +66,47 @@ async def get_quote(symbol: str = Query(..., min_length=1, max_length=20)):
     return data
 
 
+_RES_TO_TF = {60: "1m", 300: "5m", 900: "15m", 3600: "1h", 14400: "4h", 86400: "1d", 604800: "1w"}
+
+
 @router.get("/candles")
 async def get_candles(
     symbol: str = Query("EURUSD"),
-    timeframe: str = Query("1h"),
+    resolution: int = Query(3600),          # seconds (frontend chart contract)
+    from_: int | None = Query(None, alias="from"),  # unix seconds
+    to: int | None = Query(None),                    # unix seconds
+    timeframe: str | None = Query(None),    # optional explicit override
     limit: int = Query(300, le=1000),
     db: AsyncSession = Depends(get_db),
 ):
-    cache_key = f"candles:{symbol.upper()}:{timeframe}:{limit}"
+    """Returns the Finnhub-style columnar shape the chart expects:
+    {s, t[], o[], h[], l[], c[], v[]}."""
+    from datetime import datetime as _dt, timezone as _tz
+
+    tf = timeframe or _RES_TO_TF.get(resolution, "1h")
+    cache_key = f"candles:{symbol.upper()}:{tf}:{from_}:{to}:{limit}"
     cached = await _cache_get(cache_key)
     if cached:
         return cached
+
+    from_dt = _dt.fromtimestamp(from_, tz=_tz.utc) if from_ else None
+    to_dt = _dt.fromtimestamp(to, tz=_tz.utc) if to else None
     try:
-        candles = await ohlcv_service.get_candles(db, symbol, timeframe, limit)
+        candles = await ohlcv_service.get_candles(db, symbol, tf, limit, from_dt, to_dt)
     except Exception as e:
         raise HTTPException(502, detail=f"Market data error: {e}")
-    result = {"symbol": symbol.upper(), "timeframe": timeframe, "candles": candles}
-    if candles:
-        await _cache_set(cache_key, result, ttl=60)
+
+    if not candles:
+        return {"s": "no_data", "t": [], "o": [], "h": [], "l": [], "c": [], "v": []}
+
+    t, o, h, low, c, v = [], [], [], [], [], []
+    for row in candles:
+        ts = row["time"]
+        epoch = int(_dt.fromisoformat(ts).timestamp()) if isinstance(ts, str) else int(ts)
+        t.append(epoch); o.append(row["open"]); h.append(row["high"])
+        low.append(row["low"]); c.append(row["close"]); v.append(row.get("volume", 0))
+    result = {"s": "ok", "t": t, "o": o, "h": h, "l": low, "c": c, "v": v}
+    await _cache_set(cache_key, result, ttl=60)
     return result
 
 
@@ -339,30 +363,31 @@ async def get_macro_data(
     if cached:
         return cached
 
-    results: dict = {}
-    async with _httpx.AsyncClient(timeout=10.0) as client:
-        for sid in series_list:
-            try:
-                r = await client.get(
-                    "https://fred.stlouisfed.org/graph/fredgraph.csv",
-                    params={"id": sid},
-                    headers={"User-Agent": "CopyTradePlatform/1.0"},
-                )
-                if r.status_code != 200:
-                    results[sid] = _mock_macro(sid, limit)
-                    continue
-                lines = r.text.strip().split("\n")[1:]
-                data_points = []
-                for line in lines[-limit:]:
-                    parts = line.split(",")
-                    if len(parts) == 2 and parts[1] != ".":
-                        try:
-                            data_points.append({"date": parts[0], "value": float(parts[1])})
-                        except ValueError:
-                            continue
-                results[sid] = data_points if data_points else _mock_macro(sid, limit)
-            except Exception:
-                results[sid] = _mock_macro(sid, limit)
+    async def _fetch_one(client, sid: str) -> tuple[str, list]:
+        try:
+            r = await client.get(
+                "https://fred.stlouisfed.org/graph/fredgraph.csv",
+                params={"id": sid},
+                headers={"User-Agent": "CopyTradePlatform/1.0"},
+            )
+            if r.status_code != 200:
+                return sid, _mock_macro(sid, limit)
+            data_points = []
+            for line in r.text.strip().split("\n")[1:][-limit:]:
+                parts = line.split(",")
+                if len(parts) == 2 and parts[1] != ".":
+                    try:
+                        data_points.append({"date": parts[0], "value": float(parts[1])})
+                    except ValueError:
+                        continue
+            return sid, (data_points or _mock_macro(sid, limit))
+        except Exception:
+            return sid, _mock_macro(sid, limit)
+
+    # Fetch all series concurrently — sequential was up to 6×timeout (~60s).
+    async with _httpx.AsyncClient(timeout=8.0) as client:
+        pairs = await asyncio.gather(*[_fetch_one(client, sid) for sid in series_list])
+    results = dict(pairs)
 
     await _cache_set(cache_key, results, ttl=3600)
     return results
