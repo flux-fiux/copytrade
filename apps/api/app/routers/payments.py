@@ -1,4 +1,5 @@
-"""CryptoMus payment router — crypto subscription payments."""
+"""NOWPayments crypto payment router — crypto subscription payments."""
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -10,7 +11,7 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.models.signal_subscription import SignalSubscription
 from app.models.subscription_plan import SubscriptionPlan
-from app.services.cryptomus_service import cryptomus_service
+from app.services.nowpayments_service import nowpayments_service
 
 router = APIRouter()
 
@@ -46,7 +47,7 @@ async def create_payment(
     callback_url = f"{settings.API_BASE_URL}/api/v1/payments/webhook"
     success_url = f"{settings.FRONTEND_URL}/dashboard/subscriptions?success=1"
 
-    payment = await cryptomus_service.create_payment(
+    payment = await nowpayments_service.create_payment(
         amount=amount,
         currency=payload.currency,
         network=payload.network,
@@ -70,16 +71,22 @@ async def create_payment(
 
 @router.post("/webhook")
 async def payment_webhook(request: Request, db: AsyncSession = Depends(get_db)):
-    body = await request.json()
-    if not cryptomus_service.verify_webhook(dict(body)):
+    raw = await request.body()
+    try:
+        body = json.loads(raw)
+    except Exception:
+        raise HTTPException(400, "Invalid payload")
+
+    signature = request.headers.get("x-nowpayments-sig", "")
+    if not nowpayments_service.verify_webhook(body, signature):
         raise HTTPException(400, "Invalid webhook signature")
 
-    status = body.get("status")
-    order_id = body.get("order_id", "")
-    payment_uuid = body.get("uuid")
+    payment_status = body.get("payment_status")
+    order_id = body.get("order_id", "") or ""
+    payment_id = str(body.get("payment_id", ""))
 
-    # Cryptomus marks a payment paid via "paid" or "paid_over".
-    if status in ("paid", "paid_over") and order_id.startswith("sub_"):
+    # NOWPayments marks a fully-paid invoice as "finished".
+    if payment_status == "finished" and order_id.startswith("sub_"):
         parts = order_id.split("_")
         if len(parts) >= 2:
             try:
@@ -88,15 +95,15 @@ async def payment_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     select(SignalSubscription).where(SignalSubscription.id == sub_id)
                 )
                 sub = result.scalar_one_or_none()
-                # Idempotent: skip if this payment was already credited (webhooks retry).
-                if sub and payment_uuid and sub.last_credited_payment_uuid != payment_uuid:
+                # Idempotent: skip if this payment was already credited (IPN retries).
+                if sub and payment_id and sub.last_credited_payment_uuid != payment_id:
                     now = datetime.now(timezone.utc)
                     base = sub.current_period_end if (sub.current_period_end and sub.current_period_end > now) else now
                     sub.current_period_end = base + timedelta(days=30)
                     sub.status = "ACTIVE"
-                    sub.last_credited_payment_uuid = payment_uuid
+                    sub.last_credited_payment_uuid = payment_id
                     await db.commit()
-            except (ValueError, Exception):
+            except Exception:
                 pass
 
     return {"received": True}
@@ -107,4 +114,4 @@ async def check_payment_status(
     payment_uuid: str,
     current_user: dict = Depends(get_current_user),
 ):
-    return await cryptomus_service.get_payment_status(payment_uuid)
+    return await nowpayments_service.get_payment_status(payment_uuid)

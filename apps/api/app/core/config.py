@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # CryptoMus
     CRYPTOMUS_API_KEY: str = ""
     CRYPTOMUS_MERCHANT_UUID: str = ""
+    # NOWPayments (primary crypto gateway — non-custodial, USDT)
+    NOWPAYMENTS_API_KEY: str = ""
+    NOWPAYMENTS_IPN_SECRET: str = ""
 
     # Market Data
     FINNHUB_API_KEY: str = ""
