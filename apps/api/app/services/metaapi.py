@@ -17,24 +17,31 @@ class MetaAPIService:
         return not settings.METAAPI_TOKEN
 
     async def provision_account(
-        self, broker: str, login: str, password: str, server: str, platform: str = "mt4"
+        self, broker: str, login: str, password: str, server: str, platform: str = "mt4",
+        copy_factory_roles: list[str] | None = None,
     ) -> dict:
         if self._dev_mode:
             return {"id": f"mock-{uuid.uuid4().hex[:8]}", "state": "DEPLOYED"}
+
+        body = {
+            "login": login,
+            "password": password,
+            "name": f"{broker}-{login}",
+            "server": server,
+            "platform": platform.lower(),
+            "magic": 0,
+            "type": "cloud",
+        }
+        # CopyFactory requires accounts tagged PROVIDER (master) / SUBSCRIBER
+        # (follower) at provisioning — the role can't be added afterwards.
+        if copy_factory_roles:
+            body["copyFactoryRoles"] = copy_factory_roles
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{PROVISIONING_URL}/users/current/accounts",
                 headers=self._headers,
-                json={
-                    "login": login,
-                    "password": password,
-                    "name": f"{broker}-{login}",
-                    "server": server,
-                    "platform": platform.lower(),
-                    "magic": 0,
-                    "type": "cloud",
-                },
+                json=body,
             )
         if resp.status_code not in (200, 201):
             raise HTTPException(502, detail=f"MetaAPI error: {resp.text[:200]}")

@@ -39,19 +39,23 @@ async def connect_account(
     await rate_limit(request, "connect_mt4", max_calls=5, window_seconds=3600)
     user_id = uuid.UUID(current_user["sub"])
 
+    # Tag the account for CopyFactory at provisioning time (required; can't be added later).
+    cf_roles = ["PROVIDER"] if payload.account_type == "MASTER" else ["SUBSCRIBER"]
     meta_info = await metaapi_service.provision_account(
         broker=payload.broker_name,
         login=payload.login,
         password=payload.password,
         server=payload.server,
         platform=payload.platform.lower(),
+        copy_factory_roles=cf_roles,
     )
     meta_api_account_id = meta_info["id"]
     await metaapi_service.deploy_account(meta_api_account_id)
 
     copy_factory_strategy_id = None
     if payload.account_type == "MASTER":
-        strategy_id = str(uuid.uuid4())
+        # CopyFactory strategy IDs must be exactly 4 alphanumeric chars.
+        strategy_id = uuid.uuid4().hex[:4]
         await copyfactory_service.create_strategy(
             strategy_id,
             meta_api_account_id,
