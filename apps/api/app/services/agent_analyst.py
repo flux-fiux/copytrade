@@ -28,13 +28,12 @@ _REPORT_KEYS = {
 
 
 def is_available() -> tuple[bool, str]:
-    """Whether the agent core can run: dependency installed + LLM key present."""
+    """Whether the agent core is configured. Checked from the API process for
+    gating/UX, so it only verifies the LLM key — the heavy `tradingagents` dep
+    lives in the dedicated agent-worker, where run_analysis imports it for real.
+    """
     if not settings.DEEPSEEK_API_KEY:
         return False, "DEEPSEEK_API_KEY not configured"
-    try:
-        import tradingagents  # noqa: F401
-    except Exception as e:  # pragma: no cover
-        return False, f"tradingagents not installed: {e}"
     return True, ""
 
 
@@ -68,6 +67,14 @@ def run_analysis(symbol: str, trade_date: str, asset_type: str = "stock") -> dic
     config["max_debate_rounds"] = settings.AGENT_MAX_DEBATE_ROUNDS
     config["online_tools"] = True
     config["results_dir"] = "/tmp/tradingagents_results"
+    # Use yfinance (free, keyless) for all core data so no market-data key is
+    # required. Optional macro/prediction vendors degrade gracefully if unset.
+    config["data_vendors"] = {
+        "core_stock_apis": "yfinance",
+        "technical_indicators": "yfinance",
+        "fundamental_data": "yfinance",
+        "news_data": "yfinance",
+    }
 
     logger.info("Running TradingAgents for %s (%s) on %s", symbol, asset_type, trade_date)
     ta = TradingAgentsGraph(config=config)

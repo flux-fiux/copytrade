@@ -31,6 +31,12 @@ services:
     env_file: ./apps/api/.env
     depends_on: [redis, api]
 
+  worker-agent:                           # AI Analyst — TradingAgents multi-agent core (DeepSeek)
+    build: { context: ./apps/api, dockerfile: Dockerfile.agent-worker }
+    restart: unless-stopped
+    env_file: ./apps/api/.env             # + DEEPSEEK_API_KEY / market-data key
+    depends_on: [redis, api]
+
   worker-ct:                              # CopyFactory copy executor
     build: { context: ./apps/worker-ct, dockerfile: Dockerfile }
     restart: unless-stopped

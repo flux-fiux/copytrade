@@ -25,6 +25,11 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     worker_prefetch_multiplier=1,
+    # Heavy multi-agent analysis runs on a dedicated agent-worker (its own image
+    # carries the tradingagents deps); the main worker never picks these up.
+    task_routes={
+        "app.workers.agent_tasks.*": {"queue": "agents"},
+    },
     beat_schedule={
         # Leaderboard: full recalculate every hour, driven by workers/
         "leaderboard-hourly": {

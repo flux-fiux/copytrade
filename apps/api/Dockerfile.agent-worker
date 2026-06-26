@@ -1,0 +1,25 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# git: TradingAgents installs from its GitHub repo (not on PyPI).
+# gcc/libpq-dev: build deps for psycopg2 and some agent deps.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml .
+# Install the app plus the heavy `agents` extra (langgraph/langchain + TradingAgents).
+RUN pip install --no-cache-dir "python-jose[cryptography]>=3.3.0" && \
+    pip install --no-cache-dir -e ".[agents]"
+
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini .
+
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Dedicated worker: consumes ONLY the `agents` queue, single concurrency
+# (each multi-agent run is heavy and long-running). No --beat here.
+CMD ["celery", "-A", "app.celery_app:celery_app", "worker", "-Q", "agents", "-l", "info", "--concurrency=1"]
