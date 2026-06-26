@@ -3,7 +3,9 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+# npm install (not ci): per-package lockfile is monorepo-root-managed and may be
+# stale; in this standalone build context it resolves from package.json.
+RUN npm install --no-audit --no-fund
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
