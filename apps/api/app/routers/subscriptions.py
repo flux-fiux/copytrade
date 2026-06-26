@@ -216,6 +216,13 @@ async def subscribe(
             )
 
         if master_account and master_account.copy_factory_strategy_id and follower_account:
+            # Ensure both accounts are deployed — a prior cancel may have undeployed
+            # them to save cost. deploy is best-effort (no-op if already deployed).
+            for _acc_id in (master_account.meta_api_account_id, follower_account.meta_api_account_id):
+                try:
+                    await metaapi_service.deploy_account(_acc_id)
+                except Exception:
+                    pass
             # CopyFactory subscriber creation requires the follower account to be
             # broker-CONNECTED, not just deployed — wait (bounded) first.
             await metaapi_service.wait_until_connected(follower_account.meta_api_account_id, timeout=45)
@@ -293,6 +300,54 @@ async def subscribe(
     )
 
 
+async def _undeploy_if_idle(db: AsyncSession, sub: SignalSubscription) -> None:
+    """Cost control: undeploy a follower / master MT4 account once it no longer
+    backs any ACTIVE subscription, so MetaAPI stops billing for it."""
+    changed = False
+
+    if sub.follower_account_id:
+        n = (await db.execute(
+            select(func.count()).select_from(SignalSubscription).where(
+                SignalSubscription.follower_account_id == sub.follower_account_id,
+                SignalSubscription.status == "ACTIVE",
+            )
+        )).scalar() or 0
+        if n == 0:
+            fa = (await db.execute(
+                select(MT4Account).where(MT4Account.id == sub.follower_account_id)
+            )).scalar_one_or_none()
+            if fa and fa.connection_status != "UNDEPLOYED":
+                try:
+                    await metaapi_service.undeploy_account(fa.meta_api_account_id)
+                    fa.connection_status = "UNDEPLOYED"
+                    changed = True
+                except Exception as e:
+                    logger.warning("[cancel] undeploy follower failed: %s", e)
+
+    n2 = (await db.execute(
+        select(func.count()).select_from(SignalSubscription).where(
+            SignalSubscription.master_id == sub.master_id,
+            SignalSubscription.status == "ACTIVE",
+        )
+    )).scalar() or 0
+    if n2 == 0:
+        ma = (await db.execute(
+            select(MT4Account).where(
+                MT4Account.user_id == sub.master_id, MT4Account.account_type == "MASTER"
+            )
+        )).scalars().first()
+        if ma and ma.connection_status != "UNDEPLOYED":
+            try:
+                await metaapi_service.undeploy_account(ma.meta_api_account_id)
+                ma.connection_status = "UNDEPLOYED"
+                changed = True
+            except Exception as e:
+                logger.warning("[cancel] undeploy master failed: %s", e)
+
+    if changed:
+        await db.commit()
+
+
 @router.post("/cancel/{subscription_id}", status_code=status.HTTP_200_OK)
 async def cancel_subscription(
     subscription_id: uuid.UUID,
@@ -331,6 +386,9 @@ async def cancel_subscription(
     sub.status = "CANCELLED"
     sub.cancelled_at = datetime.now(timezone.utc)
     await db.commit()
+
+    # Cost control: stop MetaAPI billing for accounts no longer used by any active copy.
+    await _undeploy_if_idle(db, sub)
     return {"status": "cancelled"}
 
 
@@ -434,6 +492,19 @@ async def resume_subscription_endpoint(
     ok = await risk_guard.resume_subscription(subscription_id, db)
     if not ok:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Subscription cannot be resumed")
+
+    # Re-deploy the follower account in case it was undeployed to save cost.
+    if sub.follower_account_id:
+        fa = (await db.execute(
+            select(MT4Account).where(MT4Account.id == sub.follower_account_id)
+        )).scalar_one_or_none()
+        if fa:
+            try:
+                await metaapi_service.deploy_account(fa.meta_api_account_id)
+                fa.connection_status = "CONNECTING"
+                await db.commit()
+            except Exception:
+                pass
     return {"status": "resumed"}
 
 

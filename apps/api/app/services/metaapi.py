@@ -60,6 +60,19 @@ class MetaAPIService:
         if resp.status_code not in (200, 204):
             raise HTTPException(502, detail=f"MetaAPI deploy error: {resp.text[:200]}")
 
+    async def undeploy_account(self, account_id: str) -> None:
+        """Stop the account (UNDEPLOYED) to halt MetaAPI billing while keeping its
+        config. Re-deploy later to resume. No-op in dev mode."""
+        if self._dev_mode:
+            return
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{PROVISIONING_URL}/users/current/accounts/{account_id}/undeploy",
+                headers=self._headers,
+            )
+        if resp.status_code not in (200, 204):
+            raise HTTPException(502, detail=f"MetaAPI undeploy error: {resp.text[:200]}")
+
     async def wait_until_connected(self, account_id: str, timeout: int = 45, interval: int = 5) -> bool:
         """Poll until the account is broker-CONNECTED (CopyFactory strategy/subscriber
         creation requires it). Returns False on timeout rather than raising."""
