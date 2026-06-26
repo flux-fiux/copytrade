@@ -323,7 +323,9 @@
     "status_connected": "Conectado",
     "status_disconnected": "Desconectado",
     "status_connecting": "Conectando",
-    "disconnect_confirm": "¿Desconectar esta cuenta? Las operaciones en copia activas se pausarán."
+    "disconnect_confirm": "¿Desconectar esta cuenta? Las operaciones en copia activas se pausarán.",
+    "sync_failed": "Error de sincronización, reintenta",
+    "action_failed": "Acción fallida, reintenta"
   },
   "subscriptions_page": {
     "title": "Mis suscripciones",

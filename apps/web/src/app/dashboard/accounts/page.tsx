@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { api, type MT4AccountData } from "@/lib/api-client";
+import { api } from "@/lib/api";
+import type { MT4AccountData } from "@/lib/api-client";
+import { toast } from "sonner";
 import { ConnectAccountForm } from "@/components/dashboard/connect-account-form";
 
 
@@ -37,8 +39,7 @@ export default function AccountsPage() {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
-      const data = await api.mt4Accounts.list(token);
+      const data = await api.mt4Accounts.list();
       setAccounts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load accounts");
@@ -61,11 +62,10 @@ export default function AccountsPage() {
   const handleSync = async (id: string) => {
     setSyncingId(id);
     try {
-      const token = await getToken();
-      const updated = await api.mt4Accounts.sync(token, id);
+      const updated = await api.mt4Accounts.sync(id);
       setAccounts(prev => prev.map(a => a.id === id ? updated : a));
     } catch {
-      // silent — account might be mocked in dev
+      toast.error(t("sync_failed"));
     } finally {
       setSyncingId(null);
     }
@@ -74,11 +74,10 @@ export default function AccountsPage() {
   const handleDisconnect = async (id: string) => {
     if (!confirm(t("disconnect_confirm"))) return;
     try {
-      const token = await getToken();
-      await api.mt4Accounts.disconnect(token, id);
+      await api.mt4Accounts.disconnect(id);
       setAccounts(prev => prev.filter(a => a.id !== id));
     } catch {
-      // silent
+      toast.error(t("action_failed"));
     }
   };
 

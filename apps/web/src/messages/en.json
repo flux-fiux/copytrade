@@ -323,7 +323,9 @@
     "status_connected": "Connected",
     "status_disconnected": "Disconnected",
     "status_connecting": "Connecting",
-    "disconnect_confirm": "Disconnect this account? Active copy trades will be paused."
+    "disconnect_confirm": "Disconnect this account? Active copy trades will be paused.",
+    "sync_failed": "Sync failed, please retry",
+    "action_failed": "Action failed, please retry"
   },
   "subscriptions_page": {
     "title": "My Subscriptions",

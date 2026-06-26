@@ -323,7 +323,9 @@
     "status_connected": "接続済み",
     "status_disconnected": "切断済み",
     "status_connecting": "接続中",
-    "disconnect_confirm": "このアカウントを切断しますか？進行中のコピートレードが一時停止されます。"
+    "disconnect_confirm": "このアカウントを切断しますか？進行中のコピートレードが一時停止されます。",
+    "sync_failed": "同期に失敗しました。再試行してください",
+    "action_failed": "操作に失敗しました。再試行してください"
   },
   "subscriptions_page": {
     "title": "マイサブスクリプション",

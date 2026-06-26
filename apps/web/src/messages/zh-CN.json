@@ -323,7 +323,9 @@
     "status_connected": "已连接",
     "status_disconnected": "已断开",
     "status_connecting": "连接中",
-    "disconnect_confirm": "确认断开此账户？活跃的跟单将被暂停。"
+    "disconnect_confirm": "确认断开此账户？活跃的跟单将被暂停。",
+    "sync_failed": "同步失败,请重试",
+    "action_failed": "操作失败,请重试"
   },
   "subscriptions_page": {
     "title": "我的订阅",
