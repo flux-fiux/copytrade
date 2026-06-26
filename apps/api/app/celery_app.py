@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.workers.ohlcv_tasks",
         "app.workers.settlement_tasks",
         "app.workers.mt4_sync_tasks",
+        "app.workers.subscription_expiry_tasks",
     ],
 )
 
@@ -48,6 +49,11 @@ celery_app.conf.update(
         "mt4-sync": {
             "task": "app.workers.mt4_sync_tasks.sync_all_accounts",
             "schedule": crontab(minute="*/5"),
+        },
+        # Expire crypto subscriptions whose paid period elapsed: daily 01:00 UTC
+        "subscription-expiry": {
+            "task": "app.workers.subscription_expiry_tasks.expire_due_subscriptions",
+            "schedule": crontab(hour=1, minute=0),
         },
     },
 )

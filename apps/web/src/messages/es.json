@@ -364,7 +364,11 @@
     "success_activated": "¡Suscripción activada!",
     "success_desc": "Ahora estás copiando automáticamente las operaciones de tu proveedor de señales seleccionado. Las operaciones aparecerán en tu cuenta MT4/MT5 en segundos.",
     "success_view_subs": "Ver mis suscripciones",
-    "success_browse_masters": "Explorar más Masters"
+    "success_browse_masters": "Explorar más Masters",
+    "status_expired": "Expirado",
+    "renew_btn": "Renovar",
+    "renewing": "Iniciando…",
+    "pay_now": "Pagar ahora"
   },
   "signals_page": {
     "title": "Señales de copia",

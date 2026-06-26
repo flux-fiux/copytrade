@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen, ArrowUpRight, X, CheckCircle2, AlertTriangle, Play, ShieldAlert, FlaskConical,
-  Pencil, Check,
+  Pencil, Check, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ const statusStyles: Record<string, string> = {
   PAUSED:           "border-orange-500/30 text-orange-400",
   PAUSED_DRAWDOWN:  "border-red-500/30 text-red-400",
   CANCELLED:        "border-red-500/30 text-red-400",
+  EXPIRED:          "border-zinc-500/30 text-zinc-400",
 };
 
 // statusLabel is now built from t() inside the component
@@ -103,6 +104,7 @@ function SubscriptionsContent() {
   const [loading, setLoading]     = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [resumingId, setResumingId]     = useState<string | null>(null);
+  const [renewingId, setRenewingId]     = useState<string | null>(null);
   const [editingId, setEditingId]       = useState<string | null>(null);
   const [editLot, setEditLot]           = useState("");
   const [editDd, setEditDd]             = useState("");
@@ -177,6 +179,27 @@ function SubscriptionsContent() {
       setErrorMsg("Failed to resume subscription. Please try again.");
     } finally {
       setResumingId(null);
+    }
+  }
+
+  async function handleRenew(subId: string) {
+    setRenewingId(subId);
+    setErrorMsg(null);
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setRenewingId(null); return; }
+    try {
+      const res = await fetch(`${API}/api/v1/payments/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ subscription_id: subId, currency: "USDT", network: "TRON" }),
+      });
+      if (!res.ok) throw new Error("payment failed");
+      const payment = await res.json();
+      window.location.href = payment.payment_url || "/dashboard/subscriptions";
+    } catch {
+      setErrorMsg("Failed to start payment. Please try again.");
+      setRenewingId(null);
     }
   }
 
@@ -339,7 +362,7 @@ function SubscriptionsContent() {
                       className={cn("text-[10px] border shrink-0", statusStyles[s.status] ?? "border-border text-muted-foreground")}
                     >
                       {(s.status === "PAUSED" || s.status === "PAUSED_DRAWDOWN") && <AlertTriangle className="h-2.5 w-2.5 mr-1" />}
-                      {s.status === "ACTIVE" ? t("status_active") : s.status === "PENDING" ? t("status_pending") : s.status === "PAUSED" ? t("status_paused") : s.status === "PAUSED_DRAWDOWN" ? t("status_paused_drawdown") : s.status === "CANCELLED" ? t("status_cancelled") : s.status}
+                      {s.status === "ACTIVE" ? t("status_active") : s.status === "PENDING" ? t("status_pending") : s.status === "PAUSED" ? t("status_paused") : s.status === "PAUSED_DRAWDOWN" ? t("status_paused_drawdown") : s.status === "CANCELLED" ? t("status_cancelled") : s.status === "EXPIRED" ? t("status_expired") : s.status}
                     </Badge>
                   </div>
 
@@ -424,6 +447,16 @@ function SubscriptionsContent() {
                   )}
 
                   <div className="flex gap-2 mt-4">
+                    {(s.status === "EXPIRED" || s.status === "PENDING") && (
+                      <button
+                        onClick={() => handleRenew(s.id)}
+                        disabled={renewingId === s.id}
+                        className={cn(buttonVariants({ size: "sm" }), "gap-1.5 disabled:opacity-50")}
+                      >
+                        <RefreshCw className={cn("h-3.5 w-3.5", renewingId === s.id && "animate-spin")} />
+                        {renewingId === s.id ? t("renewing") : s.status === "PENDING" ? t("pay_now") : t("renew_btn")}
+                      </button>
+                    )}
                     <Link
                       href={`/masters/${s.master_id}`}
                       className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}

@@ -376,7 +376,7 @@ async def my_subscriptions(
             "lot_multiplier": float(sub.lot_multiplier),
             "max_drawdown_pct": float(sub.max_drawdown_pct) if sub.max_drawdown_pct else None,
             "created_at": sub.subscribed_at.isoformat() if sub.subscribed_at else "",
-            "next_billing_date": None,
+            "next_billing_date": sub.current_period_end.isoformat() if sub.current_period_end else None,
             "pnl": round(pnl, 2) if pnl is not None else None,
             "return_pct": return_pct,
             "pause_reason": sub.pause_reason,

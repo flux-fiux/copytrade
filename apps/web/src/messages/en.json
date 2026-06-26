@@ -364,7 +364,11 @@
     "success_activated": "Subscription Activated!",
     "success_desc": "You're now automatically copying trades from your selected signal provider. Trades will appear in your MT4/MT5 account within seconds.",
     "success_view_subs": "View My Subscriptions",
-    "success_browse_masters": "Browse More Masters"
+    "success_browse_masters": "Browse More Masters",
+    "status_expired": "Expired",
+    "renew_btn": "Renew",
+    "renewing": "Starting…",
+    "pay_now": "Pay now"
   },
   "signals_page": {
     "title": "Copy Signals",

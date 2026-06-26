@@ -364,7 +364,11 @@
     "success_activated": "サブスクリプション有効化！",
     "success_desc": "選択したシグナルプロバイダーの取引を自動的にコピーしています。数秒以内にMT4/MT5口座に取引が表示されます。",
     "success_view_subs": "サブスクリプションを見る",
-    "success_browse_masters": "もっとマスターを見る"
+    "success_browse_masters": "もっとマスターを見る",
+    "status_expired": "期限切れ",
+    "renew_btn": "更新",
+    "renewing": "処理中…",
+    "pay_now": "支払う"
   },
   "signals_page": {
     "title": "コピーシグナル",

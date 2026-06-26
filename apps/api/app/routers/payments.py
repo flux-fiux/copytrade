@@ -1,5 +1,6 @@
 """CryptoMus payment router — crypto subscription payments."""
 import uuid
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -75,8 +76,10 @@ async def payment_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     status = body.get("status")
     order_id = body.get("order_id", "")
+    payment_uuid = body.get("uuid")
 
-    if status == "paid" and order_id.startswith("sub_"):
+    # Cryptomus marks a payment paid via "paid" or "paid_over".
+    if status in ("paid", "paid_over") and order_id.startswith("sub_"):
         parts = order_id.split("_")
         if len(parts) >= 2:
             try:
@@ -85,8 +88,13 @@ async def payment_webhook(request: Request, db: AsyncSession = Depends(get_db)):
                     select(SignalSubscription).where(SignalSubscription.id == sub_id)
                 )
                 sub = result.scalar_one_or_none()
-                if sub and sub.status != "ACTIVE":
+                # Idempotent: skip if this payment was already credited (webhooks retry).
+                if sub and payment_uuid and sub.last_credited_payment_uuid != payment_uuid:
+                    now = datetime.now(timezone.utc)
+                    base = sub.current_period_end if (sub.current_period_end and sub.current_period_end > now) else now
+                    sub.current_period_end = base + timedelta(days=30)
                     sub.status = "ACTIVE"
+                    sub.last_credited_payment_uuid = payment_uuid
                     await db.commit()
             except (ValueError, Exception):
                 pass

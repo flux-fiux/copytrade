@@ -364,7 +364,11 @@
     "success_activated": "订阅已激活！",
     "success_desc": "您现在正在自动跟单您选择的信号提供者的交易。交易将在数秒内出现在您的 MT4/MT5 账户中。",
     "success_view_subs": "查看我的订阅",
-    "success_browse_masters": "浏览更多信号源"
+    "success_browse_masters": "浏览更多信号源",
+    "status_expired": "已到期",
+    "renew_btn": "续费",
+    "renewing": "跳转中…",
+    "pay_now": "去支付"
   },
   "signals_page": {
     "title": "跟单信号",

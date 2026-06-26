@@ -21,7 +21,7 @@ class SignalSubscription(Base):
     max_lot_per_trade: Mapped[float | None] = mapped_column(Numeric(10, 4))
     max_drawdown_pct: Mapped[float | None] = mapped_column(Numeric(5, 2))
     allowed_symbols: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-    status: Mapped[str] = mapped_column(String(15), default="ACTIVE")  # ACTIVE|PAUSED|CANCELLED
+    status: Mapped[str] = mapped_column(String(15), default="ACTIVE")  # ACTIVE|PAUSED|CANCELLED|PENDING|EXPIRED
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(100))
     performance_fee_hwm: Mapped[float] = mapped_column(Numeric(20, 2), default=0)  # High Water Mark
     subscribed_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -29,3 +29,6 @@ class SignalSubscription(Base):
     paused_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
     pause_reason: Mapped[str | None] = mapped_column(String(500))
     cryptomus_payment_uuid: Mapped[str | None] = mapped_column(String(100))
+    # Crypto subscriptions are one-time payments per period; this drives expiry/renewal.
+    current_period_end: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
+    last_credited_payment_uuid: Mapped[str | None] = mapped_column(String(100))  # webhook idempotency
