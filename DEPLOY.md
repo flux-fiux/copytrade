@@ -71,9 +71,24 @@ Note the Railway domains for Services 1 and 4 — needed for Vercel env vars.
    - `NEXT_PUBLIC_WS_URL` = Railway worker-rt service URL
 3. Deploy
 
-## Step 6 — Stripe Webhook
+## Step 6 — Payments
 
-After API is deployed:
+### 6a. Crypto (Cryptomus) — primary rail
+
+1. In the Railway **API** service set:
+   - `CRYPTOMUS_API_KEY`, `CRYPTOMUS_MERCHANT_UUID`
+   - **`API_BASE_URL` = the public API URL** (e.g. `https://your-api.railway.app`).
+     ⚠️ This is critical: the payment callback URL is built from it. If it stays
+     `localhost`, Cryptomus webhooks never arrive and paid subscriptions never
+     activate. No webhook needs registering in the Cryptomus dashboard — the
+     callback URL is sent per-payment.
+   - `FRONTEND_URL` = your Vercel domain (success redirect target).
+2. The webhook endpoint is `https://your-api.railway.app/api/v1/payments/webhook`
+   (signature-verified automatically).
+
+### 6b. Stripe — optional (skip to launch crypto-only)
+
+Leave `STRIPE_SECRET_KEY` blank to run on crypto alone. To enable card payments:
 
 1. Stripe Dashboard → Developers → Webhooks → Add endpoint:
    - URL: `https://your-api.railway.app/webhooks/stripe`
